@@ -1,0 +1,40 @@
+{
+    "local_client":{
+        "cores":{
+            "type":["int"],
+            "nullable": true
+        },
+        "autorestrictor": {
+            "type": ["boolean"],
+            "nullable": true
+        },
+        "local_dir": {
+            "type": ["boolean"],
+            "nullable": true
+        },
+        "wait_for_workers": {
+            "type": ["boolean"],
+            "nullable": true
+        },
+        "serial_execution": {
+            "type": ["boolean"],
+            "nullable": true
+        },
+        "memory_limit":{
+            "type":["str"],
+            "nullable": true
+        },
+        "dask_local_dir":{
+            "type":["str"],
+            "nullable": true
+        },
+        "log_params":{
+            "type":["dict"],
+            "nullable": true
+        },
+        "worker_log_params":{
+            "type":["dict"],
+            "nullable": true
+        }
+    }
+}
