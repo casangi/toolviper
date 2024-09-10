@@ -43,7 +43,7 @@ def set_verbosity(state: Union[None, bool] = None):
 
 
 def info(message: str, verbose: bool = False):
-    logger_name = os.getenv("VIPER_LOGGER_NAME")
+    logger_name = os.getenv("LOGGER_NAME")
 
     if verbosity.get() is True or False:
         verbose = verbosity.get()
@@ -56,7 +56,7 @@ def info(message: str, verbose: bool = False):
 
 
 def log(message: str, verbose: bool = False):
-    logger_name = os.getenv("VIPER_LOGGER_NAME")
+    logger_name = os.getenv("LOGGER_NAME")
 
     if verbosity.get() is True or False:
         verbose = verbosity.get()
@@ -70,7 +70,7 @@ def log(message: str, verbose: bool = False):
 
 
 def exception(message: str, verbose: bool = False):
-    logger_name = os.getenv("VIPER_LOGGER_NAME")
+    logger_name = os.getenv("LOGGER_NAME")
 
     if verbosity.get() is True or False:
         verbose = verbosity.get()
@@ -84,7 +84,7 @@ def exception(message: str, verbose: bool = False):
 
 
 def debug(message: str, verbose: bool = False):
-    logger_name = os.getenv("VIPER_LOGGER_NAME")
+    logger_name = os.getenv("LOGGER_NAME")
 
     if verbosity.get() is True or False:
         verbose = verbosity.get()
@@ -97,7 +97,7 @@ def debug(message: str, verbose: bool = False):
 
 
 def warning(message: str, verbose: bool = False):
-    logger_name = os.getenv("VIPER_LOGGER_NAME")
+    logger_name = os.getenv("LOGGER_NAME")
 
     if verbosity.get() is True or False:
         verbose = verbosity.get()
@@ -110,7 +110,7 @@ def warning(message: str, verbose: bool = False):
 
 
 def error(message: str, verbose: bool = True):
-    logger_name = os.getenv("VIPER_LOGGER_NAME")
+    logger_name = os.getenv("LOGGER_NAME")
 
     if verbosity.get() is True or False:
         verbose = verbosity.get()
@@ -123,7 +123,7 @@ def error(message: str, verbose: bool = True):
 
 
 def critical(message: str, verbose: bool = True):
-    logger_name = os.getenv("VIPER_LOGGER_NAME")
+    logger_name = os.getenv("LOGGER_NAME")
 
     if verbosity.get() is True or False:
         verbose = verbosity.get()
@@ -208,11 +208,11 @@ class LoggingFormatter(logging.Formatter):
 
 def get_logger(logger_name: Union[str, None] = None):
     if logger_name is None:
-        if os.getenv("VIPER_LOGGER_NAME"):
+        if os.getenv("LOGGER_NAME"):
             # Return default logger from env if none is specified.
-            logger_name = os.getenv("VIPER_LOGGER_NAME")
+            logger_name = os.getenv("LOGGER_NAME")
         else:
-            logger_name = "toolviper"
+            logger_name = "viperlog"
 
     try:
         worker = get_worker()
@@ -253,7 +253,7 @@ def setup_logger(
 ):
     """To set up as many loggers as you want"""
     if logger_name is None:
-        logger_name = "toolviper"
+        logger_name = "viperlog"
 
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.getLevelName(log_level))
@@ -276,7 +276,7 @@ def setup_logger(
 
 def get_worker_logger_name(logger_name: Union[str, None] = None):
     if logger_name is None:
-        logger_name = "logger"
+        logger_name = "viperlog"
 
     return "_".join((logger_name, str(get_worker().id)))
 
