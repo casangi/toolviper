@@ -11,31 +11,24 @@ readme = "README.md"
 requires-python = ">= 3.9, < 3.13"
 
 dependencies = [
-    'astropy',
     'cerberus',
     'dask',
     'dask_jobqueue',
     'distributed',
-    'matplotlib',
     'numba>=0.57.0',
     'numpy',
     'psutil',
     'ipywidgets',
-    'prettytable',
     'pytest',
     'pytest-cov',
     'pytest-html',
     'rich',
-    'scipy',
     'tqdm',
-    'xarray',
     'zarr',
     'bokeh',
     'jupyterlab',
     'pyarrow',
     'graphviz',
-    'rich',
-    'python_casacore>=3.6.1; sys_platform != "darwin" '
 ]
 
 
