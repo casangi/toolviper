@@ -1,9 +1,10 @@
 [project]
-name = "vipercore"
+name = "toolviper"
 version = "0.0.1"
 description = ""
 authors = [
     {name = "Joshua Hoskins", email="jhoskins@nrao.edu"},
+    {name = "Jan Willem-Steeb", email="jsteeb@nrao.edu"}
 ]
 license = {file = "LICENSE"}
 readme = "README.md"

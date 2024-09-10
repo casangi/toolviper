@@ -5,13 +5,13 @@ import zipfile
 import json
 import psutil
 import pathlib
-import vipercore
+import toolviper
 import concurrent.futures
 
-import vipercore.utils.logger as logger
+import toolviper.utils.logger as logger
 
 from typing import NoReturn, Union
-import vipercore.utils.console as console
+import toolviper.utils.console as console
 
 colorize = console.Colorize()
 
@@ -55,10 +55,10 @@ def download(
         No return
     """
 
-    vipercore.utils.data.update()
+    toolviper.utils.data.update()
 
     if not pathlib.Path(folder).resolve().exists():
-        vipercore.utils.logger.info(
+        toolviper.utils.logger.info(
             f"Creating path:{colorize.blue(str(pathlib.Path(folder).resolve()))}"
         )
         pathlib.Path(folder).resolve().mkdir()
@@ -287,7 +287,7 @@ def _download(file: str, folder: str = ".") -> NoReturn:
             logger.error(f"Requested file not found: {file}")
             logger.info(
                 f"For a list of available files try using "
-                f"{colorize.blue('vipercore.utils.data.list_files()')}."
+                f"{colorize.blue('toolviper.utils.data.list_files()')}."
             )
 
             return
@@ -298,7 +298,7 @@ def _download(file: str, folder: str = ".") -> NoReturn:
             f"Couldn't find file metadata locally in {colorize.blue(str(meta_data_path))}, trying to retrieve ..."
         )
 
-        vipercore.utils.data.update()
+        toolviper.utils.data.update()
 
         return
 

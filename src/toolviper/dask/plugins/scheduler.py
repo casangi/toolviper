@@ -23,7 +23,7 @@ SOFTWARE.
 """
 
 import click
-import vipercore.utils.logger as logger
+import toolviper.utils.logger as logger
 
 from dask.core import reverse_dict
 from dask.base import tokenize

@@ -6,11 +6,11 @@ import pathlib
 import distributed
 import dask_jobqueue
 import multiprocessing
-import vipercore.dask.menrva
+import toolviper.dask.menrva
 
-import vipercore.utils.parameter as parameter
-import vipercore.utils.logger as logger
-import vipercore.utils.console as console
+import toolviper.utils.parameter as parameter
+import toolviper.utils.logger as logger
+import toolviper.utils.console as console
 
 from typing import Union, Dict
 
@@ -19,13 +19,13 @@ colorize = console.Colorize()
 
 def get_thread_info() -> Dict[str, float]:
     # This just brings the built-in thread info function into the client module.
-    return vipercore.dask.menrva.MenrvaClient.thread_info()
+    return toolviper.dask.menrva.MenrvaClient.thread_info()
 
 
 def get_client() -> Union[None, distributed.Client]:
     """
-    Get a vipercore client instance
-    Returns: None or a vipercore client instance
+    Get a toolviper client instance
+    Returns: None or a toolviper client instance
 
     """
     try:
@@ -43,8 +43,8 @@ def get_client() -> Union[None, distributed.Client]:
 
 def get_cluster() -> Union[None, distributed.LocalCluster]:
     """
-    Get a vipercore cluster instance
-    Returns: None or a vipercore cluster instance
+    Get a toolviper cluster instance
+    Returns: None or a toolviper cluster instance
 
     """
     cluster = None
@@ -159,7 +159,7 @@ def local_client(
     }
 
     # If the user wants to change the global logger name from the
-    # default value of vipercore
+    # default value of toolviper
     os.environ["VIPER_LOGGER_NAME"] = log_params["logger_name"]
 
     if local_dir:
@@ -242,7 +242,7 @@ def local_client(
 
     except ValueError:
 
-        client = vipercore.dask.menrva.MenrvaClient(cluster)
+        client = toolviper.dask.menrva.MenrvaClient(cluster)
         client.get_versions(check=True)
 
     # When constructing a graph that has local cache enabled all workers need to be up and running.
@@ -342,7 +342,7 @@ def distributed_client(
     }
 
     # If the user wants to change the global logger name from the
-    # default value of vipercore
+    # default value of toolviper
     os.environ["VIPER_LOGGER_NAME"] = log_params["logger_name"]
 
     logger.setup_logger(**log_params)
@@ -359,7 +359,7 @@ def distributed_client(
     # to this module, I think keeping it static in the module directory it good.
     plugin_path = str(pathlib.Path(__file__).parent.resolve().joinpath("plugins/"))
 
-    client = vipercore.dask.menrva.MenrvaClient(cluster)
+    client = toolviper.dask.menrva.MenrvaClient(cluster)
     client.get_versions(check=True)
     logger.info("Created client " + str(client))
     return client
@@ -545,7 +545,7 @@ def slurm_cluster_client(
         scheduler_options={"dashboard_address": ":" + str(dashboard_port)},
     )  # interface="ib0"
 
-    client = vipercore.dask.menrva.MenrvaClient(cluster)
+    client = toolviper.dask.menrva.MenrvaClient(cluster)
 
     cluster.scale(workers_per_node * number_of_nodes)
 

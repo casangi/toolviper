@@ -8,10 +8,10 @@ import inspect
 import functools
 import importlib
 
-import vipercore.utils.logger
-import vipercore.utils.console as console
+import toolviper.utils.logger
+import toolviper.utils.console as console
 
-from vipercore.utils.protego import Protego
+from toolviper.utils.protego import Protego
 
 from typing import Callable, Any, Union, NoReturn, Dict, List, Optional, Tuple
 from types import ModuleType
@@ -113,11 +113,11 @@ def config_search(root: str = "/", module_name=None) -> Union[None, str]:
     colorize = console.Colorize()
 
     if root == "/":
-        vipercore.utils.logger.warning(
+        toolviper.utils.logger.warning(
             "File search from root could take some time ..."
         )
 
-    vipercore.utils.logger.debug(
+    toolviper.utils.logger.debug(
         "Searching {} for configuration file, please wait ...".format(
             colorize.blue(root)
         )
@@ -134,20 +134,20 @@ def config_search(root: str = "/", module_name=None) -> Union[None, str]:
 def set_config_directory(path: str, create: bool = False) -> NoReturn:
     colorize = console.Colorize()
     if pathlib.Path(path).exists():
-        vipercore.utils.logger.info(
+        toolviper.utils.logger.info(
             "Setting configuration directory to [{path}]".format(
                 path=colorize.blue(path)
             )
         )
         os.environ["PARAMETER_CONFIG_PATH"] = path
     else:
-        vipercore.utils.logger.info(
+        toolviper.utils.logger.info(
             "The configuration directory [{path}] does not currently exist.".format(
                 path=colorize.blue(path)
             )
         )
         if create:
-            vipercore.utils.logger.info(
+            toolviper.utils.logger.info(
                 "Creating empty configuration directory: {path}".format(
                     path=colorize.blue(path)
                 )
@@ -193,12 +193,12 @@ def verify(
     module_name = module_name.split(".")[-1]
 
     if external_logger is None:
-        logger = vipercore.utils.logger.get_logger()
+        logger = toolviper.utils.logger.get_logger()
 
     else:
         logger = external_logger
 
-    vipercore.utils.logger.debug(
+    toolviper.utils.logger.debug(
         "Checking parameter values for {module}.{function}".format(
             function=colorize.blue(function_name), module=colorize.blue(module_name)
         )

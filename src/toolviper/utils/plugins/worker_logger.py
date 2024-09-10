@@ -1,6 +1,6 @@
 import click
 
-from vipercore.utils.logger import setup_worker_logger
+from toolviper.utils.logger import setup_worker_logger
 
 
 class WorkerLogger:
