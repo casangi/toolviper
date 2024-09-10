@@ -32,7 +32,8 @@ DEFAULT = False
 
 # global verbosity flag
 verbosity: Union[ContextVar[bool], ContextVar[None]] = ContextVar(
-    "message_verbosity", default=None
+    "message_verbosity",
+    default=None
 )
 
 
