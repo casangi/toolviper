@@ -1,7 +1,7 @@
 import sys
 import click
 
-import vipercore.utils.logger as logger
+import toolviper.utils.logger as logger
 import distributed
 
 from distributed.diagnostics.plugin import WorkerPlugin

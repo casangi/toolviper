@@ -62,7 +62,7 @@ Open in Colab: https://colab.research.google.com/github/casangi/graph_viper/blob
 ----
 """
 
-autoapi_dirs = ["../src/vipercore/dask", "../src/vipercore/graph_tools"]
+autoapi_dirs = ["../src/toolviper/dask", "../src/toolviper/graph_tools"]
 autoapi_add_toctree_entry = False
 autoapi_generate_api_docs = True
 autoapi_root = "_api/autoapi"
@@ -121,7 +121,7 @@ pygments_style = "sphinx"
 #
 html_theme = "sphinx_rtd_theme"
 
-html_logo = "_media/vipercore_logo.jpeg"
+html_logo = "_media/toolviper_logo.jpeg"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -153,7 +153,7 @@ html_static_path = ["_static"]
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "vipercoredoc"
+htmlhelp_basename = "toolviperdoc"
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -176,7 +176,7 @@ latex_elements = {
     #'sphinxsetup': 'hmargin={0.5in,0.5in}, vmargin={0.7in,0.7in}'
 }
 
-latex_logo = "_media/vipercore_logo.jpeg"
+latex_logo = "_media/toolviper_logo.jpeg"
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
@@ -184,7 +184,7 @@ latex_logo = "_media/vipercore_logo.jpeg"
 latex_documents = [
     (
         master_doc,
-        "vipercore.tex",
+        "toolviper.tex",
         "Graph Visibility and Image Parallel Execution Reduction",
         "National Radio Astronomy Observatory",
         "manual",
@@ -199,7 +199,7 @@ latex_documents = [
 man_pages = [
     (
         master_doc,
-        "vipercore",
+        "toolviper",
         "Graph Visibility and Image Parallel Execution Reduction",
         [author],
         1,
@@ -215,7 +215,7 @@ man_pages = [
 texinfo_documents = [
     (
         master_doc,
-        "vipercore",
+        "toolviper",
         "Graph Visibility and Image Parallel Execution Reduction",
         author,
         "GrpahVIPER",

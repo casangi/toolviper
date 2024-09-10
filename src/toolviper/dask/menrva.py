@@ -7,8 +7,8 @@ import importlib
 import importlib.util
 import pathlib
 
-import vipercore.utils.logger as logger
-import vipercore.utils.console as console
+import toolviper.utils.logger as logger
+import toolviper.utils.console as console
 
 from importlib.metadata import PackageNotFoundError, version
 
