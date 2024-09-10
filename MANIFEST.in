@@ -1,0 +1,8 @@
+include README.md
+include MANIFEST.in
+include LICENSE
+include CONTRIBUTOR_LICENSING_AGREEMENT
+
+recursive-include src/toolviper/utils/data *
+recursive-include src/toolviper/utils/data/.dropbox *
+recursive-include src/toolviper/config *
