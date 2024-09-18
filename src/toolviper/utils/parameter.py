@@ -90,23 +90,37 @@ def _get_path(function: Callable) -> str:
 
 def get_path(function: Callable) -> tuple[str, str]:
     module = inspect.getmodule(function)
-    module_path = inspect.getfile(module).rstrip(".py")
+    module_path = inspect.getfile(module).removesuffix(".py")
 
     # Determine whether this is a developer install or a site install
     tag = "src" if "src" in module_path else "site-packages"
 
-    # The base directory should be to the left of the tag
-    base_module_path = module_path.split(f"{tag}/")[0]
+    try:
+        # The base directory should be to the left of the tag
+        base_module_path = module_path.split(f"{tag}/")[0]
 
-    # Split the module path up and determine what the package name and location is.
-    split_path = module_path.split("/")
-    index = split_path.index(tag) + 1
-    package_name = split_path[index]
+        # Split the module path up and determine what the package name and location is.
+        split_path = module_path.split("/")
+        index = split_path.index(tag) + 1
+        package_name = split_path[index]
 
-    # Build the full package path
-    base_module_path = pathlib.Path(base_module_path).joinpath(f"{tag}/{package_name}")
+        # Build the full package path
+        base_module_path = pathlib.Path(base_module_path).joinpath(f"{tag}/{package_name}")
 
-    return str(base_module_path), module_path
+        return str(base_module_path), module_path
+
+    except ValueError:
+        import importlib
+        toolviper.utils.logger.debug(f"module {module.__name__} has non-standard install path ...")
+
+        # Need to get the base package name
+        package = module.__name__.split(".")[0]
+
+        # IF we load the base pacakge we can find the base path
+        package_path = importlib.import_module(package).__file__
+        base_module_path = pathlib.Path(package_path).parent
+
+        return str(base_module_path), module_path
 
 
 def config_search(root: str = "/", module_name=None) -> Union[None, str]:
