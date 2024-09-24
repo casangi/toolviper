@@ -15,20 +15,13 @@ dependencies = [
     'dask',
     'dask_jobqueue',
     'distributed',
-    'numba>=0.57.0',
     'numpy',
     'psutil',
-    'ipywidgets',
     'pytest',
     'pytest-cov',
     'pytest-html',
     'rich',
     'tqdm',
-    'zarr',
-    'bokeh',
-    'jupyterlab',
-    'pyarrow',
-    'graphviz',
 ]
 
 
