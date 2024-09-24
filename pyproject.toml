@@ -21,6 +21,7 @@ dependencies = [
     'pytest-cov',
     'pytest-html',
     'rich',
+    'requests',
     'tqdm',
 ]
 
