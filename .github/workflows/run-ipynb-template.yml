@@ -1,0 +1,41 @@
+name: ipynb Tests
+
+on:
+  workflow_call:
+    
+jobs:
+  build:
+    name: ipynb (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -l {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.12"]
+    steps:
+    - name: Setup Conda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        auto-activate-base: false
+        activate-environment: test
+        auto-update-conda: true
+        python-version: ${{ matrix.python-version }}
+        channels: conda-forge
+
+    - run: conda install graphviz 
+
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies with pip
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install .
+
+    - name: Run Jupyter notebooks
+      run: |
+       for notebook in $(find docs -name '*.ipynb'); do
+        jupyter nbconvert --to notebook --execute $notebook --output $(basename $notebook)
+       done
