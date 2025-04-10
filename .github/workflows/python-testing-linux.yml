@@ -1,5 +1,5 @@
 # .github/workflows/python-testing-linux.yml
-name: "Python Linux testing (from template)"
+name: Linux
 
 on:
   push:

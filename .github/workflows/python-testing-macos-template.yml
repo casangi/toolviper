@@ -5,8 +5,8 @@ on:
     inputs:
       python-versions:
         required: false
-        type: array
-        default: ["3.11", "3.12", "3.13"]
+        type: string
+        default: '["3.11", "3.12", "3.13"]' 
       test-path:
         required: false
         type: string
@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["macos-latest"]
-        python-version: ${{ inputs.python-versions }}
+        python-version: ${{ fromJson(inputs.python-versions) }}
     steps:
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
