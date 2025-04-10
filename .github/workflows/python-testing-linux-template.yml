@@ -40,7 +40,8 @@ jobs:
         pytest -v ${{ inputs.test-path }} \
         --html=test-results.html --self-contained-html \
         --cov=. --no-cov-on-fail --cov-branch \
-        --cov-report=html --cov-report=xml --doctest-modules
+        --cov-report=html --cov-report=xml --doctest-modules \
+        --junitxml=junit.xml -o junit_family=legacy
 
     - name: Upload pytest test results and coverage reports
       uses: actions/upload-artifact@v4
@@ -60,3 +61,9 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}  # Use the passed token from workflow_call
         slug: ${{ github.repository }}
+
+    - name: Upload test results to Codecov
+      if: ${{ !cancelled() }}
+      uses: codecov/test-results-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
