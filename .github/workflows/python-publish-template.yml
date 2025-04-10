@@ -55,11 +55,17 @@ jobs:
         name: python-package-distributions
         path: dist/
     - name: Publish distribution 📦 to PyPI
-      env:
-        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }} 
-      run: >
+      run: |
         pip install --upgrade setuptools wheel twine
-        twine upload dist/* -u __token__ -p $PYPI_TOKEN
+        twine upload dist/*
+      env:
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+      # env:
+      #   PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }} 
+      # run: >
+      #   pip install --upgrade setuptools wheel twine
+      #   twine upload dist/* -u __token__ -p $PYPI_TOKEN
     # - name: Publish distribution 📦 to PyPI
     #   uses: pypa/gh-action-pypi-publish@release/v1
     #   with:
