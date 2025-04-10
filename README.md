@@ -1,16 +1,18 @@
 # ToolVIPER
-Tools and utilities for optimized radio astronomy processing using the VIPER framework.
-
-[![Python 3.9 3.10 3.11](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue)](https://www.python.org/downloads/release/python-3130/)
-![Linux Tests](https://github.com/casangi/toolviper/blob/main/.github/workflows/python-testing-linux.yml/badge.svg)
-![macOS Tests](https://github.com/casangi/toolviper/blob/main/.github/workflows/python-testing-macos.yml/badge.svg)
-![ipynb Tests](https://github.com/casangi/toolviper/blob/main/.github/workflows/run-ipynb.yml/badge.svg)
-
 |Coverage|
+
+Tools and utilities for optimized radio astronomy processing using the VIPER framework.
 
 .. |Coverage| image:: https://codecov.io/gh/casangi/toolviper/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/casangi/toolviper/branch/main/toolviper
    :alt: Coverage status
+
+
+<!-- [![Python 3.9 3.10 3.11](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue)](https://www.python.org/downloads/release/python-3130/)
+![Linux Tests](https://github.com/casangi/toolviper/blob/main/.github/workflows/python-testing-linux.yml/badge.svg)
+![macOS Tests](https://github.com/casangi/toolviper/blob/main/.github/workflows/python-testing-macos.yml/badge.svg)
+![ipynb Tests](https://github.com/casangi/toolviper/blob/main/.github/workflows/run-ipynb.yml/badge.svg) -->
+
 
 <!-- .. |Python Support| image:: https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue
    :target: https://www.python.org/downloads/release/python-3130/

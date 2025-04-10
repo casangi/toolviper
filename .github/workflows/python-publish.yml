@@ -1,0 +1,12 @@
+# .github/workflows/python-publish.yml
+name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  call-publish:
+    uses: casangi/toolviper/.github/workflows/python-publish-template.yml@main
+    with:
+      pypi-url: "https://pypi.org/project/toolviper"
