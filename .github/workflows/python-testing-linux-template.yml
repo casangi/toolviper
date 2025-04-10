@@ -14,10 +14,7 @@ on:
         required: false
         type: string
         default: "tests/"
-      CODECOV_TOKEN:
-        required: true
-        type: string  # Pass the token as a string
-
+        
 jobs:
   build:
     runs-on: ${{ matrix.os }}
