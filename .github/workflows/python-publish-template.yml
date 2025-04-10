@@ -45,8 +45,6 @@ jobs:
     environment:
       name: release
       url: ${{ inputs.pypi-url }}
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
 
     steps:
     - name: Download all the dists
@@ -56,3 +54,6 @@ jobs:
         path: dist/
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: "__token__"
+        password: ${{ secrets.PYPI_TOKEN }}  # Using your pre-generated PyPI token from GitHub secrets

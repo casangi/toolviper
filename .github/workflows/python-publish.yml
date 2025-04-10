@@ -10,3 +10,4 @@ jobs:
     uses: casangi/toolviper/.github/workflows/python-publish-template.yml@main
     with:
       pypi-url: "https://pypi.org/project/toolviper"
+    secrets: inherit
