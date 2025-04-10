@@ -9,8 +9,8 @@ jobs:
   check-codecov-token:
     runs-on: ubuntu-latest
     steps:
-      - name: Check CODECOV_TOKEN
-        run: echo "CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }}"
+      - name: Check PYPI_TOKEN
+        run: echo "PYPI_TOKEN=${{ secrets.PYPI_TOKEN }}"
 
   call-publish:
     uses: casangi/toolviper/.github/workflows/python-publish-template.yml@main
