@@ -1,5 +1,5 @@
 # .github/workflows/python-testing-macos.yml
-name: "Python testing (from template)"
+name: MacOS Tests
 
 on:
   push:
