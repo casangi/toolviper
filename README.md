@@ -3,8 +3,8 @@
 Tools and utilities for optimized radio astronomy processing using the VIPER framework.
 
 [![Python 3.11 3.12 3.13](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/downloads/release/python-3130/)
-![Linux Tests](https://github.com/casangi/toolviper/blob/main/.github/workflows/python-testing-linux.yml/badge.svg)
-![macOS Tests](https://github.com/casangi/toolviper/blob/main/.github/workflows/python-testing-macos.yml/badge.svg)
+![Linux Tests](https://github.com/casangi/toolviper/actions/workflows/python-testing-linux.yml/badge.svg?branch=main)
+![macOS Tests](https://github.com/casangi/toolviper/actions/workflows/python-testing-macos.yml/badge.svg?branch=main)
 ![ipynb Tests](https://github.com/casangi/toolviper/blob/main/.github/workflows/run-ipynb.yml/badge.svg)
 [![Coverage](https://codecov.io/gh/casangi/toolviper/branch/main/graph/badge.svg)](https://codecov.io/gh/casangi/toolviper/branch/main/toolviper)
 <!-- [![Documentation Status](https://readthedocs.org/projects/toolviper/badge/?version=latest)](https://toolviper.readthedocs.io) -->
