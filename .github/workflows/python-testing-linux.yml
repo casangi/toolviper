@@ -1,57 +1,16 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
-name: Linux Tests
+# .github/workflows/python-testing-linux.yml
+name: "Python Linux testing (from template)"
 
 on:
   push:
     paths-ignore:
       - '**.md'
       - '**.rst'
-  pull_request: 
+  pull_request:
     paths-ignore:
       - '**.md'
       - '**.rst'
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.11","3.12","3.13"]
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python 3
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install dependencies with pip
-      run: |
-        python -m pip install --upgrade pip
-        pip install .  # install your package
-        pip install pytest-cov
-    - name: Test with pytest
-      run: |
-        pytest -v tests/ \
-        --html=test-results.html --self-contained-html \
-        --cov=. --no-cov-on-fail --cov-branch \
-        --cov-report=html --cov-report=xml --doctest-modules
-
-    - name: Upload pytest test results and coverage reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: pytest-results-${{ matrix.python-version }}
-        path: |
-          ./test-results.html
-          ./htmlcov
-      # Use always() to always run this step to publish test results when there are test failures
-      if: ${{ always() }}
-
-    - name: Upload results to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        slug: ${{ github.repository }}
+  call-testing-linux:
+    uses: casangi/toolviper/.github/workflows/python-testing-linux-template.yml@main
