@@ -14,6 +14,9 @@ on:
         required: false
         type: string
         default: "tests/"
+      cov_project:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -39,7 +42,7 @@ jobs:
       run: |
         pytest -v ${{ inputs.test-path }} \
         --html=test-results.html --self-contained-html \
-        --cov=toolviper --no-cov-on-fail --cov-branch \
+        --cov=${{ inputs.cov_project }} --no-cov-on-fail --cov-branch \
         --cov-report=html --cov-report=xml --doctest-modules \
         --junitxml=junit.xml -o junit_family=legacy
 

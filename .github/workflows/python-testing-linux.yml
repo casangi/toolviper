@@ -20,4 +20,8 @@ jobs:
 
   call-testing-linux:
     uses: casangi/toolviper/.github/workflows/python-testing-linux-template.yml@main
+    with:
+      cov_project: "toolviper"
+      test-path: "tests/"
+      python-versions: '["3.11", "3.12", "3.13"]'
     secrets: inherit
