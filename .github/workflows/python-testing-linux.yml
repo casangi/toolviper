@@ -40,19 +40,14 @@ name: Linux Tests
 # name: "Python testing on Linux (template)"
 
 on:
-  workflow_call:
-    inputs:
-      python-versions:
-        required: false
-        type: string
-        default: '["3.11", "3.12", "3.13"]' 
-      test-path:
-        required: false
-        type: string
-        default: "tests/"
-      cov_project:
-        required: true
-        type: string
+  push:
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
 
 jobs:
   build:
