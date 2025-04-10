@@ -33,6 +33,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install .
+        pip install jupyterlab
 
     - name: Run Jupyter notebooks
       run: |
