@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Check CODECOV_TOKEN
+      run: echo "CODECOV_TOKEN=${{ secrets.PYPI_TOKEN }}"
     - uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v4

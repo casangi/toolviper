@@ -6,6 +6,12 @@ on:
     types: [created]
 
 jobs:
+  check-codecov-token:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CODECOV_TOKEN
+        run: echo "CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }}"
+
   call-publish:
     uses: casangi/toolviper/.github/workflows/python-publish-template.yml@main
     with:
