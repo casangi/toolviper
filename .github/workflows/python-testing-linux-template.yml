@@ -52,8 +52,8 @@ jobs:
       # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}
 
-    - name: Check CODECOV_TOKEN
-      run: echo "CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }}"
+    # - name: Check CODECOV_TOKEN
+    #   run: echo "CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }}"
 
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v5
