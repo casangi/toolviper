@@ -47,8 +47,8 @@ jobs:
       url: ${{ inputs.pypi-url }}
 
     steps:
-    - name: Check PYPI_TOKEN 
-      run: echo "In template PYPI_TOKEN =${{ secrets.PYPI_TOKEN }}"
+    # - name: Check PYPI_TOKEN 
+    #   run: echo "In template PYPI_TOKEN =${{ secrets.PYPI_TOKEN }}"
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
@@ -59,21 +59,3 @@ jobs:
       with:
         user: "__token__"
         password: ${{ secrets.PYPI_TOKEN }}  # Using your pre-generated PyPI token from GitHub secrets
-
-
-      # run: |
-      #   pip install --upgrade setuptools wheel twine
-      #   twine upload dist/*
-      # env:
-      #   TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-
-      # env:
-      #   PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }} 
-      # run: >
-      #   pip install --upgrade setuptools wheel twine
-      #   twine upload dist/* -u __token__ -p $PYPI_TOKEN
-    # - name: Publish distribution 📦 to PyPI
-    #   uses: pypa/gh-action-pypi-publish@release/v1
-    #   with:
-    #     user: "__token__"
-    #     password: ${{ secrets.PYPI_TOKEN }}  # Using your pre-generated PyPI token from GitHub secrets
