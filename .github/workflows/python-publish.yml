@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check PYPI_TOKEN
-        run: echo "PYPI_TOKEN=${{ secrets.PYPI_TOKEN }}"
+        run: echo "2 PYPI_TOKEN=${{ secrets.PYPI_TOKEN }}"
 
   call-publish:
     uses: casangi/toolviper/.github/workflows/python-publish-template.yml@main

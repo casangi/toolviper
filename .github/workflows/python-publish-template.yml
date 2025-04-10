@@ -54,10 +54,10 @@ jobs:
         path: dist/
     - name: Publish distribution 📦 to PyPI
       env:
-        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}  # Replace 'PYPI_TOKEN' with your secret's name
+        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }} 
       run: >
         python3 -m pip install --upgrade setuptools wheel twine
-        twine upload dist/* -u __token__ -p ${{ secrets.PYPI_TOKEN }}
+        python3 -m twine upload dist/* -u __token__ -p $PYPI_TOKEN
     # - name: Publish distribution 📦 to PyPI
     #   uses: pypa/gh-action-pypi-publish@release/v1
     #   with:
