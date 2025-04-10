@@ -20,3 +20,5 @@ jobs:
 
   call-testing-linux:
     uses: casangi/toolviper/.github/workflows/python-testing-linux-template.yml@main
+    with:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

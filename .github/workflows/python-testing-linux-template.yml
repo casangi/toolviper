@@ -14,6 +14,9 @@ on:
         required: false
         type: string
         default: "tests/"
+      CODECOV_TOKEN:
+        required: true
+        type: string  # Pass the token as a string
 
 jobs:
   build:
@@ -53,10 +56,10 @@ jobs:
       if: ${{ always() }}
 
     - name: Check CODECOV_TOKEN
-      run: echo "CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }}"
+      run: echo "CODECOV_TOKEN=${{ inputs.CODECOV_TOKEN }}"
 
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v5
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+        token: ${{ inputs.CODECOV_TOKEN }}  # Use the passed token from workflow_call
         slug: ${{ github.repository }}
