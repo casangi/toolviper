@@ -58,20 +58,20 @@ class TestToolViperClient:
 
     #     client.shutdown()
 
-    # def test_client_get(self):
-    #     """
-    #     Test the get_client() function.
-    #     """
-    #     from toolviper.dask.client import get_client
+    def test_client_get(self):
+        """
+        Test the get_client() function.
+        """
+        from toolviper.dask.client import get_client
 
-    #     client = local_client(
-    #         cores=2,
-    #         memory_limit="4GB",
-    #     )
+        client = local_client(
+            cores=2,
+            memory_limit="4GB",
+        )
 
-    #     assert get_client() == distributed.Client.current()
+        assert get_client() == distributed.Client.current()
 
-    #     client.shutdown()
+        client.shutdown()
 
     # def test_cluster_get(self):
     #     """
