@@ -2,6 +2,7 @@ import os
 import re
 import pathlib
 import distributed
+import toolviper
 
 from toolviper.dask.client import local_client
 
