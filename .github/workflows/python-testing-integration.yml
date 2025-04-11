@@ -1,0 +1,15 @@
+name: Python Testing Integration
+
+# on:
+#   pull_request:
+#     branches: [main]
+
+on:
+    push:
+        paths-ignore:
+        - '**.md'
+        - '**.rst'
+
+jobs:
+  test:
+    uses: casangi/toolviper/.github/workflows/python-testing-integration-template.yml@main
