@@ -4,6 +4,10 @@ import pathlib
 import distributed
 import toolviper
 
+print("hallo")
+print("toolviper version", toolviper.__version__)
+print("toolviper dir", dir(toolviper))
+
 from toolviper.dask import local_client
 
 
