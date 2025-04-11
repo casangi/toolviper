@@ -86,6 +86,7 @@ jobs:
         run: |
           echo "Current working directory:"
           pwd
+          ls -al
 
       - name: Install PR Package
         run: |
@@ -97,6 +98,7 @@ jobs:
         run: |
           echo "Current working directory:"
           pwd
+          ls -al
 
       - name: Debug ToolVIPER install
         run: |
