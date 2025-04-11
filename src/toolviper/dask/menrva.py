@@ -21,6 +21,7 @@ from typing import Callable, Tuple, Dict, Any, Union
 
 colorize = console.Colorize()
 
+
 class MenrvaClient(distributed.Client):
     """
     This and extended version of the general Dask distributed client that will allow for
@@ -34,7 +35,6 @@ class MenrvaClient(distributed.Client):
         except ValueError:
             logger.debug("<No Dask Client>")
             return None
-
 
         try:
             dle_version = parse_version(version("dask-labextension"))
@@ -56,20 +56,22 @@ class MenrvaClient(distributed.Client):
         )
 
     @staticmethod
-    def thread_info()->Dict[str, Any]:
+    def thread_info() -> Dict[str, Any]:
 
         try:
             client = distributed.Client.current()
 
         except ValueError:  # Using default Dask schedular.
-            logger.warning("Couldn't find a current client instance, calculating thread information based on current system.")
+            logger.warning(
+                "Couldn't find a current client instance, calculating thread information based on current system."
+            )
 
             cpu_cores = psutil.cpu_count()
-            total_memory = psutil.virtual_memory().total / (1024 ** 3)
+            total_memory = psutil.virtual_memory().total / (1024**3)
 
             thread_info = {
-                'n_threads': cpu_cores,
-                'memory_per_thread': total_memory / cpu_cores
+                "n_threads": cpu_cores,
+                "memory_per_thread": total_memory / cpu_cores,
             }
 
             return thread_info
@@ -79,22 +81,23 @@ class MenrvaClient(distributed.Client):
 
         # client.cluster only exists for LocalCluster
         if client.cluster is None:
-            worker_items = client.scheduler_info()['workers'].items()
+            worker_items = client.scheduler_info()["workers"].items()
 
         else:
-            worker_items = client.cluster.scheduler_info['workers'].items()
+            worker_items = client.cluster.scheduler_info["workers"].items()
 
         for worker_name, worker in worker_items:
-            temp_memory_per_thread = (worker['memory_limit'] / worker['nthreads']) / (1024 ** 3)
-            n_threads = n_threads + worker['nthreads']
+            temp_memory_per_thread = (worker["memory_limit"] / worker["nthreads"]) / (
+                1024**3
+            )
+            n_threads = n_threads + worker["nthreads"]
 
-            if (memory_per_thread == -1) or (memory_per_thread > temp_memory_per_thread):
+            if (memory_per_thread == -1) or (
+                memory_per_thread > temp_memory_per_thread
+            ):
                 memory_per_thread = temp_memory_per_thread
 
-        thread_info = {
-            'n_threads': n_threads,
-            'memory_per_thread': memory_per_thread
-        }
+        thread_info = {"n_threads": n_threads, "memory_per_thread": memory_per_thread}
 
         return thread_info
 

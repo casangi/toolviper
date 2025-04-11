@@ -17,7 +17,7 @@ class TestToolViperClient:
     def teardown_class(cls):
         """teardown any state that was previously setup with a call to setup_class
         such as deleting test data"""
-        #cls.client.shutdown()
+        # cls.client.shutdown()
         pass
 
     def setup_method(self):
@@ -104,22 +104,25 @@ class TestToolViperClient:
         # Not sure if this test is deterministic. The tests are done using github actions and, I am sure the container
         # environment will change over time. Hopefully, the test pulls out the most consistently calculated case.
 
-        worker_items = client.cluster.scheduler_info['workers'].items()
+        worker_items = client.cluster.scheduler_info["workers"].items()
 
         for worker_name, worker in worker_items:
-            temp_memory_per_thread = (worker['memory_limit'] / worker['nthreads']) / (1024 ** 3)
-            n_threads = n_threads + worker['nthreads']
+            temp_memory_per_thread = (worker["memory_limit"] / worker["nthreads"]) / (
+                1024**3
+            )
+            n_threads = n_threads + worker["nthreads"]
 
-            if (memory_per_thread == -1) or (memory_per_thread > temp_memory_per_thread):
+            if (memory_per_thread == -1) or (
+                memory_per_thread > temp_memory_per_thread
+            ):
                 memory_per_thread = temp_memory_per_thread
 
         assert client.thread_info() == {
             "n_threads": 2,
-            "memory_per_thread": memory_per_thread
+            "memory_per_thread": memory_per_thread,
         }
 
         client.shutdown()
-
 
     def test_client_dask_dir(self):
         """

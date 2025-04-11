@@ -32,10 +32,10 @@ def is_notebook() -> bool:
 
 
 def validate(
-        config_dir: str = None,
-        custom_checker: Callable = None,
-        add_data_type: Any = None,
-        external_logger: Callable = None,
+    config_dir: str = None,
+    custom_checker: Callable = None,
+    add_data_type: Any = None,
+    external_logger: Callable = None,
 ):
     def function_wrapper(function):
         @functools.wraps(function)
@@ -105,13 +105,18 @@ def get_path(function: Callable) -> tuple[str, str]:
         package_name = split_path[index]
 
         # Build the full package path
-        base_module_path = pathlib.Path(base_module_path).joinpath(f"{tag}/{package_name}")
+        base_module_path = pathlib.Path(base_module_path).joinpath(
+            f"{tag}/{package_name}"
+        )
 
         return str(base_module_path), module_path
 
     except ValueError:
         import importlib
-        toolviper.utils.logger.debug(f"module {module.__name__} has non-standard install path ...")
+
+        toolviper.utils.logger.debug(
+            f"module {module.__name__} has non-standard install path ..."
+        )
 
         # Need to get the base package name
         package = module.__name__.split(".")[0]
@@ -127,9 +132,7 @@ def config_search(root: str = "/", module_name=None) -> Union[None, str]:
     colorize = console.Colorize()
 
     if root == "/":
-        toolviper.utils.logger.warning(
-            "File search from root could take some time ..."
-        )
+        toolviper.utils.logger.warning("File search from root could take some time ...")
 
     toolviper.utils.logger.debug(
         "Searching {} for configuration file, please wait ...".format(
@@ -189,13 +192,13 @@ def verify_configuration(path: str, module: ModuleType) -> List[str]:
 
 
 def verify(
-        function: Callable,
-        args: Dict,
-        meta_data: Dict[str, Union[Optional[str], Any]],
-        config_dir: str = None,
-        add_data_type: Any = None,
-        custom_checker: Callable = None,
-        external_logger: Callable = None,
+    function: Callable,
+    args: Dict,
+    meta_data: Dict[str, Union[Optional[str], Any]],
+    config_dir: str = None,
+    add_data_type: Any = None,
+    custom_checker: Callable = None,
+    external_logger: Callable = None,
 ) -> NoReturn:
     colorize = console.Colorize()
     function_name, module_name = meta_data.values()
@@ -224,32 +227,49 @@ def verify(
     logger.info(f"Module path: {colorize.blue(package_path)}")
 
     # First we need to find the parameter configuration files
-    if pathlib.Path(package_path).joinpath("config").joinpath(f"{module_name}.param.json").exists():
-        logger.debug(f"Found configuration for {module_name}.{function_name} in: {colorize.blue(package_path)}")
+    if (
+        pathlib.Path(package_path)
+        .joinpath("config")
+        .joinpath(f"{module_name}.param.json")
+        .exists()
+    ):
+        logger.debug(
+            f"Found configuration for {module_name}.{function_name} in: {colorize.blue(package_path)}"
+        )
         path = str(pathlib.Path(package_path).joinpath("config"))
 
     # User specified configuration directory take precedent
     if config_dir is not None:
         if pathlib.Path(config_dir).joinpath(f"{module_name}.param.json").exists():
-            logger.debug(f"Setting configuration directory to user provided [{config_dir}]")
+            logger.debug(
+                f"Setting configuration directory to user provided [{config_dir}]"
+            )
             path = config_dir
 
         else:
-            logger.warning("User provided configuration directory does not exist. Searching for parameter files ...")
+            logger.warning(
+                "User provided configuration directory does not exist. Searching for parameter files ..."
+            )
 
     # If we have been delt only failure at this point, then we try one last ditch effort. Search the package directory!
     if not path:
-        logger.debug(f"Couldn't determine parameter configuration directory, doing a depth search of {package_path}")
+        logger.debug(
+            f"Couldn't determine parameter configuration directory, doing a depth search of {package_path}"
+        )
         path = config_search(root=package_path, module_name=module_name)
 
         if not path:
-            logger.error(f"Cannot find parameter configuration directory for {function_name}")
+            logger.error(
+                f"Cannot find parameter configuration directory for {function_name}"
+            )
             raise FileNotFoundError
 
     # Define parameter file name
     parameter_file = module_name + ".param.json"
 
-    logger.debug(f"Parameter configuration file: {pathlib.Path(path).joinpath(parameter_file)}")
+    logger.debug(
+        f"Parameter configuration file: {pathlib.Path(path).joinpath(parameter_file)}"
+    )
 
     with open(pathlib.Path(path).joinpath(parameter_file)) as json_file:
         schema = json.load(json_file)

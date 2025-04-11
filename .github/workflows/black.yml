@@ -1,0 +1,6 @@
+# This workflow runs black on the codebase to check for formatting issues.
+on: [push, pull_request]
+
+jobs:
+    call-testing-linux:
+      uses: casangi/toolviper/.github/workflows/black-template.yml@main

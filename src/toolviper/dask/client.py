@@ -19,10 +19,7 @@ import toolviper.utils.parameter as parameter
 colorize = console.Colorize()
 
 
-def load_libraries(
-    name: str,
-    libs: Union[str, list[str]]
-) -> dict[str, bool]:
+def load_libraries(name: str, libs: Union[str, list[str]]) -> dict[str, bool]:
     """Load libraries if they were installed and can be loaded.
 
     Parameters
@@ -36,6 +33,7 @@ def load_libraries(
     -------
         an item of dict has the name and the flag whether all libraries were loaded successfully.
     """
+
     def _load_library(_lib):
         if find_spec(_lib) is not None:
             import_module(_lib)
@@ -53,7 +51,7 @@ def load_libraries(
         _avail = [False, "   illegal module specification"]
 
     _result = "Success" if _avail[0] else "Fail"
-    logger.info(f'Loading module: {name} -- {_result}')
+    logger.info(f"Loading module: {name} -- {_result}")
     [logger.info(x) for x in _avail[1]]
 
     return {name: _avail[0]}
@@ -67,8 +65,10 @@ def print_libraries_availability(spec: dict[str, bool]):
     spec : dict[str, bool]
         an instance of available_specs
     """
-    loaded_lib = [ k for k, v in spec.items() if v ]
-    logger.info(f"{colorize.green('Available functions of this environment')}: {', '.join(loaded_lib)}")
+    loaded_lib = [k for k, v in spec.items() if v]
+    logger.info(
+        f"{colorize.green('Available functions of this environment')}: {', '.join(loaded_lib)}"
+    )
 
 
 """
@@ -80,7 +80,7 @@ logger.info(colorize.green("Checking functions availability:"))
 available_specs = {
     **load_libraries("slurm", "dask_jobqueue"),
     **load_libraries("dask_ssh", ["asyncssh", "jupyter_server_proxy", "paramiko"]),
-    **load_libraries("CUDA", "dask_cuda")
+    **load_libraries("CUDA", "dask_cuda"),
 }
 print_libraries_availability(available_specs)
 
@@ -129,15 +129,15 @@ def get_cluster() -> Union[None, distributed.LocalCluster]:
 
 @parameter.validate()
 def local_client(
-        cores: int = None,
-        memory_limit: str = None,
-        autorestrictor: bool = False,
-        dask_local_dir: str = None,
-        local_dir: str = None,
-        wait_for_workers: bool = True,
-        log_params: Union[None, Dict] = None,
-        worker_log_params: Union[None, Dict] = None,
-        serial_execution: bool = False,
+    cores: int = None,
+    memory_limit: str = None,
+    autorestrictor: bool = False,
+    dask_local_dir: str = None,
+    local_dir: str = None,
+    wait_for_workers: bool = True,
+    log_params: Union[None, Dict] = None,
+    worker_log_params: Union[None, Dict] = None,
+    serial_execution: bool = False,
 ) -> Union[distributed.Client, None]:
     """ Setup dask cluster and logger.
 
@@ -289,7 +289,7 @@ def local_client(
 
     if memory_limit is None:
         memory_limit = "".join(
-            (str(round((psutil.virtual_memory().available / (1024 ** 2)) / cores)), "MB")
+            (str(round((psutil.virtual_memory().available / (1024**2)) / cores)), "MB")
         )
 
     try:
@@ -333,10 +333,10 @@ def local_client(
 
 
 def distributed_client(
-        cluster: None,
-        dask_local_dir: str = None,
-        log_params: Union[None, Dict] = None,
-        worker_log_params: Union[None, Dict] = None,
+    cluster: None,
+    dask_local_dir: str = None,
+    log_params: Union[None, Dict] = None,
+    worker_log_params: Union[None, Dict] = None,
 ) -> Union[distributed.Client, None]:
     """ Setup dask cluster and logger.
 
@@ -434,22 +434,22 @@ def distributed_client(
 
 
 def slurm_cluster_client(
-        workers_per_node: int,
-        cores_per_node: int,
-        memory_per_node: str,
-        number_of_nodes: int,
-        queue: str,
-        interface: str,
-        python_env_dir: str,
-        dask_local_dir: str,
-        dask_log_dir: str,
-        exclude_nodes: str = "",
-        dashboard_port: int = 8787,
-        local_dir: str = None,
-        autorestrictor: bool = False,
-        wait_for_workers: bool = True,
-        log_params: Union[None, Dict] = None,
-        worker_log_params: Union[None, Dict] = None,
+    workers_per_node: int,
+    cores_per_node: int,
+    memory_per_node: str,
+    number_of_nodes: int,
+    queue: str,
+    interface: str,
+    python_env_dir: str,
+    dask_local_dir: str,
+    dask_log_dir: str,
+    exclude_nodes: str = "",
+    dashboard_port: int = 8787,
+    local_dir: str = None,
+    autorestrictor: bool = False,
+    wait_for_workers: bool = True,
+    log_params: Union[None, Dict] = None,
+    worker_log_params: Union[None, Dict] = None,
 ):
     """Creates a Dask slurm_cluster_client on a multinode cluster.
 
