@@ -27,67 +27,67 @@ jobs:
 
       - name: Print Statements
         run: |
-           echo "github.repository_owner=${{ github.repository_owner }}"
-           echo "github.repository=${{ github.repository }}"
+           echo "1 github.repository_owner=${{ github.repository_owner }}"
+           echo "2 github.repository=${{ github.repository }}"
 
       # 1. ToolVIPER
       - name: Clone and install ToolVIPER (main)
-        if: github.repository != '${{ github.repository_owner }}/ToolVIPER'
+        if: github.repository != '${{ github.repository_owner }}/toolviper'
         run: |
-          git clone https://github.com/${{ github.repository_owner }}/ToolVIPER.git
-          pip install -e ToolVIPER
+          git clone https://github.com/${{ github.repository_owner }}/toolviper.git
+          pip install -e toolviper
 
       # 2. XRADIO
       - name: Clone and install XRADIO (main)
-        if: github.repository != '${{ github.repository_owner }}/XRADIO'
+        if: github.repository != '${{ github.repository_owner }}/xradio'
         run: |
-          git clone https://github.com/${{ github.repository_owner }}/XRADIO.git
-          pip install -e XRADIO
+          git clone https://github.com/${{ github.repository_owner }}/xradio.git
+          pip install -e xradio
 
       # 3. GraphVIPER
       - name: Clone and install GraphVIPER (main)
-        if: github.repository != '${{ github.repository_owner }}/GraphVIPER'
+        if: github.repository != '${{ github.repository_owner }}/graphviper'
         run: |
-          git clone https://github.com/${{ github.repository_owner }}/GraphVIPER.git
-          pip install -e GraphVIPER
+          git clone https://github.com/${{ github.repository_owner }}/graphviper.git
+          pip install -e graphviper
 
       # 4. AstroVIPER
       - name: Clone and install AstroVIPER (main)
-        if: github.repository != '${{ github.repository_owner }}/AstroVIPER'
+        if: github.repository != '${{ github.repository_owner }}/astroviper'
         run: |
-          git clone https://github.com/${{ github.repository_owner }}/AstroVIPER.git
-          pip install -e AstroVIPER
+          git clone https://github.com/${{ github.repository_owner }}/astroviper.git
+          pip install -e astroviper
 
       # 5. Run tests
       - name: Run ToolVIPER tests
         run: |
-          if [ "${{ github.repository }}" = "${{ github.repository_owner }}/ToolVIPER" ]; then
+          if [ "${{ github.repository }}" = "${{ github.repository_owner }}/toolviper" ]; then
             pytest tests
           else
-            pytest ToolVIPER/tests
+            pytest toolviper/tests
           fi
 
       # - name: Run XRADIO tests
       #   run: |
-      #     if [ "${{ github.repository }}" = "${{ github.repository_owner }}/XRADIO" ]; then
+      #     if [ "${{ github.repository }}" = "${{ github.repository_owner }}/xradio" ]; then
       #       pytest tests
       #     else
-      #       pytest XRADIO/tests
+      #       pytest xradio/tests
       #     fi
 
       - name: Run GraphVIPER tests
         run: |
-          if [ "${{ github.repository }}" = "${{ github.repository_owner }}/GraphVIPER" ]; then
+          if [ "${{ github.repository }}" = "${{ github.repository_owner }}/graphviper" ]; then
             pytest tests
           else
-            pytest GraphVIPER/tests
+            pytest graphviper/tests
           fi
 
       - name: Run AstroVIPER tests
         run: |
-          if [ "${{ github.repository }}" = "${{ github.repository_owner }}/AstroVIPER" ]; then
+          if [ "${{ github.repository }}" = "${{ github.repository_owner }}/astroviper" ]; then
             pytest tests
           else
-            pytest AstroVIPER/tests
+            pytest astroviper/tests
           fi
 
