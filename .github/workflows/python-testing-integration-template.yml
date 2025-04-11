@@ -32,12 +32,12 @@ jobs:
            echo "3 ${{ github.repository_owner }}/toolviper"
       
       - name: Test if equal
-        if : github.repository == '${{ github.repository_owner }}/toolviper'
+        if : ${{ github.repository == '${{ github.repository_owner }}/toolviper' }}
         run: |
-          echo "This is the main repository"
+          echo "This is toolviper"
 
       - name: Test if equal
-        if : github.repository != '${{ github.repository_owner }}/toolviper'
+        if : ${{ github.repository != '${{ github.repository_owner }}/toolviper' }}
         run: |
           echo "This is not toolviper"
 
