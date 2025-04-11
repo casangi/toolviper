@@ -12,12 +12,6 @@ on:
       - '**.rst'
 
 jobs:
-  # check-codecov-token:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Check CODECOV_TOKEN
-  #       run: echo "CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }}"
-
   call-testing-linux:
     uses: casangi/toolviper/.github/workflows/run-ipynb-template.yml@main
     secrets: inherit
