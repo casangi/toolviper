@@ -25,34 +25,35 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
 
-      - name: Print Statements
-        run: |
-           echo "1 github.repository_owner=casangi"
-           echo "2 github.repository=${{ github.repository }}"
-           echo "3 casangi/toolviper"
+      # For debugging
+      # - name: Print Statements
+      #   run: |
+      #      echo "1 github.repository_owner=casangi"
+      #      echo "2 github.repository=${{ github.repository }}"
+      #      echo "3 casangi/toolviper"
       
-      # 1. ToolVIPER
+      # 1. If no ToolVIPER install from main
       - name: Clone and install ToolVIPER (main)
         if: github.repository != 'casangi/toolviper'
         run: |
           git clone https://github.com/casangi/toolviper.git
           pip install -e toolviper
 
-      # 2. XRADIO
+      # 2. If no XRADIO install from main
       - name: Clone and install XRADIO (main)
         if: github.repository != 'casangi/xradio'
         run: |
           git clone https://github.com/casangi/xradio.git
           pip install -e xradio
 
-      # 3. GraphVIPER
+      # 3. If no GraphVIPER install from main
       - name: Clone and install GraphVIPER (main)
         if: github.repository != 'casangi/graphviper'
         run: |
           git clone https://github.com/casangi/graphviper.git
           pip install -e graphviper
 
-      # 4. AstroVIPER
+      # 4. If no AstroVIPER install from main
       - name: Clone and install AstroVIPER (main)
         if: github.repository != 'casangi/astroviper'
         run: |
@@ -70,17 +71,19 @@ jobs:
         run: |
           if [ "${{ github.repository }}" = "casangi/toolviper" ]; then
             pytest tests
+            pytest tests_integration
           else
             pytest toolviper/tests
+            pytest toolviper/tests_integration
           fi
 
-      # - name: Run XRADIO tests
-      #   run: |
-      #     if [ "${{ github.repository }}" = "casangi/xradio" ]; then
-      #       pytest tests
-      #     else
-      #       pytest xradio/tests
-      #     fi
+      - name: Run XRADIO tests
+        run: |
+          if [ "${{ github.repository }}" = "casangi/xradio" ]; then
+            pytest tests
+          else
+            pytest xradio/tests
+          fi
 
       - name: Run GraphVIPER tests
         run: |
