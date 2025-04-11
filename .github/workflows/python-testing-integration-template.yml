@@ -12,8 +12,18 @@ jobs:
         python-version: [3.12]
 
     steps:
+      - name: 1. Show working directory
+        run: |
+          echo "Current working directory:"
+          pwd
+
       - name: Checkout calling repository (PR version)
         uses: actions/checkout@v4
+
+      - name: 2. Show working directory
+        run: |
+          echo "Current working directory:"
+          pwd
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -24,6 +34,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pytest
+
+
+      - name: 3. Show working directory
+        run: |
+          echo "Current working directory:"
+          pwd
 
       # For debugging
       # - name: Print Statements
@@ -38,6 +54,11 @@ jobs:
         run: |
           git clone https://github.com/casangi/toolviper.git
           pip install -e toolviper
+
+      - name: 4. Show working directory
+        run: |
+          echo "Current working directory:"
+          pwd
 
       # 2. If no XRADIO install from main
       - name: Clone and install XRADIO (main)
@@ -60,11 +81,21 @@ jobs:
           git clone https://github.com/casangi/astroviper.git
           pip install -e astroviper
 
+      - name: 5. Show working directory
+        run: |
+          echo "Current working directory:"
+          pwd
+
       - name: Install PR Package
         run: |
           python -m pip install --upgrade pip
           pip install pytest
           pip install -e .
+
+      - name: 6. Show working directory
+        run: |
+          echo "Current working directory:"
+          pwd
 
       - name: Debug ToolVIPER install
         run: |
