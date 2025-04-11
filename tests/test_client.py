@@ -8,7 +8,7 @@ print("hallo")
 print("toolviper dir", dir(toolviper))
 print("toolviper dir", dir(toolviper.dask))
 
-from toolviper.dask import local_client
+from toolviper.dask.client import local_client
 
 
 class TestToolViperClient:
