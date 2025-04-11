@@ -31,13 +31,23 @@ jobs:
            echo "2 github.repository=${{ github.repository }}"
            echo "3 ${{ github.repository_owner }}/toolviper"
       
-      - name: Test if equal
-        if : ${{ github.repository == '${{ github.repository_owner }}/toolviper' }}
+      - name: Test if ToolVIPER
+        if : ${{ github.repository == 'casangi/toolviper' }}
         run: |
           echo "This is toolviper"
 
-      - name: Test if equal
-        if : ${{ github.repository != '${{ github.repository_owner }}/toolviper' }}
+      - name: Test if statement is true
+        if : ${{ 'casangi/toolviper' == 'casangi/toolviper' }}
+        run: |
+          echo "casangi/toolviper == casangi/toolviper"
+      
+      - name: Test if statement is false
+        if : ${{ 'casangi/toolviper' != 'casangi/toolviper' }}
+        run: |
+          echo "casangi/toolviper != casangi/toolviper"
+
+      - name: Test if not ToolVIPER
+        if : ${{ github.repository != 'casangi/toolviper' }}
         run: |
           echo "This is not toolviper"
 
