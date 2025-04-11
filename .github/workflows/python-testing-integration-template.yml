@@ -27,62 +27,42 @@ jobs:
 
       - name: Print Statements
         run: |
-           echo "1 github.repository_owner=${{ github.repository_owner }}"
+           echo "1 github.repository_owner=casangi"
            echo "2 github.repository=${{ github.repository }}"
-           echo "3 ${{ github.repository_owner }}/toolviper"
+           echo "3 casangi/toolviper"
       
-      - name: Test if ToolVIPER
-        if : ${{ github.repository == 'casangi/toolviper' }}
-        run: |
-          echo "This is toolviper"
-
-      - name: Test if statement is true
-        if : ${{ 'casangi/toolviper' == 'casangi/toolviper' }}
-        run: |
-          echo "casangi/toolviper == casangi/toolviper"
-      
-      - name: Test if statement is false
-        if : ${{ 'casangi/toolviper' != 'casangi/toolviper' }}
-        run: |
-          echo "casangi/toolviper != casangi/toolviper"
-
-      - name: Test if not ToolVIPER
-        if : ${{ github.repository != 'casangi/toolviper' }}
-        run: |
-          echo "This is not toolviper"
-
       # 1. ToolVIPER
       - name: Clone and install ToolVIPER (main)
-        if: github.repository != '${{ github.repository_owner }}/toolviper'
+        if: github.repository != 'casangi/toolviper'
         run: |
-          git clone https://github.com/${{ github.repository_owner }}/toolviper.git
+          git clone https://github.com/casangi/toolviper.git
           pip install -e toolviper
 
       # 2. XRADIO
       - name: Clone and install XRADIO (main)
-        if: github.repository != '${{ github.repository_owner }}/xradio'
+        if: github.repository != 'casangi/xradio'
         run: |
-          git clone https://github.com/${{ github.repository_owner }}/xradio.git
+          git clone https://github.com/casangi/xradio.git
           pip install -e xradio
 
       # 3. GraphVIPER
       - name: Clone and install GraphVIPER (main)
-        if: github.repository != '${{ github.repository_owner }}/graphviper'
+        if: github.repository != 'casangi/graphviper'
         run: |
-          git clone https://github.com/${{ github.repository_owner }}/graphviper.git
+          git clone https://github.com/casangi/graphviper.git
           pip install -e graphviper
 
       # 4. AstroVIPER
       - name: Clone and install AstroVIPER (main)
-        if: github.repository != '${{ github.repository_owner }}/astroviper'
+        if: github.repository != 'casangi/astroviper'
         run: |
-          git clone https://github.com/${{ github.repository_owner }}/astroviper.git
+          git clone https://github.com/casangi/astroviper.git
           pip install -e astroviper
 
       # 5. Run tests
       - name: Run ToolVIPER tests
         run: |
-          if [ "${{ github.repository }}" = "${{ github.repository_owner }}/toolviper" ]; then
+          if [ "${{ github.repository }}" = "casangi/toolviper" ]; then
             pytest tests
           else
             pytest toolviper/tests
@@ -90,7 +70,7 @@ jobs:
 
       # - name: Run XRADIO tests
       #   run: |
-      #     if [ "${{ github.repository }}" = "${{ github.repository_owner }}/xradio" ]; then
+      #     if [ "${{ github.repository }}" = "casangi/xradio" ]; then
       #       pytest tests
       #     else
       #       pytest xradio/tests
@@ -98,7 +78,7 @@ jobs:
 
       - name: Run GraphVIPER tests
         run: |
-          if [ "${{ github.repository }}" = "${{ github.repository_owner }}/graphviper" ]; then
+          if [ "${{ github.repository }}" = "casangi/graphviper" ]; then
             pytest tests
           else
             pytest graphviper/tests
@@ -106,7 +86,7 @@ jobs:
 
       - name: Run AstroVIPER tests
         run: |
-          if [ "${{ github.repository }}" = "${{ github.repository_owner }}/astroviper" ]; then
+          if [ "${{ github.repository }}" = "casangi/astroviper" ]; then
             pytest tests
           else
             pytest astroviper/tests
