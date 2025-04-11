@@ -1,17 +1,17 @@
 name: Python Testing Integration
 
-# on:
-#   pull_request:
-#     paths-ignore:
-#       - '**.md'
-#       - '**.rst'
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
 
 # For testing the workflow.
-on:
-    push:
-        paths-ignore:
-        - '**.md'
-        - '**.rst'
+# on:
+#     push:
+#         paths-ignore:
+#         - '**.md'
+#         - '**.rst'
 
 jobs:
   test:
