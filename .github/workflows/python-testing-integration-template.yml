@@ -29,6 +29,7 @@ jobs:
         run: |
            echo "1 github.repository_owner=${{ github.repository_owner }}"
            echo "2 github.repository=${{ github.repository }}"
+           echo "${{ github.repository_owner }}/toolviper"
 
       # 1. ToolVIPER
       - name: Clone and install ToolVIPER (main)
