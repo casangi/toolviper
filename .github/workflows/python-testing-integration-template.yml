@@ -29,7 +29,10 @@ jobs:
         run: |
            echo "1 github.repository_owner=${{ github.repository_owner }}"
            echo "2 github.repository=${{ github.repository }}"
-           echo "${{ github.repository_owner }}/toolviper"
+           echo "3 ${{ github.repository_owner }}/toolviper"
+           echo "Exact repository value: ${github.repository}"
+           echo "Comparison value: ${{ github.repository_owner }}/toolviper"
+           echo "Are they equal: $([[ ${github.repository,,} == '${{ github.repository_owner }}/toolviper' ]] && echo 'Yes' || echo 'No')"
 
       # 1. ToolVIPER
       - name: Clone and install ToolVIPER (main)
