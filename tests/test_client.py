@@ -4,7 +4,7 @@ import pathlib
 import distributed
 import toolviper
 
-from toolviper.dask.client import local_client
+from toolviper.dask import local_client
 
 
 class TestToolViperClient:
