@@ -12,4 +12,4 @@ on:
 
 jobs:
   test:
-    uses: ${{ github.repository_owner }}/toolviper/.github/workflows/python-testing-integration-template.yml@main
+    uses: casangi/toolviper/.github/workflows/python-testing-integration-template.yml@main
