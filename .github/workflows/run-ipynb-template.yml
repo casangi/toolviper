@@ -38,5 +38,7 @@ jobs:
     - name: Run Jupyter notebooks
       run: |
        for notebook in $(find docs -name '*.ipynb'); do
-        jupyter nbconvert --to notebook --execute $notebook --output $(basename $notebook)
+        ls -al
+        pwd
+        jupyter nbconvert --to notebook --execute $notebook --output $(basename $notebook) --stdout
        done
