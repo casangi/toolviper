@@ -110,11 +110,11 @@ jobs:
           pwd
           ls -al
 
-      - name: Debug ToolVIPER install
-        run: |
-          python -c "import toolviper; print(dir(toolviper))"
-          pip list | grep toolviper
-          find $(python -c 'import toolviper; import os; print(os.path.dirname(toolviper.__file__))')
+      # - name: Debug ToolVIPER install
+      #   run: |
+      #     python -c "import toolviper; print(dir(toolviper))"
+      #     pip list | grep toolviper
+      #     find $(python -c 'import toolviper; import os; print(os.path.dirname(toolviper.__file__))')
 
       # 5. Run tests
       - name: Run ToolVIPER tests
