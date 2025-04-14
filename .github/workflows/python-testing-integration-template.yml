@@ -1,7 +1,38 @@
 name: Python Testing Integration Template
 
+#Example how to use:
+# jobs:
+#   test-with-specific-branches:
+#     uses: casangi/toolviper/.github/workflows/test-integration-template.yml@main
+#     with:
+#       toolviper_ref: 'v1.0.0' #optional, default main
+#       xradio_ref: 'dev' #optional, default main
+#       graphviper_ref: 'release-candidate' #optional, default main
+#       astroviper_ref: 'main' #optional, default main
+
 on:
   workflow_call:
+    inputs:
+      toolviper_ref:
+        description: 'Branch or tag for ToolVIPER'
+        required: false
+        default: 'main'
+        type: string
+      xradio_ref:
+        description: 'Branch or tag for XRADIO'
+        required: false
+        default: 'main'
+        type: string
+      graphviper_ref:
+        description: 'Branch or tag for GraphVIPER'
+        required: false
+        default: 'main'
+        type: string
+      astroviper_ref:
+        description: 'Branch or tag for AstroVIPER'
+        required: false
+        default: 'main'
+        type: string
 
 jobs:
   test-all:
@@ -12,19 +43,8 @@ jobs:
         python-version: [3.12]
 
     steps:
-      - name: 1. Show working directory
-        run: |
-          echo "Current working directory:"
-          pwd
-          ls -al
-
       - name: Checkout calling repository (PR version)
         uses: actions/checkout@v4
-
-      - name: 2. Show working directory
-        run: |
-          echo "Current working directory:"
-          pwd
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -36,87 +56,46 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
 
-      - name: 3. Show working directory
-        run: |
-          echo "Current working directory:"
-          pwd
-
-      # For debugging
-      # - name: Print Statements
-      #   run: |
-      #      echo "1 github.repository_owner=casangi"
-      #      echo "2 github.repository=${{ github.repository }}"
-      #      echo "3 casangi/toolviper"
-      
-      # 1. If no ToolVIPER install from main
-      - name: Clone and install ToolVIPER (main)
+      - name: Clone and install ToolVIPER
         if: github.repository != 'casangi/toolviper'
         run: |
           ORIGINAL_DIR=$(pwd)
           cd ..
-          git clone https://github.com/casangi/toolviper.git
+          git clone --branch "${{ inputs.toolviper_ref }}" https://github.com/casangi/toolviper.git
           pip install -e toolviper
           cd "$ORIGINAL_DIR"
 
-      - name: 4. Show working directory
-        run: |
-          echo "Current working directory:"
-          pwd
-          ls -al
-
-      # 2. If no XRADIO install from main
-      - name: Clone and install XRADIO (main)
+      - name: Clone and install XRADIO
         if: github.repository != 'casangi/xradio'
         run: |
           ORIGINAL_DIR=$(pwd)
           cd ..
-          git clone https://github.com/casangi/xradio.git
+          git clone --branch "${{ inputs.xradio_ref }}" https://github.com/casangi/xradio.git
           pip install -e xradio
           cd "$ORIGINAL_DIR"
 
-      # 3. If no GraphVIPER install from main
-      - name: Clone and install GraphVIPER (main)
+      - name: Clone and install GraphVIPER
         if: github.repository != 'casangi/graphviper'
         run: |
           ORIGINAL_DIR=$(pwd)
           cd ..
-          git clone https://github.com/casangi/graphviper.git
+          git clone --branch "${{ inputs.graphviper_ref }}" https://github.com/casangi/graphviper.git
           pip install -e graphviper
           cd "$ORIGINAL_DIR"
 
-      # 4. If no AstroVIPER install from main
-      - name: Clone and install AstroVIPER (main)
+      - name: Clone and install AstroVIPER
         if: github.repository != 'casangi/astroviper'
         run: |
           ORIGINAL_DIR=$(pwd)
           cd ..
-          git clone https://github.com/casangi/astroviper.git
+          git clone --branch "${{ inputs.astroviper_ref }}" https://github.com/casangi/astroviper.git
           pip install -e astroviper
           cd "$ORIGINAL_DIR"
-
-      - name: 5. Show working directory
-        run: |
-          echo "Current working directory:"
-          pwd
-          ls -al
 
       - name: Install PR Package
         run: |
           pip install -e .
 
-      - name: 6. Show working directory
-        run: |
-          echo "Current working directory:"
-          pwd
-          ls -al
-
-      # - name: Debug ToolVIPER install
-      #   run: |
-      #     python -c "import toolviper; print(dir(toolviper))"
-      #     pip list | grep toolviper
-      #     find $(python -c 'import toolviper; import os; print(os.path.dirname(toolviper.__file__))')
-
-      # 5. Run tests
       - name: Run ToolVIPER tests
         run: |
           if [ "${{ github.repository }}" = "casangi/toolviper" ]; then
@@ -150,4 +129,153 @@ jobs:
           else
             pytest ../astroviper/tests
           fi
+
+
+# jobs:
+#   test-all:
+#     runs-on: ubuntu-latest
+
+#     strategy:
+#       matrix:
+#         python-version: [3.12]
+
+#     steps:
+#       - name: 1. Show working directory
+#         run: |
+#           echo "Current working directory:"
+#           pwd
+#           ls -al
+
+#       - name: Checkout calling repository (PR version)
+#         uses: actions/checkout@v4
+
+#       - name: 2. Show working directory
+#         run: |
+#           echo "Current working directory:"
+#           pwd
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: ${{ matrix.python-version }}
+
+#       - name: Install core test dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install pytest
+
+#       - name: 3. Show working directory
+#         run: |
+#           echo "Current working directory:"
+#           pwd
+
+#       # For debugging
+#       # - name: Print Statements
+#       #   run: |
+#       #      echo "1 github.repository_owner=casangi"
+#       #      echo "2 github.repository=${{ github.repository }}"
+#       #      echo "3 casangi/toolviper"
+      
+#       # 1. If no ToolVIPER install from main
+#       - name: Clone and install ToolVIPER (main)
+#         if: github.repository != 'casangi/toolviper'
+#         run: |
+#           ORIGINAL_DIR=$(pwd)
+#           cd ..
+#           git clone https://github.com/casangi/toolviper.git
+#           pip install -e toolviper
+#           cd "$ORIGINAL_DIR"
+
+#       - name: 4. Show working directory
+#         run: |
+#           echo "Current working directory:"
+#           pwd
+#           ls -al
+
+#       # 2. If no XRADIO install from main
+#       - name: Clone and install XRADIO (main)
+#         if: github.repository != 'casangi/xradio'
+#         run: |
+#           ORIGINAL_DIR=$(pwd)
+#           cd ..
+#           git clone https://github.com/casangi/xradio.git
+#           pip install -e xradio
+#           cd "$ORIGINAL_DIR"
+
+#       # 3. If no GraphVIPER install from main
+#       - name: Clone and install GraphVIPER (main)
+#         if: github.repository != 'casangi/graphviper'
+#         run: |
+#           ORIGINAL_DIR=$(pwd)
+#           cd ..
+#           git clone https://github.com/casangi/graphviper.git
+#           pip install -e graphviper
+#           cd "$ORIGINAL_DIR"
+
+#       # 4. If no AstroVIPER install from main
+#       - name: Clone and install AstroVIPER (main)
+#         if: github.repository != 'casangi/astroviper'
+#         run: |
+#           ORIGINAL_DIR=$(pwd)
+#           cd ..
+#           git clone https://github.com/casangi/astroviper.git
+#           pip install -e astroviper
+#           cd "$ORIGINAL_DIR"
+
+#       - name: 5. Show working directory
+#         run: |
+#           echo "Current working directory:"
+#           pwd
+#           ls -al
+
+#       - name: Install PR Package
+#         run: |
+#           pip install -e .
+
+#       - name: 6. Show working directory
+#         run: |
+#           echo "Current working directory:"
+#           pwd
+#           ls -al
+
+#       # - name: Debug ToolVIPER install
+#       #   run: |
+#       #     python -c "import toolviper; print(dir(toolviper))"
+#       #     pip list | grep toolviper
+#       #     find $(python -c 'import toolviper; import os; print(os.path.dirname(toolviper.__file__))')
+
+#       # 5. Run tests
+#       - name: Run ToolVIPER tests
+#         run: |
+#           if [ "${{ github.repository }}" = "casangi/toolviper" ]; then
+#             pytest tests
+#             pytest tests_integration
+#           else
+#             pytest ../toolviper/tests
+#             pytest ../toolviper/tests_integration
+#           fi
+
+#       - name: Run XRADIO tests
+#         run: |
+#           if [ "${{ github.repository }}" = "casangi/xradio" ]; then
+#             pytest tests
+#           else
+#             pytest ../xradio/tests
+#           fi
+
+#       - name: Run GraphVIPER tests
+#         run: |
+#           if [ "${{ github.repository }}" = "casangi/graphviper" ]; then
+#             pytest tests
+#           else
+#             pytest ../graphviper/tests
+#           fi
+
+#       - name: Run AstroVIPER tests
+#         run: |
+#           if [ "${{ github.repository }}" = "casangi/astroviper" ]; then
+#             pytest tests
+#           else
+#             pytest ../astroviper/tests
+#           fi
 
