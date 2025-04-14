@@ -1,6 +1,6 @@
 [project]
 name = "toolviper"
-version = "0.0.12"
+version = "0.0.11"
 description = ""
 authors = [
     {name = "Joshua Hoskins", email="jhoskins@nrao.edu"},
