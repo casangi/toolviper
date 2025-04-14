@@ -27,6 +27,16 @@ dependencies = [
 
 
 [project.optional-dependencies]
+interactive = [
+    'matplotlib',
+    'prettytable',
+    'jupyterlab',
+    'ipykernel',
+    'ipympl',
+    'ipython',
+    'jupyter-client',
+]
+
 docs = [
     'ipykernel',
     'ipympl',
