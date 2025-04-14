@@ -37,14 +37,17 @@ jobs:
 
     - name: Run Jupyter notebooks
       run: |
+       ORIGINAL_DIR=$(pwd)
        for notebook in $(find docs -name '*.ipynb'); do
-        # echo "Running notebook: $notebook"
+        echo "Running notebook: $notebook"
         # ls -al
         # pwd
         # jupyter nbconvert --to notebook --execute $notebook --output $(basename $notebook) --stdout
 
         NOTEBOOK_DIR=$(dirname "$notebook")
         NOTEBOOK_FILE=$(basename "$notebook")
+
+        echo "NOTEBOOK_DIR: $NOTEBOOK_DIR, NOTEBOOK_FILE: $NOTEBOOK_FILE"
   
         cd "$NOTEBOOK_DIR"
         jupyter nbconvert --to notebook --execute "$NOTEBOOK_FILE" --output "$NOTEBOOK_FILE" --stdout
