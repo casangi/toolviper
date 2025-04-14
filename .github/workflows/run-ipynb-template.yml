@@ -48,8 +48,19 @@ jobs:
         NOTEBOOK_FILE=$(basename "$notebook")
 
         echo "NOTEBOOK_DIR: $NOTEBOOK_DIR, NOTEBOOK_FILE: $NOTEBOOK_FILE"
-  
+        echo "Original dir $ORIGINAL_DIR"
+
         cd "$NOTEBOOK_DIR"
+
+        echo "1 ********************"
+        ls -al
+        echo "********************"
+        python -c 'import toolviper; import os; toolviper.utils.data.download(file="gmrt.ms")'
+        echo "2 ********************"
+        ls -al
+        echo "********************"
+
+        pwd
         jupyter nbconvert --to notebook --execute "$NOTEBOOK_FILE" --output "$NOTEBOOK_FILE" --stdout
         cd "$ORIGINAL_DIR"
        done
