@@ -14,24 +14,24 @@ on:
   workflow_call:
     inputs:
       toolviper_ref:
-        description: 'Branch or tag for ToolVIPER'
+        description: "Branch or tag for ToolVIPER"
         required: false
-        default: 'main'
+        default: "main"
         type: string
       xradio_ref:
-        description: 'Branch or tag for XRADIO'
+        description: "Branch or tag for XRADIO"
         required: false
-        default: 'main'
+        default: "main"
         type: string
       graphviper_ref:
-        description: 'Branch or tag for GraphVIPER'
+        description: "Branch or tag for GraphVIPER"
         required: false
-        default: 'main'
+        default: "main"
         type: string
       astroviper_ref:
-        description: 'Branch or tag for AstroVIPER'
+        description: "Branch or tag for AstroVIPER"
         required: false
-        default: 'main'
+        default: "main"
         type: string
 
 jobs:
@@ -57,40 +57,44 @@ jobs:
           pip install pytest
 
       - name: Clone and install ToolVIPER
-        if: github.repository != 'casangi/toolviper'
         run: |
-          ORIGINAL_DIR=$(pwd)
-          cd ..
-          git clone --branch "${{ inputs.toolviper_ref }}" https://github.com/casangi/toolviper.git
-          pip install -e toolviper
-          cd "$ORIGINAL_DIR"
+          if [ -d "../toolviper" ]; then
+            ORIGINAL_DIR=$(pwd)
+            cd ..
+            git clone --branch "${{ inputs.toolviper_ref }}" https://github.com/casangi/toolviper.git
+            pip install -e toolviper
+            cd "$ORIGINAL_DIR"
+          fi
 
       - name: Clone and install XRADIO
-        if: github.repository != 'casangi/xradio'
         run: |
-          ORIGINAL_DIR=$(pwd)
-          cd ..
-          git clone --branch "${{ inputs.xradio_ref }}" https://github.com/casangi/xradio.git
-          pip install -e xradio
-          cd "$ORIGINAL_DIR"
+          if [ -d "../xradio" ]; then
+            ORIGINAL_DIR=$(pwd)
+            cd ..
+            git clone --branch "${{ inputs.xradio_ref }}" https://github.com/casangi/xradio.git
+            pip install -e xradio
+            cd "$ORIGINAL_DIR"
+          fi
 
       - name: Clone and install GraphVIPER
-        if: github.repository != 'casangi/graphviper'
         run: |
-          ORIGINAL_DIR=$(pwd)
-          cd ..
-          git clone --branch "${{ inputs.graphviper_ref }}" https://github.com/casangi/graphviper.git
-          pip install -e graphviper
-          cd "$ORIGINAL_DIR"
+          if [ -d "../graphviper" ]; then
+            ORIGINAL_DIR=$(pwd)
+            cd ..
+            git clone --branch "${{ inputs.graphviper_ref }}" https://github.com/casangi/graphviper.git
+            pip install -e graphviper
+            cd "$ORIGINAL_DIR"
+          fi
 
       - name: Clone and install AstroVIPER
-        if: github.repository != 'casangi/astroviper'
         run: |
-          ORIGINAL_DIR=$(pwd)
-          cd ..
-          git clone --branch "${{ inputs.astroviper_ref }}" https://github.com/casangi/astroviper.git
-          pip install -e astroviper
-          cd "$ORIGINAL_DIR"
+          if [ -d "../astroviper" ]; then
+            ORIGINAL_DIR=$(pwd)
+            cd ..
+            git clone --branch "${{ inputs.astroviper_ref }}" https://github.com/casangi/astroviper.git
+            pip install -e astroviper
+            cd "$ORIGINAL_DIR"
+          fi
 
       - name: Install PR Package
         run: |
@@ -129,7 +133,6 @@ jobs:
           else
             pytest ../astroviper/tests
           fi
-
 
 # jobs:
 #   test-all:
@@ -175,7 +178,7 @@ jobs:
 #       #      echo "1 github.repository_owner=casangi"
 #       #      echo "2 github.repository=${{ github.repository }}"
 #       #      echo "3 casangi/toolviper"
-      
+
 #       # 1. If no ToolVIPER install from main
 #       - name: Clone and install ToolVIPER (main)
 #         if: github.repository != 'casangi/toolviper'
