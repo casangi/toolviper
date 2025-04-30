@@ -58,7 +58,7 @@ jobs:
 
       - name: Clone and install ToolVIPER
         run: |
-          if [ -d "../toolviper" ]; then
+          if [ ! -d "../toolviper" ]; then
             ORIGINAL_DIR=$(pwd)
             cd ..
             git clone --branch "${{ inputs.toolviper_ref }}" https://github.com/casangi/toolviper.git
@@ -68,7 +68,7 @@ jobs:
 
       - name: Clone and install XRADIO
         run: |
-          if [ -d "../xradio" ]; then
+          if [ ! -d "../xradio" ]; then
             ORIGINAL_DIR=$(pwd)
             cd ..
             git clone --branch "${{ inputs.xradio_ref }}" https://github.com/casangi/xradio.git
@@ -78,7 +78,7 @@ jobs:
 
       - name: Clone and install GraphVIPER
         run: |
-          if [ -d "../graphviper" ]; then
+          if [ ! -d "../graphviper" ]; then
             ORIGINAL_DIR=$(pwd)
             cd ..
             git clone --branch "${{ inputs.graphviper_ref }}" https://github.com/casangi/graphviper.git
@@ -88,7 +88,7 @@ jobs:
 
       - name: Clone and install AstroVIPER
         run: |
-          if [ -d "../astroviper" ]; then
+          if [ ! -d "../astroviper" ]; then
             ORIGINAL_DIR=$(pwd)
             cd ..
             git clone --branch "${{ inputs.astroviper_ref }}" https://github.com/casangi/astroviper.git
