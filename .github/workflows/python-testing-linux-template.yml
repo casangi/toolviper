@@ -36,8 +36,7 @@ jobs:
     - name: Install dependencies with pip
       run: |
         python -m pip install --upgrade pip
-        pip install .  # install your package
-        pip install pytest-cov
+        pip install ".[all]"  # install your package
     - name: Test with pytest
       run: |
         pytest -v ${{ inputs.test-path }} \
