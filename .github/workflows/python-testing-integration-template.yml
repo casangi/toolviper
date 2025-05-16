@@ -72,7 +72,7 @@ jobs:
             ORIGINAL_DIR=$(pwd)
             cd ..
             git clone --branch "${{ inputs.xradio_ref }}" https://github.com/casangi/xradio.git
-            pip install -e xradio
+            pip install -e "xradio[all]"
             cd "$ORIGINAL_DIR"
           fi
 
@@ -82,7 +82,7 @@ jobs:
             ORIGINAL_DIR=$(pwd)
             cd ..
             git clone --branch "${{ inputs.graphviper_ref }}" https://github.com/casangi/graphviper.git
-            pip install -e graphviper
+            pip install -e "graphviper[all]"
             cd "$ORIGINAL_DIR"
           fi
 
@@ -92,13 +92,13 @@ jobs:
             ORIGINAL_DIR=$(pwd)
             cd ..
             git clone --branch "${{ inputs.astroviper_ref }}" https://github.com/casangi/astroviper.git
-            pip install -e astroviper
+            pip install -e "astroviper[all]"
             cd "$ORIGINAL_DIR"
           fi
 
       - name: Install PR Package
         run: |
-          pip install -e .
+          pip install -e ".[all]"
 
       - name: Run ToolVIPER tests
         run: |

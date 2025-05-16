@@ -34,8 +34,7 @@ jobs:
     - name: Install dependencies with pip
       run: |
         python -m pip install --upgrade pip
-        python -m pip install .
-        pip install ".[interactive]" #The magic if not present download fails in ipynb
+        pip install ".[all]" #The magic if not present download fails in ipynb
 
     - name: Run Jupyter notebooks
       run: |
