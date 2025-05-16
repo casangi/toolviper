@@ -51,11 +51,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           # install the current package
-          pip install .
+          pip install ".[all]"
           pip install casatools 
           # trigger `casa-data` fetch
-          mkdir -p ~/.casa/data && python -c 'import casatools'          
-          pip install pytest-cov
+          mkdir -p ~/.casa/data && python -c 'import casatools'
 
       - name: Test with pytest
         run: |
