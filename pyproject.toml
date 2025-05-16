@@ -53,3 +53,28 @@ docs = [
     'twine',
     'pandoc'
 ]
+
+all = [
+    'pytest',
+    'pytest-cov',
+    'pytest-html',
+    'matplotlib',
+    'prettytable',
+    'jupyterlab',
+    'ipykernel',
+    'ipympl',
+    'ipython',
+    'jupyter-client',
+    'ipykernel',
+    'ipympl',
+    'ipython',
+    'jupyter-client',
+    'nbsphinx',
+    'recommonmark',
+    'scanpydoc',
+    'sphinx-autoapi',
+    'sphinx-autosummary-accessors',
+    'sphinx_rtd_theme',
+    'twine',
+    'pandoc'
+]
