@@ -106,7 +106,7 @@ class TestToolViperClient:
         memory_per_thread = -1
         n_threads = 0
 
-        # Not sure if this test is deterministic. The tests are done using github actions and, I am sure the container
+        # Not sure if this test is deterministic. The tests are done using GitHub actions, and I am sure the container
         # environment will change over time. Hopefully, the test pulls out the most consistently calculated case.
 
         worker_items = client.cluster.scheduler_info["workers"].items()
@@ -122,7 +122,7 @@ class TestToolViperClient:
             ):
                 memory_per_thread = temp_memory_per_thread
 
-        assert client.thread_info()["n_threads"] == 12
+        assert client.thread_info()["n_threads"] == n_threads
         assert client.thread_info()["memory_per_thread"] == memory_per_thread
 
         client.shutdown()
