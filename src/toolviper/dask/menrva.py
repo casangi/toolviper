@@ -28,6 +28,11 @@ class MenrvaClient(distributed.Client):
     plugin management and more extended features.
     """
 
+    def __init__(self, cluster):
+        super().__init__()
+
+        self.n_workers = len(cluster.workers.keys())
+
     def _repr_html_(self):
         try:
             distributed.Client.current()
@@ -43,7 +48,7 @@ class MenrvaClient(distributed.Client):
         except PackageNotFoundError:
             JUPYTERLAB = False
 
-        scheduler, info = self._get_scheduler_info()
+        scheduler, info = self._get_scheduler_info(self.n_workers)
 
         return get_template("client.html.j2").render(
             id=self.id,
