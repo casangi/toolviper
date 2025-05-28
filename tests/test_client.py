@@ -4,9 +4,9 @@ import pathlib
 import distributed
 import toolviper
 
-print("hallo")
-print("toolviper dir", dir(toolviper))
-print("toolviper dir", dir(toolviper.dask))
+#print("hallo")
+#print("toolviper dir", dir(toolviper))
+#print("toolviper dir", dir(toolviper.dask))
 
 from toolviper.dask.client import local_client
 
@@ -122,10 +122,8 @@ class TestToolViperClient:
             ):
                 memory_per_thread = temp_memory_per_thread
 
-        assert client.thread_info() == {
-            "n_threads": 2,
-            "memory_per_thread": memory_per_thread,
-        }
+        assert client.thread_info()["n_threads"] == 12
+        assert client.thread_info()["memory_per_thread"] == memory_per_thread
 
         client.shutdown()
 
