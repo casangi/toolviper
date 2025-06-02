@@ -70,6 +70,7 @@ def print_libraries_availability(spec: dict[str, bool]):
         f"{colorize.green('Available functions of this environment')}: {', '.join(loaded_lib)}"
     )
 
+
 def get_thread_info() -> Dict[str, float]:
     # This just brings the built-in thread info function into the client module.
     return toolviper.dask.menrva.MenrvaClient.thread_info()

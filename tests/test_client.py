@@ -2,11 +2,6 @@ import os
 import re
 import pathlib
 import distributed
-import toolviper
-
-#print("hallo")
-#print("toolviper dir", dir(toolviper))
-#print("toolviper dir", dir(toolviper.dask))
 
 from toolviper.dask.client import local_client
 
@@ -161,7 +156,6 @@ class TestToolViperClient:
         except FileNotFoundError:
             assert False
 
-
     def test_load_libraries(self):
         from toolviper.dask.client import load_libraries
 
@@ -178,4 +172,3 @@ class TestToolViperClient:
         _set_up_dask(local_directory=pathlib.Path(".").cwd())
 
         assert dask.config.config["distributed"]["scheduler"]["allowed-failures"] == 10
-
