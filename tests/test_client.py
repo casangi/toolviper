@@ -160,3 +160,22 @@ class TestToolViperClient:
 
         except FileNotFoundError:
             assert False
+
+
+    def test_load_libraries(self):
+        from toolviper.dask.client import load_libraries
+
+        libraries = load_libraries(name="CUDA", libs="dask_cuda")
+
+        # Assuming github actions doesn't have CUDA installed
+        assert libraries.get("CUDA") == False
+
+    def test__set_up_dask(self):
+        import dask
+
+        from toolviper.dask.client import _set_up_dask
+
+        _set_up_dask(local_directory=pathlib.Path(".").cwd())
+
+        assert dask.config.config["distributed"]["scheduler"]["allowed-failures"] == 10
+
