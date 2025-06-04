@@ -19,7 +19,7 @@ colorize = console.Colorize()
 def version():
     # Load the file dropbox file meta data.
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
-        ".dropbox/file.download.json"
+        ".cloudflare/file.download.json"
     )
 
     # Verify that the download metadata exists and updates if not.
@@ -55,8 +55,8 @@ def download(
         No return
     """
 
-    toolviper.utils.data.update()
-
+    #toolviper.utils.data.update()
+    logger.info(f"Downloading [cloudflare]: {file}")
     if not pathlib.Path(folder).resolve().exists():
         toolviper.utils.logger.info(
             f"Creating path:{colorize.blue(str(pathlib.Path(folder).resolve()))}"
@@ -74,7 +74,7 @@ def download(
         if n_threads is None:
             n_threads = _get_usable_threads(len(file))
 
-        logger.debug(f"Initializing downloader with {n_threads} threads.")
+        logger.debug(f"Initializing [cloudflare] downloader with {n_threads} threads.")
 
         _print_file_queue(file)
 
@@ -92,7 +92,7 @@ def list_files():
     table = Table(show_header=True, show_lines=True)
 
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
-        ".dropbox/file.download.json"
+        ".cloudflare/file.download.json"
     )
 
     # Verify that the download metadata exist and update if not.
@@ -121,7 +121,7 @@ def list_files():
 
 def get_files():
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
-        ".dropbox/file.download.json"
+        ".cloudflare/file.download.json"
     )
 
     # Verify that the download metadata exists and updates if not.
@@ -134,9 +134,9 @@ def get_files():
 
 
 def update():
-    meta_data_path = pathlib.Path(__file__).parent.joinpath(".dropbox")
+    meta_data_path = pathlib.Path(__file__).parent.joinpath(".cloudflare")
 
-    _makedir(str(pathlib.Path(__file__).parent), ".dropbox")
+    _makedir(str(pathlib.Path(__file__).parent), ".cloudflare")
 
     file_meta_data = {
         "metadata": {
@@ -210,12 +210,8 @@ def _is_notebook() -> bool:
 
 def _get_from_cloudflare(file: str, folder: str, file_meta_data: dict, bar=True) -> None:
     fullname = file_meta_data["metadata"][file]["file"]
-    id = file_meta_data["metadata"][file]["id"]
-    rlkey = file_meta_data["metadata"][file]["rlkey"]
 
-    url = "https://www.dropbox.com/scl/fi/{id}/{file}?rlkey={rlkey}".format(
-        id=id, file=fullname, rlkey=rlkey
-    )
+    url = "http://downloadnrao.org/{file}".format(file=fullname)
 
     r = requests.get(url, stream=True, headers={"user-agent": "Wget/1.16 (linux-gnu)"})
     total = int(r.headers.get("content-length", 0))
@@ -273,7 +269,7 @@ def _download(file: str, folder: str = ".") -> NoReturn:
 
     # Load the file dropbox file meta data.
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
-        ".dropbox/file.download.json"
+        ".cloudflare/file.download.json"
     )
 
     if meta_data_path.exists():
@@ -336,7 +332,7 @@ def _makedir(path, folder):
 
 def _verify_metadata_file():
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
-        ".dropbox/file.download.json"
+        ".cloudflare/file.download.json"
     )
 
     if not meta_data_path.exists():
