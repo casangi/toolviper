@@ -2,14 +2,14 @@ import logging
 import multiprocessing
 import os
 import pathlib
-from importlib import import_module
-from importlib.util import find_spec
-from typing import Dict, Union
-
 import dask
 import dask_jobqueue
 import distributed
 import psutil
+
+from importlib import import_module
+from importlib.util import find_spec
+from typing import Dict, Union
 
 import toolviper.dask.menrva
 import toolviper.utils.console as console
@@ -58,7 +58,7 @@ def load_libraries(name: str, libs: Union[str, list[str]]) -> dict[str, bool]:
 
 
 def print_libraries_availability(spec: dict[str, bool]):
-    """Print contents of available_specs.
+    """Print the contents of available_specs.
 
     Parameters
     ----------
@@ -66,23 +66,9 @@ def print_libraries_availability(spec: dict[str, bool]):
         an instance of available_specs
     """
     loaded_lib = [k for k, v in spec.items() if v]
-    logger.info(
+    logger.debug(
         f"{colorize.green('Available functions of this environment')}: {', '.join(loaded_lib)}"
     )
-
-
-"""
-load libraries related functions of a distributed environment
-'available_specs' contains the function name and a flag that the function was loaded successfully 
-"""
-
-logger.info(colorize.green("Checking functions availability:"))
-available_specs = {
-    **load_libraries("slurm", "dask_jobqueue"),
-    **load_libraries("dask_ssh", ["asyncssh", "jupyter_server_proxy", "paramiko"]),
-    **load_libraries("CUDA", "dask_cuda"),
-}
-print_libraries_availability(available_specs)
 
 
 def get_thread_info() -> Dict[str, float]:
@@ -423,6 +409,20 @@ def distributed_client(
 
     _set_up_dask(dask_local_dir)
 
+    """
+    load libraries related functions of a distributed environment
+    'available_specs' contains the function name and a flag that the function was loaded successfully 
+    """
+
+    logger.debug(colorize.green("Checking functions availability:"))
+    available_specs = {
+        **load_libraries("slurm", "dask_jobqueue"),
+        **load_libraries("dask_ssh", ["asyncssh", "jupyter_server_proxy", "paramiko"]),
+        **load_libraries("CUDA", "dask_cuda"),
+    }
+
+    print_libraries_availability(available_specs)
+
     # This will work as long as the scheduler path isn't in some outside directory. Being that it is a plugin specific
     # to this module, I think keeping it static in the module directory it good.
     plugin_path = str(pathlib.Path(__file__).parent.resolve().joinpath("plugins/"))
@@ -563,6 +563,20 @@ def slurm_cluster_client(
     logger.setup_logger(**log_params)
 
     _set_up_dask(dask_local_dir)
+
+    """
+    load libraries related functions of a distributed environment
+    'available_specs' contains the function name and a flag that the function was loaded successfully 
+    """
+
+    logger.debug(colorize.green("Checking functions availability:"))
+    available_specs = {
+        **load_libraries("slurm", "dask_jobqueue"),
+        **load_libraries("dask_ssh", ["asyncssh", "jupyter_server_proxy", "paramiko"]),
+        **load_libraries("CUDA", "dask_cuda"),
+    }
+
+    print_libraries_availability(available_specs)
 
     plugin_path = str(pathlib.Path(__file__).parent.resolve().joinpath("plugins/"))
 

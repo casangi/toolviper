@@ -2,9 +2,6 @@ import os
 
 from importlib.metadata import version
 from toolviper.utils.logger import setup_logger
-import toolviper.dask
-import toolviper.utils
-import toolviper.config
 
 __version__ = version("toolviper")
 

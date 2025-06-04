@@ -2,11 +2,6 @@ import os
 import re
 import pathlib
 import distributed
-import toolviper
-
-print("hallo")
-print("toolviper dir", dir(toolviper))
-print("toolviper dir", dir(toolviper.dask))
 
 from toolviper.dask.client import local_client
 
@@ -106,7 +101,7 @@ class TestToolViperClient:
         memory_per_thread = -1
         n_threads = 0
 
-        # Not sure if this test is deterministic. The tests are done using github actions and, I am sure the container
+        # Not sure if this test is deterministic. The tests are done using GitHub actions, and I am sure the container
         # environment will change over time. Hopefully, the test pulls out the most consistently calculated case.
 
         worker_items = client.cluster.scheduler_info["workers"].items()
@@ -122,10 +117,8 @@ class TestToolViperClient:
             ):
                 memory_per_thread = temp_memory_per_thread
 
-        assert client.thread_info() == {
-            "n_threads": 2,
-            "memory_per_thread": memory_per_thread,
-        }
+        assert client.thread_info()["n_threads"] == n_threads
+        assert client.thread_info()["memory_per_thread"] == memory_per_thread
 
         client.shutdown()
 
@@ -162,3 +155,20 @@ class TestToolViperClient:
 
         except FileNotFoundError:
             assert False
+
+    def test_load_libraries(self):
+        from toolviper.dask.client import load_libraries
+
+        libraries = load_libraries(name="CUDA", libs="dask_cuda")
+
+        # Assuming github actions doesn't have CUDA installed
+        assert libraries.get("CUDA") == False
+
+    def test__set_up_dask(self):
+        import dask
+
+        from toolviper.dask.client import _set_up_dask
+
+        _set_up_dask(local_directory=pathlib.Path(".").cwd())
+
+        assert dask.config.config["distributed"]["scheduler"]["allowed-failures"] == 10

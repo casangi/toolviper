@@ -223,7 +223,10 @@ def _get_from_dropbox(file: str, folder: str, file_meta_data: dict, bar=True) ->
     fullname = str(pathlib.Path(folder).joinpath(fullname))
 
     if _is_notebook():
-        from tqdm.notebook import tqdm
+        # This is due to a failure in python > 3.10 with tdqm fix this later
+        # from tqdm.notebook import tqdm
+        from tqdm import tqdm
+
     else:
         from tqdm import tqdm
 
