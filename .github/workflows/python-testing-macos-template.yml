@@ -33,6 +33,7 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           channels: conda-forge
+          channel-priority: strict
 
       - run: conda install python-casacore
       
