@@ -52,7 +52,7 @@ jobs:
           python -m pip install --upgrade pip
           # install the current package
           pip install ".[all]"
-          pip uninstall python-casacore 
+          pip uninstall python-casacore -y
           pip install casatools 
           # trigger `casa-data` fetch
           mkdir -p ~/.casa/data && python -c 'import casatools'
