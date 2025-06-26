@@ -35,6 +35,10 @@
         "worker_log_params":{
             "type":["dict"],
             "nullable": true
+        },
+        "dashboard_port": {
+            "type": ["int", "str"],
+            "nullable": true
         }
     }
 }

@@ -6,6 +6,7 @@ import dask
 import dask_jobqueue
 import distributed
 import psutil
+import socket
 
 from importlib import import_module
 from importlib.util import find_spec
@@ -113,6 +114,12 @@ def get_cluster() -> Union[None, distributed.LocalCluster]:
     return cluster
 
 
+def _is_port_in_use(port: int, host: str = "127.0.0.1") -> bool:
+    """Checks if a TCP port is in use on localhost."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex((host, port)) == 0
+
+
 @parameter.validate()
 def local_client(
     cores: int = None,
@@ -124,6 +131,7 @@ def local_client(
     log_params: Union[None, Dict] = None,
     worker_log_params: Union[None, Dict] = None,
     serial_execution: bool = False,
+    dashboard_port: Union[int, str] = 8787,
 ) -> Union[distributed.Client, None]:
     """ Setup dask cluster and logger.
 
@@ -151,6 +159,10 @@ def local_client(
     worker_log_params : dict
         worker_log_params: Keys as same as log_params, default values given in `Additional \
         Information`_.
+    dashboard_port : int or str
+        Port to expose the Dask dashboard (default: 8787).
+        Use an integer like 8787 for a fixed port, or ":0" to let the OS pick a free one.
+        You may also specify a hostname or IP, e.g., "localhost:8789" or "0.0.0.0:8790".
 
     .. _Description:
 
@@ -212,8 +224,6 @@ def local_client(
         **worker_log_params,
     }
 
-    # If the user wants to change the global logger name from the
-    # default value of toolviper
     os.environ["VIPER_LOGGER_NAME"] = log_params["logger_name"]
 
     if local_dir:
@@ -277,27 +287,73 @@ def local_client(
         memory_limit = "".join(
             (str(round((psutil.virtual_memory().available / (1024**2)) / cores)), "MB")
         )
+    # ---------------------------------------------------------------------------
+    # NOTE FOR CODE REVIEWERS:
+    #
+    # The following blocks are commented out, not deleted, to preserve visibility
+    # during review. These blocks previously attempted to reuse an existing Dask
+    # client or cluster, but were removed to ensure deterministic behavior.
+    #
+    # Git diff tools may show excessive segmentation for this change.
+    # To reduce visual diff noise, you can use the following command:
+    #
+    #     git diff -w --word-diff=color src/toolviper/dask/client.py
+    #
+    # This will suppress whitespace-only changes and highlight inline edits.
+    # ---------------------------------------------------------------------------
+    # Removed implicit client reuse in favor of deterministic creation of new LocalCluster
+    # Old block retained for clarity during code review
+    #
+    # try:
+    #     cluster = distributed.Client.current().cluster
+    # except ValueError:
+    #     cluster = distributed.LocalCluster(
+    #         n_workers=cores,
+    #         threads_per_worker=1,
+    #         processes=True,
+    #         memory_limit=memory_limit,
+    #         silence_logs=logging.ERROR,
+    #     )
 
-    try:
-        cluster = distributed.Client.current().cluster
+    # Determine dashboard address
+    if isinstance(dashboard_port, int):
+        if _is_port_in_use(dashboard_port):
+            logger.warning(
+                f"Port {dashboard_port} already in use. Falling back to random port (':0')."
+            )
+            dashboard_address = ":0"
+        else:
+            dashboard_address = f":{dashboard_port}"
+    else:
+        dashboard_address = dashboard_port
 
-    except ValueError:
+    cluster = distributed.LocalCluster(
+        n_workers=cores,
+        threads_per_worker=1,
+        processes=True,
+        memory_limit=memory_limit,
+        silence_logs=logging.ERROR,
+        dashboard_address=f":{dashboard_port}" if isinstance(dashboard_port, int) else dashboard_port,
+    )
 
-        cluster = distributed.LocalCluster(
-            n_workers=cores,
-            threads_per_worker=1,
-            processes=True,
-            memory_limit=memory_limit,
-            silence_logs=logging.ERROR,  # , silence_logs=logging.ERROR #,resources={ 'GPU': 2}
-        )
+	# If the dashboard port is set to ":0", check which port is actually used
+    if dashboard_address == ":0":
+        actual_port = cluster.scheduler.address.split(":")[-1]
+        logger.info(f"Dask dashboard is now running on port {actual_port}.")
+    else:
+        logger.info(f"Dask dashboard is running on user-specified port {dashboard_port}.")
 
-    try:
-        client = distributed.Client.current()
+    # Removed implicit client reuse to avoid unpredictable worker count reuse
+    # Old block retained for clarity during code review
+    #
+    # try:
+    #     client = distributed.Client.current()
+    # except ValueError:
+    #     client = toolviper.dask.menrva.MenrvaClient(cluster)
+    #     client.get_versions(check=True)
 
-    except ValueError:
-
-        client = toolviper.dask.menrva.MenrvaClient(cluster)
-        client.get_versions(check=True)
+    client = toolviper.dask.menrva.MenrvaClient(cluster)
+    client.get_versions(check=True)
 
     # When constructing a graph that has local cache enabled all workers need to be up and running.
     if local_cache or wait_for_workers:
@@ -411,7 +467,7 @@ def distributed_client(
 
     """
     load libraries related functions of a distributed environment
-    'available_specs' contains the function name and a flag that the function was loaded successfully 
+    'available_specs' contains the function name and a flag that the function was loaded successfully
     """
 
     logger.debug(colorize.green("Checking functions availability:"))
@@ -566,7 +622,7 @@ def slurm_cluster_client(
 
     """
     load libraries related functions of a distributed environment
-    'available_specs' contains the function name and a flag that the function was loaded successfully 
+    'available_specs' contains the function name and a flag that the function was loaded successfully
     """
 
     logger.debug(colorize.green("Checking functions availability:"))
