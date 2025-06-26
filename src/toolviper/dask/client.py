@@ -333,15 +333,19 @@ def local_client(
         processes=True,
         memory_limit=memory_limit,
         silence_logs=logging.ERROR,
-        dashboard_address=f":{dashboard_port}" if isinstance(dashboard_port, int) else dashboard_port,
+        dashboard_address=(
+            f":{dashboard_port}" if isinstance(dashboard_port, int) else dashboard_port
+        ),
     )
 
-	# If the dashboard port is set to ":0", check which port is actually used
+    # If the dashboard port is set to ":0", check which port is actually used
     if dashboard_address == ":0":
         actual_port = cluster.scheduler.address.split(":")[-1]
         logger.info(f"Dask dashboard is now running on port {actual_port}.")
     else:
-        logger.info(f"Dask dashboard is running on user-specified port {dashboard_port}.")
+        logger.info(
+            f"Dask dashboard is running on user-specified port {dashboard_port}."
+        )
 
     # Removed implicit client reuse to avoid unpredictable worker count reuse
     # Old block retained for clarity during code review
