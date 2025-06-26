@@ -6,7 +6,7 @@ on:
       python-versions:
         required: false
         type: string
-        default: '["3.11", "3.12", "3.13"]' 
+        default: '["3.11.12", "3.12", "3.13"]' 
       test-path:
         required: false
         type: string
@@ -22,9 +22,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["macos-latest"]
+        os: ["macos-13"]
         python-version: ${{ fromJson(inputs.python-versions) }}
     steps:
+      - name: Keep alive
+        run: |
+          while true; do echo "Still running..."; sleep 300; done &
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
