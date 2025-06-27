@@ -310,7 +310,7 @@ def local_client(
             log_params=worker_log_params,
         )
 
-    logger.info("Client " + str(client.dashboard_link))
+    logger.info("Dask Dashboard " + str(client.dashboard_link))
 
     return client
 
