@@ -290,7 +290,7 @@ def local_client(
         threads_per_worker=1,
         processes=True,
         memory_limit=memory_limit,
-        silence_logs=logging.ERROR,  # , silence_logs=logging.ERROR #,resources={ 'GPU': 2}
+        # silence_logs=logging.ERROR,  # , silence_logs=logging.ERROR #,resources={ 'GPU': 2}
         dashboard_address=dashboard_address,
     )
     client = toolviper.dask.menrva.MenrvaClient(cluster)
@@ -310,6 +310,7 @@ def local_client(
             log_params=worker_log_params,
         )
 
+    logger.info("Client " + str(client))
     logger.info("Dask Dashboard " + str(client.dashboard_link))
 
     return client
