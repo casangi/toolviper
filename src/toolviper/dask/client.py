@@ -123,15 +123,14 @@ def local_client(
     wait_for_workers: bool = True,
     log_params: Union[None, Dict] = None,
     worker_log_params: Union[None, Dict] = None,
+    dashboard_address: str = ":8787",
     serial_execution: bool = False,
 ) -> Union[distributed.Client, None]:
-    """ Setup dask cluster and logger.
+    """ Creates a local client, scheduler and workers using Dask Distributed LocalCluster (https://docs.dask.org/en/stable/deploying-python.html#reference) 
+    with Dask configuration tuned for VIPER and the option to use autorestrictor plugin and local cache.
 
     Parameters
     ----------
-    serial_execution : bool
-        This is an option that forces dask to run in serial mode while also setting up the logger to work. This is
-        really only appropriate for debugging.
     cores : int
         Number of cores in Dask cluster, defaults to None
     memory_limit : str
@@ -151,6 +150,14 @@ def local_client(
     worker_log_params : dict
         worker_log_params: Keys as same as log_params, default values given in `Additional \
         Information`_.
+        
+    dashboard_address: str 
+        Address on which to listen for the Bokeh diagnostics server like ‘localhost:8787’ or ‘0.0.0.0:8787’. Defaults to ‘:8787’. 
+        Set to None to disable the dashboard. Use ‘:0’ for a random port. See https://docs.dask.org/en/stable/deploying-python.html#reference for more information.
+
+    serial_execution : bool
+        This is an option that forces dask to run in serial mode while also setting up the logger to work. This is
+        really only appropriate for debugging.
 
     .. _Description:
 
@@ -176,7 +183,7 @@ def local_client(
     log_params["log_to_file"] : str
         Should messages log to file.
 
-    log_params["log_filee"] : str
+    log_params["log_file"] : str
         Name of log file to create. If none is given, the file name 'logger' will be used.
 
     Returns
@@ -278,26 +285,16 @@ def local_client(
             (str(round((psutil.virtual_memory().available / (1024**2)) / cores)), "MB")
         )
 
-    try:
-        cluster = distributed.Client.current().cluster
-
-    except ValueError:
-
-        cluster = distributed.LocalCluster(
-            n_workers=cores,
-            threads_per_worker=1,
-            processes=True,
-            memory_limit=memory_limit,
-            silence_logs=logging.ERROR,  # , silence_logs=logging.ERROR #,resources={ 'GPU': 2}
-        )
-
-    try:
-        client = distributed.Client.current()
-
-    except ValueError:
-
-        client = toolviper.dask.menrva.MenrvaClient(cluster)
-        client.get_versions(check=True)
+    cluster = distributed.LocalCluster(
+        n_workers=cores,
+        threads_per_worker=1,
+        processes=True,
+        memory_limit=memory_limit,
+        silence_logs=logging.ERROR,  # , silence_logs=logging.ERROR #,resources={ 'GPU': 2}
+        dashboard_address=dashboard_address,
+    )
+    client = toolviper.dask.menrva.MenrvaClient(cluster)
+    client.get_versions(check=True)
 
     # When constructing a graph that has local cache enabled all workers need to be up and running.
     if local_cache or wait_for_workers:
@@ -313,7 +310,7 @@ def local_client(
             log_params=worker_log_params,
         )
 
-    logger.info("Client " + str(client))
+    logger.info("Client " + str(client.dashboard_link))
 
     return client
 

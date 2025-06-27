@@ -22,6 +22,11 @@ from typing import Callable, Tuple, Dict, Any, Union
 colorize = console.Colorize()
 
 
+class MyClient(distributed.Client):
+    def my_custom_method(self):
+        print("This is my custom method!")
+
+
 class MenrvaClient(distributed.Client):
     """
     This and extended version of the general Dask distributed client that will allow for
@@ -29,7 +34,7 @@ class MenrvaClient(distributed.Client):
     """
 
     def __init__(self, cluster):
-        super().__init__()
+        super().__init__(cluster)
 
         self.n_workers = len(cluster.workers.keys())
 
