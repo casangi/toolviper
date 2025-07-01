@@ -29,7 +29,7 @@ class MenrvaClient(distributed.Client):
     """
 
     def __init__(self, cluster):
-        super().__init__()
+        super().__init__(cluster)
 
         self.n_workers = len(cluster.workers.keys())
 

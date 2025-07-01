@@ -6,6 +6,8 @@ import dask
 import dask_jobqueue
 import distributed
 import psutil
+import inspect
+import functools
 
 from importlib import import_module
 from importlib.util import find_spec
@@ -273,13 +275,16 @@ def local_client(
     if cores is None:
         cores = multiprocessing.cpu_count()
 
+
     if memory_limit is None:
         memory_limit = "".join(
             (str(round((psutil.virtual_memory().available / (1024**2)) / cores)), "MB")
         )
 
+
     try:
         cluster = distributed.Client.current().cluster
+
 
     except ValueError:
 
@@ -292,6 +297,7 @@ def local_client(
         )
 
     try:
+
         client = distributed.Client.current()
 
     except ValueError:
@@ -299,7 +305,7 @@ def local_client(
         client = toolviper.dask.menrva.MenrvaClient(cluster)
         client.get_versions(check=True)
 
-    # When constructing a graph that has local cache enabled all workers need to be up and running.
+    # When constructing a graph that has local cache enabled, all workers need to be up and running.
     if local_cache or wait_for_workers:
         client.wait_for_workers(n_workers=cores)
 
@@ -649,6 +655,41 @@ def slurm_cluster_client(
 
     return client
 
+
+def auto_client():
+    def function_wrapper(function):
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            persistent_client = False
+
+            if not get_client() is None:
+                client = get_client()
+                persistent_client = True
+            else:
+
+                # Get client inputs if they exist
+                arguments = inspect.getcallargs(function, *args, **kwargs)
+                if "client" in kwargs.keys():
+                    client = local_client(**kwargs["client"])
+
+                else:
+                    client = local_client()
+
+            try:
+                print(f"Dask dashboard started at: {client.dashboard_link}")
+
+                # Run the decorated function
+                result = function(*args, **kwargs)
+
+                return result
+            finally:
+                # Ensure the client is closed even if the function raises an exception
+                if not persistent_client:
+                    client.shutdown()
+
+        return wrapper
+
+    return function_wrapper
 
 def _set_up_dask(local_directory):
     if local_directory:

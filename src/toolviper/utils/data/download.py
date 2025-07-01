@@ -5,6 +5,9 @@ import zipfile
 import json
 import psutil
 import pathlib
+
+from partd.numpy import decompress
+
 import toolviper
 import concurrent.futures
 
@@ -22,7 +25,7 @@ def version():
         ".dropbox/file.download.json"
     )
 
-    # Verify that the download metadata exist and update if not.
+    # Verify that the download metadata exists and updates if not.
     _verify_metadata_file()
 
     with open(meta_data_path) as json_file:
@@ -124,7 +127,7 @@ def get_files():
         ".dropbox/file.download.json"
     )
 
-    # Verify that the download metadata exist and update if not.
+    # Verify that the download metadata exists and updates if not.
     _verify_metadata_file()
 
     with open(meta_data_path) as json_file:
@@ -309,6 +312,7 @@ def _download(file: str, folder: str = ".") -> NoReturn:
     fullname = str(pathlib.Path(folder).joinpath(fullname))
 
     _get_from_dropbox(file, folder, file_meta_data)
+
 
     if zipfile.is_zipfile(fullname):
         shutil.unpack_archive(filename=fullname, extract_dir=folder)
