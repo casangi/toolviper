@@ -19,7 +19,7 @@ jobs:
   #       run: echo "CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }}"
 
   call-testing-linux:
-    uses: casangi/toolviper/.github/workflows/python-testing-linux-template.yml@main
+    uses: casangi/toolviper/.github/workflows/python-testing-linux-template.yml@13-update-test-workflow-to-publish-results-in-testspace
     with:
       cov_project: "toolviper"
       test-path: "tests/"

@@ -44,6 +44,7 @@ jobs:
         --cov=${{ inputs.cov_project }} --no-cov-on-fail \
         --cov-report=html --cov-report=xml --doctest-modules \
         --junitxml=junit.xml -o junit_family=legacy
+        ls -l .
 
     - name: Upload pytest test results and coverage reports
       uses: actions/upload-artifact@v4
@@ -69,4 +70,19 @@ jobs:
       uses: codecov/test-results-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        slug: casangi/graphviper
+        slug: ${{ github.repository }}
+
+    - name: Setup Testspace
+      uses: testspace-com/setup-testspace@v1
+      with:
+        domain: 'casangi'
+        project: '${{ inputs.cov_project }}-${{ matrix.python-version }}'
+
+    - name: Publish test results to Testspace
+      run: |
+        testspace "[${{ inputs.cov_project }}/${{ matrix.python-version }}]/*.xml" --link=codecov
+      if: always()
+
+
+ 
+
