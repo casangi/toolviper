@@ -285,8 +285,7 @@ def local_client(
 
     if memory_limit is None:
         memory_limit = "".join(
-            (str(round((psutil.virtual_memory().available / (1024**2)) / cores)), "MB")
-        )
+            (str(round((psutil.virtual_memory().available / (1024**2)) / cores)), "MB"))
 
 
     try:
