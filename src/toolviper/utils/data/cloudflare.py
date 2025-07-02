@@ -1,11 +1,12 @@
 import os
-import sys
 import shutil
 import requests
 import zipfile
 import json
-import psutil
 import pathlib
+
+from babel.util import missing
+
 import toolviper
 
 from threading import Thread
@@ -38,9 +39,7 @@ def download(
     file: Union[str, list],
     folder: str = ".",
     threaded: bool = True,
-    n_threads: Union[None, int] = None,
     overwrite: bool = False,
-    decompress: bool = False,
 ) -> NoReturn:
     """
         Download tool for data stored externally.
@@ -52,12 +51,8 @@ def download(
         Destination folder.
     threaded : bool
         File metadata download type.
-    n_threads : int
-        Number of threads to use.
     overwrite : bool
         Should file be overwritten.
-    decompress : bool
-        Should file be unzipped.
 
     Returns
     -------
@@ -88,6 +83,9 @@ def download(
 
     tasks = []
 
+    # Make list of files that aren't available from cloudflare yet
+    missing_files = []
+
     # Load the file dropbox file meta data.
     if meta_data_path.exists():
         with open(meta_data_path) as json_file:
@@ -109,6 +107,7 @@ def download(
                         f"{colorize.blue('toolviper.utils.data.list_files()')}."
                     )
 
+                    missing_files.append(file_)
                     continue
 
                 tasks.append(
@@ -142,6 +141,10 @@ def download(
 
         for thread in threads:
             thread.join()
+
+    if len(missing_files) > 0:
+        logger.info(f"Trying to retrieve missing files drop box: {missing_files}")
+        toolviper.utils.data.dropbox(file=missing_files, folder=folder)
 
 def worker(progress, task_id, task):
     """Simulate work being done in a thread"""

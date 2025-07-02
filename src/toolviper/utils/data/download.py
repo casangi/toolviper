@@ -6,8 +6,6 @@ import json
 import psutil
 import pathlib
 
-from partd.numpy import decompress
-
 import toolviper
 import concurrent.futures
 
@@ -34,7 +32,7 @@ def version():
         logger.info(f'{file_meta_data["version"]}')
 
 
-def download(
+def dropbox(
     file: Union[str, list],
     folder: str = ".",
     threaded: bool = True,
