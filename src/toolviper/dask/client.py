@@ -282,15 +282,13 @@ def local_client(
     if cores is None:
         cores = multiprocessing.cpu_count()
 
-
     if memory_limit is None:
         memory_limit = "".join(
-            (str(round((psutil.virtual_memory().available / (1024**2)) / cores)), "MB"))
-
+            (str(round((psutil.virtual_memory().available / (1024**2)) / cores)), "MB")
+        )
 
     try:
         cluster = distributed.Client.current().cluster
-
 
     except ValueError:
 
@@ -299,8 +297,8 @@ def local_client(
             threads_per_worker=1,
             processes=True,
             memory_limit=memory_limit,
-            #silence_logs=logging.ERROR,  # , silence_logs=logging.ERROR #,resources={ 'GPU': 2}
-            dashboard_address=dashboard_address
+            # silence_logs=logging.ERROR,  # , silence_logs=logging.ERROR #,resources={ 'GPU': 2}
+            dashboard_address=dashboard_address,
         )
 
     try:
@@ -697,6 +695,7 @@ def auto_client():
         return wrapper
 
     return function_wrapper
+
 
 def _set_up_dask(local_directory):
     if local_directory:

@@ -78,13 +78,15 @@ def download(
     finally:
         if not pathlib.Path(folder).resolve().exists():
             toolviper.utils.logger.info(
-                    f"Creating path:{colorize.blue(str(pathlib.Path(folder).resolve()))}"
+                f"Creating path:{colorize.blue(str(pathlib.Path(folder).resolve()))}"
             )
             pathlib.Path(folder).resolve().mkdir()
 
     logger.debug(f"Initializing [cloudflare] downloader ...")
 
-    meta_data_path = pathlib.Path(__file__).parent.joinpath(".cloudflare/file.download.json")
+    meta_data_path = pathlib.Path(__file__).parent.joinpath(
+        ".cloudflare/file.download.json"
+    )
 
     tasks = []
 
@@ -101,7 +103,6 @@ def download(
                     logger.info(f"File exists: {str(full_file_path)}")
                     continue
 
-
                 if file_ not in file_meta_data["metadata"].keys():
                     logger.error(f"Requested file not found: {file_}")
                     logger.info(
@@ -116,7 +117,7 @@ def download(
                         "description": file_,
                         "metadata": file_meta_data["metadata"][file_],
                         "folder": folder,
-                        "visible": True
+                        "visible": True,
                     }
                 )
 
@@ -128,12 +129,13 @@ def download(
         toolviper.utils.data.update()
         return None
 
-
     threads = []
     progress = Progress()
 
     with progress:
-        task_ids = [progress.add_task(task["description"]) for task in tasks if len(tasks) > 0]
+        task_ids = [
+            progress.add_task(task["description"]) for task in tasks if len(tasks) > 0
+        ]
 
         for i, task in enumerate(tasks):
             thread = Thread(target=worker, args=(progress, task_ids[i], task))
@@ -143,12 +145,15 @@ def download(
         for thread in threads:
             thread.join()
 
+
 def worker(progress, task_id, task):
     """Simulate work being done in a thread"""
 
     fullname = task["metadata"]["file"]
 
-    url = f"http://downloadnrao.org/{task["metadata"]["path"]}/{task["metadata"]["file"]}"
+    url = (
+        f"http://downloadnrao.org/{task["metadata"]["path"]}/{task["metadata"]["file"]}"
+    )
 
     r = requests.get(url, stream=True, headers={"user-agent": "Wget/1.16 (linux-gnu)"})
 
@@ -166,7 +171,6 @@ def worker(progress, task_id, task):
 
         # Let's clean up after ourselves
         os.remove(fullname)
-
 
 
 def list_files():
@@ -225,24 +229,22 @@ def update():
     _makedir(str(pathlib.Path(__file__).parent), ".cloudflare")
 
     file_meta_data = {
-            "file": "file.download.json",
-            "path": "/",
-            "dtype": "JSON",
-            "telescope": "NA",
-            "size": "13575",
-            "mode": "NA"
-        }
+        "file": "file.download.json",
+        "path": "/",
+        "dtype": "JSON",
+        "telescope": "NA",
+        "size": "13575",
+        "mode": "NA",
+    }
 
     tasks = {
-            "description": "file.download.json",
-            "metadata": file_meta_data,
-            "folder": meta_data_path,
-            "visible": False,
-        }
-
+        "description": "file.download.json",
+        "metadata": file_meta_data,
+        "folder": meta_data_path,
+        "visible": False,
+    }
 
     logger.info("Updating file metadata information ... ")
-
 
     progress = Progress()
     task_id = progress.add_task(tasks["description"])
@@ -267,7 +269,6 @@ def _print_file_queue(files: list) -> NoReturn:
         table.add_row(f"[magenta]{file}[/magenta]")
 
     console.print(table)
-
 
 
 def _makedir(path, folder):
