@@ -164,6 +164,7 @@ def worker(progress, task_id, task):
                 size += fd.write(chunk)
                 progress.update(task_id, completed=size, visible=task["visible"])
 
+
     if zipfile.is_zipfile(fullname):
         shutil.unpack_archive(filename=fullname, extract_dir=task["folder"])
 
