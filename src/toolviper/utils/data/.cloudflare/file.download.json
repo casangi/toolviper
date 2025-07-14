@@ -1,36 +1,12 @@
 {
     "version": "v0.0.15",
     "metadata": {
-        "ea25_cal_small_before_fixed.split.ms": {
-            "file": "ea25_cal_small_before_fixed.split.ms.zip",
-            "path": "radps/measurement_set",
-            "dtype": "CASA MS v2",
-            "telescope": "VLA",
-            "size": "150031008",
-            "mode": "Holography"
-        },
-        "ea25_cal_small_after_fixed.split.ms": {
-            "file": "ea25_cal_small_after_fixed.split.ms.zip",
-            "path": "radps/measurement_set",
-            "dtype": "CASA MS v2",
-            "telescope": "VLA",
-            "size": "150031008",
-            "mode": "Holography"
-        },
-        "J1924-2914.ms.calibrated.split.SPW3": {
-            "file": "J1924-2914.ms.calibrated.split.SPW3.zip",
-            "path": "radps/measurement_set",
-            "dtype": "CASA MS v2",
-            "telescope": "ALMA",
-            "size": "0.055",
-            "mode": "Holography"
-        },
         "extract_holog_verification.json": {
             "file": "extract_holog_verification.json",
             "path": "radps/measurement_set",
             "dtype": "json",
             "telescope": "na",
-            "size": "0.000004",
+            "size": "967",
             "mode": "na"
         },
         "holog_numerical_verification.json": {
@@ -38,7 +14,7 @@
             "path": "radps/measurement_set",
             "dtype": "json",
             "telescope": "na",
-            "size": "0.000004",
+            "size": "1033",
             "mode": "na"
         },
         "locit-input-pha.cal": {
@@ -46,7 +22,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA Cal Table",
             "telescope": "VLA",
-            "size": "0.000468",
+            "size": "92293",
             "mode": "antenna location cal table"
         },
         "panel_cutoff_mask": {
@@ -54,7 +30,7 @@
             "path": "radps/measurement_set",
             "dtype": "npy",
             "telescope": "na",
-            "size": "0.000348",
+            "size": "178212",
             "mode": "na"
         },
         "heuristic_model": {
@@ -62,7 +38,7 @@
             "path": "radps/measurement_set",
             "dtype": "bin",
             "telescope": "na",
-            "size": "0.000004",
+            "size": "556",
             "mode": "na"
         },
         "panel_test_files": {
@@ -70,7 +46,7 @@
             "path": "radps/measurement_set",
             "dtype": "na",
             "telescope": "na",
-            "size": "",
+            "size": "402916",
             "mode": "na"
         },
         "AA2-Mid-sim_00000.ms": {
@@ -78,7 +54,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "SKA Mid",
-            "size": "0.029",
+            "size": "14710912",
             "mode": "Simulated Interferometer"
         },
         "Antennae_M8.img.zarr": {
@@ -94,7 +70,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ALMA",
-            "size": "0.202",
+            "size": "189716793",
             "mode": "Interferometer Mosaic"
         },
         "Antennae_North.cal.lsrk.py39.vis.zarr": {
@@ -102,7 +78,7 @@
             "path": "radps/measurement_set",
             "dtype": "zarr",
             "telescope": "ALMA",
-            "size": "0.207",
+            "size": "203421178",
             "mode": "Interferometer Mosaic"
         },
         "Antennae_North.cal.lsrk.split.ms": {
@@ -110,7 +86,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ALMA",
-            "size": "0.0056",
+            "size": "1560578",
             "mode": "Interferometer Mosaic"
         },
         "Antennae_North.cal.lsrk.split.py39.vis.zarr": {
@@ -118,7 +94,7 @@
             "path": "radps/measurement_set",
             "dtype": "zarr",
             "telescope": "ALMA",
-            "size": "0.0047",
+            "size": "3358348",
             "mode": "Interferometer Mosaic"
         },
         "complex_valued_uv.im": {
@@ -126,7 +102,7 @@
             "path": "radps/image",
             "dtype": "image",
             "telescope": "Simulated",
-            "size": "0.768",
+            "size": "562110",
             "mode": "Simulated"
         },
         "demo_simulated.im": {
@@ -134,7 +110,7 @@
             "path": "radps/image",
             "dtype": "image",
             "telescope": "Simulated",
-            "size": "0.017",
+            "size": "15321745",
             "mode": "Simulated"
         },
         "no_mask.im": {
@@ -142,7 +118,7 @@
             "path": "radps/image",
             "dtype": "image",
             "telescope": "Simulated",
-            "size": "0.236",
+            "size": "4252",
             "mode": "Simulated"
         },
         "small_lofar.ms": {
@@ -150,7 +126,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "LOFAR",
-            "size": "0.021",
+            "size": "10091260",
             "mode": "Interferometer"
         },
         "small_meerkat.ms": {
@@ -158,7 +134,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "MeerKAT",
-            "size": "0.018",
+            "size": "2392258",
             "mode": "Interferometer"
         },
         "global_vlbi_gg084b_reduced.ms": {
@@ -166,7 +142,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "GLOBAL VLBI",
-            "size": "0.051",
+            "size": "15701018",
             "mode": "VLBI"
         },
         "VLBA_TL016B_split_lsrk.ms": {
@@ -174,7 +150,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "VLBA",
-            "size": "0.019",
+            "size": "9399847",
             "mode": "VLBI"
         },
         "ngEHT_E17A10.0.bin0000.source0000_split_lsrk.ms": {
@@ -182,7 +158,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ngEHT",
-            "size": "0.022",
+            "size": "11082603",
             "mode": "Simulated Interferometer"
         },
         "venus_ephem_test.ms": {
@@ -190,7 +166,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ALMA",
-            "size": "0.035",
+            "size": "16758430",
             "mode": "Interferometer Ephemeris"
         },
         "sdimaging.ms": {
@@ -198,7 +174,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ALMA",
-            "size": "0.035",
+            "size": "29718841",
             "mode": "Single Dish"
         },
         "ALMA_uid___A002_X1003af4_X75a3.split.avg.ms": {
@@ -206,7 +182,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ALMA",
-            "size": "0.028",
+            "size": "29593547",
             "mode": "Interferometer Ephemeris"
         },
         "VLASS3.2.sb45755730.eb46170641.60480.16266136574.split.v6.ms": {
@@ -214,23 +190,15 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "VLA",
-            "size": "0.066",
+            "size": "69019704",
             "mode": "Interferometer Ephemeris"
-        },
-        "feather_sim_sd_c1_pI.im": {
-            "file": "feather_sim_sd_c1_pI.im.zip",
-            "path": "radps/image",
-            "dtype": "image",
-            "telescope": "Simulated",
-            "size": "0.065",
-            "mode": "Simulated"
         },
         "feather_sim_vla_c1_pI.im": {
             "file": "feather_sim_vla_c1_pI.im.zip",
             "path": "radps/measurement_set",
             "dtype": "image",
             "telescope": "Simulated",
-            "size": "0.065",
+            "size": "59281653",
             "mode": "Simulated"
         },
         "ngEHT_E17A10.0.bin0000.source0000_split.ms": {
@@ -238,7 +206,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ngEHT",
-            "size": "0.022",
+            "size": "11099488",
             "mode": "Simulated"
         },
         "VLBA_TL016B_split.ms": {
@@ -246,7 +214,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "VLBA",
-            "size": "0.019",
+            "size": "9402465",
             "mode": "Interferometer"
         },
         "combine_weight_array": {
@@ -254,7 +222,7 @@
             "path": "radps/measurement_set",
             "dtype": "npy",
             "telescope": "na",
-            "size": "0.0094",
+            "size": "9750656",
             "mode": "na"
         },
         "uid___A002_X1015532_X1926f.small.ms": {
@@ -262,7 +230,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ALMA",
-            "size": "0.0065",
+            "size": "6299859",
             "mode": "Single Dish"
         },
         "uid___A002_Xae00c5_X2e6b.small.ms": {
@@ -270,7 +238,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ALMA",
-            "size": "0.0074",
+            "size": "7351298",
             "mode": "Single Dish"
         },
         "uid___A002_Xced5df_Xf9d9.small.ms": {
@@ -278,7 +246,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ALMA",
-            "size": "0.017",
+            "size": "17129127",
             "mode": "Single Dish"
         },
         "uid___A002_Xe3a5fd_Xe38e.small.ms": {
@@ -286,7 +254,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ALMA",
-            "size": "0.016",
+            "size": "16122776",
             "mode": "Single Dish"
         },
         "SNR_G55_10s.split.ms": {
@@ -294,7 +262,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "VLA",
-            "size": "0.009",
+            "size": "8648349",
             "mode": "Interferometer"
         },
         "VLASS3.2.sb45755730.eb46170641.60480.16266136574_spw10_split.ms": {
@@ -302,7 +270,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "VLASS",
-            "size": "3.36",
+            "size": "3612550230",
             "mode": "Interferometer"
         },
         "59755_eq_interleave_15.ms": {
@@ -310,7 +278,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ASKAP",
-            "size": "0.0075",
+            "size": "7493404",
             "mode": "Interferometer"
         },
         "59755_eq_interleave_0.ms": {
@@ -326,7 +294,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ASKAP",
-            "size": "0.0035",
+            "size": "3538081",
             "mode": "Interferometer"
         },
         "59754_altaz_2weights_0.ms": {
@@ -334,7 +302,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ASKAP",
-            "size": "0.0035",
+            "size": "3521937",
             "mode": "Interferometer"
         },
         "59750_altaz_2settings.ms": {
@@ -342,7 +310,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ASKAP",
-            "size": "0.0037",
+            "size": "3669608",
             "mode": "Interferometer"
         },
         "59749_bp_8beams_pattern.ms": {
@@ -350,7 +318,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "ASKAP",
-            "size": "0.0081",
+            "size": "8137335",
             "mode": "Interferometer"
         },
         "gaincal.test.zarr": {
@@ -358,7 +326,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v4",
             "telescope": "NA",
-            "size": "NA",
+            "size": "86962140",
             "mode": "NA"
         },
         "gmrt.ms": {
@@ -366,7 +334,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "GMRT",
-            "size": "0.002",
+            "size": "2125130",
             "mode": "Interferometer"
         },
         "feather.im": {
@@ -374,7 +342,7 @@
             "path": "radps/image",
             "dtype": "CASA Image",
             "telescope": "",
-            "size": "0.061",
+            "size": "61745323",
             "mode": "Interferometer"
         },
         "ska_low_sim_18s.ms": {
@@ -382,7 +350,7 @@
             "path": "radps/measurement_set",
             "dtype": "CASA MS v2",
             "telescope": "SKA Low",
-            "size": "0.0015",
+            "size": "8866100",
             "mode": "Simulated Interferometer"
         }
     }

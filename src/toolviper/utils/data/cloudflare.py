@@ -5,8 +5,6 @@ import zipfile
 import json
 import pathlib
 
-from babel.util import missing
-
 import toolviper
 
 from threading import Thread
