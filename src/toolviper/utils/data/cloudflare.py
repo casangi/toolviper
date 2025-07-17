@@ -159,7 +159,7 @@ def worker(progress, task_id, task):
     fullname = task["metadata"]["file"]
 
     url = (
-        f"http://downloadnrao.org/{task["metadata"]["path"]}/{task["metadata"]["file"]}"
+        f"http://downloadnrao.org/{task['metadata']['path']}/{task['metadata']['file']}"
     )
 
     r = requests.get(url, stream=True, headers={"user-agent": "Wget/1.16 (linux-gnu)"})
