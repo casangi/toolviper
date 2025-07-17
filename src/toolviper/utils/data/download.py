@@ -311,7 +311,6 @@ def _download(file: str, folder: str = ".") -> NoReturn:
 
     _get_from_dropbox(file, folder, file_meta_data)
 
-
     if zipfile.is_zipfile(fullname):
         shutil.unpack_archive(filename=fullname, extract_dir=folder)
 
