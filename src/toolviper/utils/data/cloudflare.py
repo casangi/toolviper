@@ -17,7 +17,7 @@ import toolviper.utils.console as console
 
 colorize = console.Colorize()
 
-PROGRESS_MAX_CHARACTERS = 24
+PROGRESS_MAX_CHARACTERS = 28
 
 def version():
     # Load the file dropbox file meta data.
