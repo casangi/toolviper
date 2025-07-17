@@ -17,6 +17,7 @@ import toolviper.utils.console as console
 
 colorize = console.Colorize()
 
+PROGRESS_MAX_CHARACTERS = 24
 
 def version():
     # Load the file dropbox file meta data.
@@ -36,7 +37,6 @@ def version():
 def download(
     file: Union[str, list],
     folder: str = ".",
-    threaded: bool = True,
     overwrite: bool = False,
 ) -> NoReturn:
     """
@@ -47,8 +47,6 @@ def download(
         Filename as stored on an external source.
     folder : str
         Destination folder.
-    threaded : bool
-        File metadata download type.
     overwrite : bool
         Should file be overwritten.
 
@@ -57,7 +55,7 @@ def download(
         No return
     """
 
-    logger.info(f"Downloading [cloudflare]: {file}")
+    logger.info("Downloading from [cloudflare] ...")
 
     if not isinstance(file, list):
         file = [file]
@@ -75,13 +73,12 @@ def download(
             )
             pathlib.Path(folder).resolve().mkdir()
 
-    logger.debug(f"Initializing [cloudflare] downloader ...")
 
     meta_data_path = pathlib.Path(__file__).parent.joinpath(".cloudflare/file.download.json")
 
     tasks = []
 
-    # Make list of files that aren't available from cloudflare yet
+    # Make a list of files that aren't available from cloudflare yet
     missing_files = []
 
     # Load the file dropbox file meta data.
@@ -108,12 +105,15 @@ def download(
                     missing_files.append(file_)
                     continue
 
+                name_format = lambda string: f"{string[:(PROGRESS_MAX_CHARACTERS - 4)]} ..." if len(string) > PROGRESS_MAX_CHARACTERS else string
+
                 tasks.append(
                     {
-                        "description": file_,
+                        "description": name_format(file_),
                         "metadata": file_meta_data["metadata"][file_],
                         "folder": folder,
-                        "visible": True
+                        "visible": True,
+                        "size": float(file_meta_data["metadata"][file_]["size"])
                     }
                 )
 
@@ -130,7 +130,7 @@ def download(
     progress = Progress()
 
     with progress:
-        task_ids = [progress.add_task(task["description"]) for task in tasks if len(tasks) > 0]
+        task_ids = [progress.add_task(task["description"], total=task["size"]) for task in tasks if len(tasks) > 0]
 
         for i, task in enumerate(tasks):
             thread = Thread(target=worker, args=(progress, task_ids[i], task))
@@ -157,11 +157,11 @@ def worker(progress, task_id, task):
 
     size = 0
     with open(fullname, "wb") as fd:
+
         for chunk in r.iter_content(chunk_size=1024):
             if chunk:
                 size += fd.write(chunk)
                 progress.update(task_id, completed=size, visible=task["visible"])
-
 
     if zipfile.is_zipfile(fullname):
         shutil.unpack_archive(filename=fullname, extract_dir=task["folder"])
@@ -231,7 +231,7 @@ def update():
             "path": "/",
             "dtype": "JSON",
             "telescope": "NA",
-            "size": "13575",
+            "size": "12484",
             "mode": "NA"
         }
 
@@ -252,7 +252,7 @@ def update():
     with progress:
         worker(progress, task_id, tasks)
 
-    # assert meta_data_path.exists() is True, logger.error("Unable to retrieve download metadata.")
+    assert meta_data_path.exists() is True, logger.error("Unable to retrieve download metadata.")
 
 
 def _print_file_queue(files: list) -> NoReturn:
