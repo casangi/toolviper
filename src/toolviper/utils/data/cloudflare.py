@@ -7,13 +7,13 @@ import pathlib
 
 import toolviper
 
+import toolviper.utils.logger as logger
+import toolviper.utils.console as console
+
 from threading import Thread
 from rich.progress import Progress
 
-import toolviper.utils.logger as logger
-
 from typing import NoReturn, Union
-import toolviper.utils.console as console
 
 colorize = console.Colorize()
 
@@ -253,6 +253,30 @@ def update():
         worker(progress, task_id, tasks)
 
     assert meta_data_path.exists() is True, logger.error("Unable to retrieve download metadata.")
+
+
+def get_file_size(path: str) -> Union[json, None]:
+    """
+    Get list file sizes in bytes for a given path. Only works for files; isn't recursive.
+    """
+    if not pathlib.Path(path).resolve().exists():
+        logger.error(f"Path not found...: {path}")
+
+        return None
+
+    file_size_dict = {}
+
+    for item in pathlib.Path(path).resolve().iterdir():
+        if pathlib.Path(item).resolve().is_file():
+            if item.name.endswith(".zip"):
+                item_ = item.name.split(".zip")[0]
+
+            else:
+                item_ = item.name
+
+            file_size_dict[item_] = os.path.getsize(pathlib.Path(item))
+
+    return file_size_dict
 
 
 def _print_file_queue(files: list) -> NoReturn:
