@@ -20,7 +20,7 @@ colorize = console.Colorize()
 PROGRESS_MAX_CHARACTERS = 28
 
 
-def version():
+def version()->NoReturn:
     # Load the file dropbox file meta data.
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
         ".cloudflare/file.download.json"
@@ -153,7 +153,7 @@ def download(
         toolviper.utils.data.dropbox(file=missing_files, folder=folder)
 
 
-def worker(progress, task_id, task):
+def worker(progress: Progress, task_id: int , task: dict)->NoReturn:
     """Simulate work being done in a thread"""
 
     fullname = task["metadata"]["file"]
@@ -181,7 +181,10 @@ def worker(progress, task_id, task):
         os.remove(fullname)
 
 
-def list_files():
+def list_files()->NoReturn:
+    """
+    List all files in cloudflare
+    """
     from rich.table import Table
     from rich.console import Console
 
@@ -217,7 +220,11 @@ def list_files():
     console.print(table)
 
 
-def get_files():
+def get_files()->NoReturn:
+    """
+    Get all files available in cloudflare manifest. This is retrieved from the local cloudflare
+    metadata file.
+    """
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
         ".cloudflare/file.download.json"
     )
@@ -231,7 +238,10 @@ def get_files():
         return list(file_meta_data["metadata"].keys())
 
 
-def update():
+def update()->NoReturn:
+    """
+    Update cloudflare manifest.
+    """
     meta_data_path = pathlib.Path(__file__).parent.joinpath(".cloudflare")
 
     _makedir(str(pathlib.Path(__file__).parent), ".cloudflare")
