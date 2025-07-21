@@ -18,6 +18,7 @@ from typing import NoReturn, Union
 colorize = console.Colorize()
 
 PROGRESS_MAX_CHARACTERS = 28
+MINIMUM_CHUNK_SIZE = 1024
 
 
 def version() -> NoReturn:
@@ -169,7 +170,7 @@ def worker(progress: Progress, task_id: int, task: dict) -> NoReturn:
     size = 0
     with open(fullname, "wb") as fd:
 
-        for chunk in r.iter_content(chunk_size=1024):
+        for chunk in r.iter_content(chunk_size=MINIMUM_CHUNK_SIZE):
             if chunk:
                 size += fd.write(chunk)
                 progress.update(task_id, completed=size, visible=task["visible"])
