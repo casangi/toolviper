@@ -225,6 +225,7 @@ def get_files() -> NoReturn:
     """
     Get all files available in cloudflare manifest. This is retrieved from the local cloudflare
     metadata file.
+
     """
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
         ".cloudflare/file.download.json"
