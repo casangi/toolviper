@@ -76,7 +76,7 @@ def download(
             pathlib.Path(folder).resolve().mkdir()
 
     logger.debug(f"Initializing [cloudflare] downloader ...")
-  
+
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
         ".cloudflare/file.download.json"
     )
@@ -121,9 +121,7 @@ def download(
                         "metadata": file_meta_data["metadata"][file_],
                         "folder": folder,
                         "visible": True,
-
                         "size": float(file_meta_data["metadata"][file_]["size"]),
-
                     }
                 )
 
@@ -143,7 +141,6 @@ def download(
             progress.add_task(task["description"], total=task["size"])
             for task in tasks
             if len(tasks) > 0
-            
         ]
 
         for i, task in enumerate(tasks):
@@ -153,7 +150,6 @@ def download(
 
         for thread in threads:
             thread.join()
-
 
     if len(missing_files) > 0:
         logger.info(f"Trying to retrieve missing files drop box: {missing_files}")
@@ -166,9 +162,7 @@ def worker(progress: Progress, task_id: int, task: dict) -> NoReturn:
     fullname = task["metadata"]["file"]
 
     url = (
-
         f"http://downloadnrao.org/{task['metadata']['path']}/{task['metadata']['file']}"
-
     )
 
     r = requests.get(url, stream=True, headers={"user-agent": "Wget/1.16 (linux-gnu)"})
@@ -188,6 +182,7 @@ def worker(progress: Progress, task_id: int, task: dict) -> NoReturn:
 
         # Let's clean up after ourselves
         os.remove(fullname)
+
 
 def list_files() -> NoReturn:
     """
@@ -262,7 +257,6 @@ def update() -> NoReturn:
         "dtype": "JSON",
         "telescope": "NA",
         "size": "12484",
-
         "mode": "NA",
     }
 
