@@ -52,11 +52,14 @@ jobs:
           python -m pip install --upgrade pip
           # install the current package
           pip install ".[all]"
+          pip uninstall python-casacore -y
           pip install casatools 
           # trigger `casa-data` fetch
           mkdir -p ~/.casa/data && python -c 'import casatools'
 
       - name: Test with pytest
+        env:
+          SKIP_TESTS_CASATOOLS: "1"  # Skip tests that require casatasks
         run: |
           pytest -v ${{ inputs.test-path }} \
           --ignore=${{ inputs.pytest_ignore }} \

@@ -25,6 +25,9 @@ jobs:
         os: ["macos-latest"]
         python-version: ${{ fromJson(inputs.python-versions) }}
     steps:
+      - name: Keep alive
+        run: |
+          while true; do echo "Still running..."; sleep 300; done &
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
@@ -33,6 +36,7 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           channels: conda-forge
+          channel-priority: strict
 
       - run: conda install python-casacore
       
