@@ -284,7 +284,8 @@ def local_client(
 
     if memory_limit is None:
         memory_limit = "".join(
-            (str(round((psutil.virtual_memory().available / (1024**2)) / cores)), "MB"))
+            (str(round((psutil.virtual_memory().available / (1024**2)) / cores)), "MB")
+        )
 
     try:
         cluster = distributed.Client.current().cluster
@@ -296,8 +297,8 @@ def local_client(
             threads_per_worker=1,
             processes=True,
             memory_limit=memory_limit,
-            #silence_logs=logging.ERROR,  # , silence_logs=logging.ERROR #,resources={ 'GPU': 2}
-            dashboard_address=dashboard_address
+            # silence_logs=logging.ERROR,  # , silence_logs=logging.ERROR #,resources={ 'GPU': 2}
+            dashboard_address=dashboard_address,
         )
 
     try:
