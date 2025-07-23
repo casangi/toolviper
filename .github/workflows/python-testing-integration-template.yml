@@ -21,7 +21,7 @@ on:
       xradio_ref:
         description: "Branch or tag for XRADIO"
         required: false
-        default: "main"
+        default: "457-fix-broken-image-test"
         type: string
       graphviper_ref:
         description: "Branch or tag for GraphVIPER"
