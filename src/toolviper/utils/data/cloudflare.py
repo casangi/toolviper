@@ -57,7 +57,7 @@ def download(
         No return
     """
 
-    logger.info("Downloading from [cloudflare] ...")
+    logger.info("Downloading from [cloudflare] ....")
 
     if not isinstance(file, list):
         file = [file]
