@@ -87,8 +87,15 @@ def download(
     missing_files = []
 
     # Load the file dropbox file meta data.
-    if meta_data_path.exists():
-        with open(meta_data_path) as json_file:
+    if not meta_data_path.exists():
+        logger.warning(
+            f"Couldn't find file metadata locally in {colorize.blue(str(meta_data_path))}"
+        )
+
+        toolviper.utils.data.update()
+
+
+    with open(meta_data_path) as json_file:
             file_meta_data = json.load(json_file)
 
             # Build the task list
@@ -125,13 +132,7 @@ def download(
                     }
                 )
 
-    else:
-        logger.warning(
-            f"Couldn't find file metadata locally in {colorize.blue(str(meta_data_path))}"
-        )
 
-        toolviper.utils.data.update()
-        return None
 
     threads = []
     progress = Progress()
