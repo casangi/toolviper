@@ -13,7 +13,7 @@ import toolviper.utils.console as console
 from threading import Thread
 from rich.progress import Progress
 
-from typing import NoReturn, Union
+from typing import NoReturn, Union, Optional
 
 colorize = console.Colorize()
 
@@ -152,7 +152,7 @@ def download(
             thread.join()
 
     if len(missing_files) > 0:
-        logger.info(f"Trying to retrieve missing files drop box: {missing_files}")
+        logger.info(f"Trying to retrieve missing files dropbox: {missing_files}")
         toolviper.utils.data.dropbox(file=missing_files, folder=folder)
 
 
@@ -275,12 +275,14 @@ def update() -> NoReturn:
     with progress:
         worker(progress, task_id, tasks)
 
-    assert meta_data_path.exists() is True, logger.error(
-        "Unable to retrieve download metadata."
-    )
+    if not meta_data_path.exists():
+        logger.error("Unable to retrieve download metadata.")
+        raise FileNotFoundError(
+            "Download metadata file does not exist at the expected path."
+        )
 
 
-def get_file_size(path: str) -> Union[json, None]:
+def get_file_size(path: str) -> Optional[dict]:
     """
     Get list file sizes in bytes for a given path. Only works for files; isn't recursive.
     """
