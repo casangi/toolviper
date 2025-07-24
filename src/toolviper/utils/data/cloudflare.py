@@ -136,7 +136,7 @@ def download(
 
     with progress:
         task_ids = [
-            #progress.add_task(task["description"], total=task["size"])
+            # progress.add_task(task["description"], total=task["size"])
             progress.add_task(task["description"])
             for task in tasks
             if len(tasks) > 0
@@ -178,7 +178,9 @@ def worker(progress: Progress, task_id: int, task: dict) -> NoReturn:
         for chunk in r.iter_content(chunk_size=MINIMUM_CHUNK_SIZE):
             if chunk:
                 size += fd.write(chunk)
-                progress.update(task_id, completed=size, total=total, visible=task["visible"])
+                progress.update(
+                    task_id, completed=size, total=total, visible=task["visible"]
+                )
 
     if zipfile.is_zipfile(fullname):
         shutil.unpack_archive(filename=fullname, extract_dir=task["folder"])
