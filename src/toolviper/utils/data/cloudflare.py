@@ -127,7 +127,7 @@ def download(
                     "metadata": file_meta_data["metadata"][file_],
                     "folder": folder,
                     "visible": True,
-                    "size": float(file_meta_data["metadata"][file_]["size"]),
+                    "size": int(file_meta_data["metadata"][file_]["size"]),
                 }
             )
 
@@ -270,6 +270,7 @@ def update() -> NoReturn:
         "metadata": file_meta_data,
         "folder": meta_data_path,
         "visible": False,
+        "size": 12484,
     }
 
     logger.info("Updating file metadata information ... ")
