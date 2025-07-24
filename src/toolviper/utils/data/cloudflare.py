@@ -94,45 +94,42 @@ def download(
 
         toolviper.utils.data.update()
 
-
     with open(meta_data_path) as json_file:
-            file_meta_data = json.load(json_file)
+        file_meta_data = json.load(json_file)
 
-            # Build the task list
-            for file_ in file:
-                full_file_path = pathlib.Path(folder).joinpath(file_)
+        # Build the task list
+        for file_ in file:
+            full_file_path = pathlib.Path(folder).joinpath(file_)
 
-                if full_file_path.exists() and not overwrite:
-                    logger.info(f"File exists: {str(full_file_path)}")
-                    continue
+            if full_file_path.exists() and not overwrite:
+                logger.info(f"File exists: {str(full_file_path)}")
+                continue
 
-                if file_ not in file_meta_data["metadata"].keys():
-                    logger.error(f"Requested file not found: {file_}")
-                    logger.info(
-                        f"For a list of available files try using "
-                        f"{colorize.blue('toolviper.utils.data.list_files()')}."
-                    )
-
-                    missing_files.append(file_)
-                    continue
-
-                name_format = lambda string: (
-                    f"{string[:(PROGRESS_MAX_CHARACTERS - 4)]} ..."
-                    if len(string) > PROGRESS_MAX_CHARACTERS
-                    else string
+            if file_ not in file_meta_data["metadata"].keys():
+                logger.error(f"Requested file not found: {file_}")
+                logger.info(
+                    f"For a list of available files try using "
+                    f"{colorize.blue('toolviper.utils.data.list_files()')}."
                 )
 
-                tasks.append(
-                    {
-                        "description": name_format(file_),
-                        "metadata": file_meta_data["metadata"][file_],
-                        "folder": folder,
-                        "visible": True,
-                        "size": float(file_meta_data["metadata"][file_]["size"]),
-                    }
-                )
+                missing_files.append(file_)
+                continue
 
+            name_format = lambda string: (
+                f"{string[:(PROGRESS_MAX_CHARACTERS - 4)]} ..."
+                if len(string) > PROGRESS_MAX_CHARACTERS
+                else string
+            )
 
+            tasks.append(
+                {
+                    "description": name_format(file_),
+                    "metadata": file_meta_data["metadata"][file_],
+                    "folder": folder,
+                    "visible": True,
+                    "size": float(file_meta_data["metadata"][file_]["size"]),
+                }
+            )
 
     threads = []
     progress = Progress()
