@@ -16,12 +16,12 @@ on:
       toolviper_ref:
         description: "Branch or tag for ToolVIPER"
         required: false
-        default: "11-implement_cloudfare_api"
+        default: "main"
         type: string
       xradio_ref:
         description: "Branch or tag for XRADIO"
         required: false
-        default: "457-fix-broken-image-test"
+        default: "main"
         type: string
       graphviper_ref:
         description: "Branch or tag for GraphVIPER"
