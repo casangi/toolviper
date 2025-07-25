@@ -6,8 +6,6 @@ import json
 import psutil
 import pathlib
 
-from partd.numpy import decompress
-
 import toolviper
 import concurrent.futures
 
@@ -34,7 +32,7 @@ def version():
         logger.info(f'{file_meta_data["version"]}')
 
 
-def download(
+def dropbox(
     file: Union[str, list],
     folder: str = ".",
     threaded: bool = True,
@@ -58,7 +56,7 @@ def download(
         No return
     """
 
-    toolviper.utils.data.update()
+    update()
 
     if not pathlib.Path(folder).resolve().exists():
         toolviper.utils.logger.info(
@@ -304,7 +302,7 @@ def _download(file: str, folder: str = ".") -> NoReturn:
             f"Couldn't find file metadata locally in {colorize.blue(str(meta_data_path))}, trying to retrieve ..."
         )
 
-        toolviper.utils.data.update()
+        update()
 
         return
 
