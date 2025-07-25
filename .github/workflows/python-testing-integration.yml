@@ -21,4 +21,4 @@ on:
 
 jobs:
   test:
-    uses: casangi/toolviper/.github/workflows/python-testing-integration-template.yml@11-implement_cloudfare_api
+    uses: casangi/toolviper/.github/workflows/python-testing-integration-template.yml@main
