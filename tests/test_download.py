@@ -1,8 +1,6 @@
 import pathlib
 
 
-
-
 class TestToolViperDownload:
     @classmethod
     def setup_class(cls):
