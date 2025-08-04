@@ -40,7 +40,7 @@ jobs:
 
       # 📌 Pin libboost-python, to avoid not finding libboost_graph.dylib error
       - name: Pin boost version
-        run: conda install libboost-python=1.86.0 boost=1.86.0
+        run: conda install libboost-python=1.86.0
 
       - run: conda install python-casacore
       
