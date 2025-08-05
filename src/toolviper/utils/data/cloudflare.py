@@ -40,6 +40,7 @@ def download(
     file: Union[str, list],
     folder: str = ".",
     overwrite: bool = False,
+    decompress: bool = True,
 ) -> NoReturn:
     """
         Download tool for data stored externally.
@@ -51,6 +52,8 @@ def download(
         Destination folder.
     overwrite : bool
         Should file be overwritten.
+    decompress : bool
+        Should file be unzipped.
 
     Returns
     -------
@@ -136,14 +139,13 @@ def download(
 
     with progress:
         task_ids = [
-            # progress.add_task(task["description"], total=task["size"])
             progress.add_task(task["description"])
             for task in tasks
             if len(tasks) > 0
         ]
 
         for i, task in enumerate(tasks):
-            thread = Thread(target=worker, args=(progress, task_ids[i], task))
+            thread = Thread(target=worker, args=(progress, task_ids[i], task, decompress))
             thread.start()
             threads.append(thread)
 
@@ -155,7 +157,7 @@ def download(
         toolviper.utils.data.dropbox(file=missing_files, folder=folder)
 
 
-def worker(progress: Progress, task_id: int, task: dict) -> NoReturn:
+def worker(progress: Progress, task_id: int, task: dict, decompress=True) -> NoReturn:
     """Simulate work being done in a thread"""
 
     fullname = task["metadata"]["file"]
@@ -182,11 +184,12 @@ def worker(progress: Progress, task_id: int, task: dict) -> NoReturn:
                     task_id, completed=size, total=total, visible=task["visible"]
                 )
 
-    if zipfile.is_zipfile(fullname):
-        shutil.unpack_archive(filename=fullname, extract_dir=task["folder"])
+    if decompress:
+        if zipfile.is_zipfile(fullname):
+            shutil.unpack_archive(filename=fullname, extract_dir=task["folder"])
 
-        # Let's clean up after ourselves
-        os.remove(fullname)
+            # Let's clean up after ourselves
+            os.remove(fullname)
 
 
 def list_files() -> NoReturn:

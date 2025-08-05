@@ -1,5 +1,6 @@
 import pathlib
 
+import toolviper.utils.logger as logger
 
 class TestToolViperDownload:
     @classmethod
@@ -30,7 +31,12 @@ class TestToolViperDownload:
         path = pathlib.Path.cwd().joinpath("data")
         path.mkdir(parents=True, exist_ok=True)
 
-        toolviper.utils.data.download(file="dropbox", folder=str(path))
+        try:
+            toolviper.utils.data.download(file="dropbox", folder=str(path))
 
-        if not path.joinpath("dropbox.txt").exists():
-            raise FileNotFoundError("dropbox.txt")
+        except Exception:
+            logger.error("Failed to download data from dropbox")
+
+        finally:
+            if not path.joinpath("dropbox.txt").exists():
+                raise FileNotFoundError("dropbox.txt")
