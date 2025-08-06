@@ -36,7 +36,7 @@ class TestToolViperDownload:
             toolviper.utils.data.download(file="dropbox", folder=str(path))
 
         except Exception as e:
-            logger.error(f"Failed to download data from dropbox:\n\m{e}")
+            logger.error(f"Failed to download data from dropbox:\n\n{e}")
 
         finally:
             if not path.joinpath("dropbox.txt").exists():
