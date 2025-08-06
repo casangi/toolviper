@@ -2,6 +2,7 @@ import pathlib
 
 import toolviper.utils.logger as logger
 
+
 class TestToolViperDownload:
     @classmethod
     def setup_class(cls):

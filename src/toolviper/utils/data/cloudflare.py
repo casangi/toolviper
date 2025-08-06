@@ -141,13 +141,13 @@ def download(
 
     with progress:
         task_ids = [
-            progress.add_task(task["description"])
-            for task in tasks
-            if len(tasks) > 0
+            progress.add_task(task["description"]) for task in tasks if len(tasks) > 0
         ]
 
         for i, task in enumerate(tasks):
-            thread = Thread(target=worker, args=(progress, task_ids[i], task, decompress))
+            thread = Thread(
+                target=worker, args=(progress, task_ids[i], task, decompress)
+            )
             thread.start()
             threads.append(thread)
 
@@ -177,7 +177,6 @@ def worker(progress: Progress, task_id: TaskID, task: dict, decompress=True) -> 
     fullname = str(pathlib.Path(task["folder"]).joinpath(filename))
 
     size = 0
-
 
     with open(fullname, "wb") as fd:
 

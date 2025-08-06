@@ -18,7 +18,8 @@ def open_json(file: str) -> Union[dict, NoReturn]:
 
     return json_file
 
-def calculate_checksum(file)->str:
+
+def calculate_checksum(file) -> str:
     with open(file, "rb") as file_:
         digest = hashlib.file_digest(file_, "sha256")
 
@@ -44,7 +45,8 @@ def update_hash(file, folder):
 
             if full_filename.is_dir():
                 logger.warning(
-                    f"{filename} is a folder, run your favorite compression algorithm to calculate the checksum")
+                    f"{filename} is a folder, run your favorite compression algorithm to calculate the checksum"
+                )
                 continue
 
             if str(full_filename).endswith(".zip"):
@@ -59,6 +61,7 @@ def update_hash(file, folder):
     with open(file, "w") as file_:
         json.dump(json_file, file_)
 
+
 def verify(filename, folder):
     import toolviper
 
@@ -68,7 +71,9 @@ def verify(filename, folder):
         raise FileNotFoundError
 
     base_address = pathlib.Path(toolviper.__file__).parent
-    metadata_address = base_address.joinpath("utils/data/.cloudflare/file.download.json")
+    metadata_address = base_address.joinpath(
+        "utils/data/.cloudflare/file.download.json"
+    )
 
     if metadata_address.exists():
         if filename.endswith(".zip"):
@@ -76,16 +81,18 @@ def verify(filename, folder):
 
             metadata = open_json(str(metadata_address))
 
-        # Verify the downloaded file
-            if not metadata["metadata"][filename]["hash"] == toolviper.utils.tools.calculate_checksum(fullname)[:2]:
+            # Verify the downloaded file
+            if (
+                not metadata["metadata"][filename]["hash"]
+                == toolviper.utils.tools.calculate_checksum(fullname)[:2]
+            ):
                 line_number = inspect.currentframe().f_back.f_lineno
                 raise ChecksumError(
                     message="Checksum verification failed.",
                     filename=filename,
                     folder=folder,
-                    line_number=line_number
+                    line_number=line_number,
                 )
-
 
     else:
         logger.error(f"{metadata_address} doesn't exist ... exiting.")
@@ -103,4 +110,6 @@ class ChecksumError(Exception):
 
     def __str__(self):
         file = pathlib.Path(self.folder).joinpath(self.filename)
-        return f"[{self.line_number}]: There was an error verifying the checksum of {file}"
+        return (
+            f"[{self.line_number}]: There was an error verifying the checksum of {file}"
+        )
