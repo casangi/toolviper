@@ -11,9 +11,11 @@ import toolviper.utils.logger as logger
 import toolviper.utils.console as console
 
 from threading import Thread
-from rich.progress import Progress
+from rich.progress import Progress, TaskID
 
-from typing import NoReturn, Union, Optional
+from typing import NoReturn, Union, Optional, Any
+
+from toolviper.utils.tools import ChecksumError
 
 colorize = console.Colorize()
 
@@ -41,7 +43,7 @@ def download(
     folder: str = ".",
     overwrite: bool = False,
     decompress: bool = True,
-) -> NoReturn:
+) -> None:
     """
         Download tool for data stored externally.
     Parameters
@@ -157,10 +159,10 @@ def download(
         toolviper.utils.data.dropbox(file=missing_files, folder=folder)
 
 
-def worker(progress: Progress, task_id: int, task: dict, decompress=True) -> NoReturn:
+def worker(progress: Progress, task_id: TaskID, task: dict, decompress=True) -> None:
     """Simulate work being done in a thread"""
 
-    fullname = task["metadata"]["file"]
+    filename = task["metadata"]["file"]
 
     url = (
         f"http://downloadnrao.org/{task['metadata']['path']}/{task['metadata']['file']}"
@@ -172,9 +174,11 @@ def worker(progress: Progress, task_id: int, task: dict, decompress=True) -> NoR
     if total == 0:
         total = task["size"]
 
-    fullname = str(pathlib.Path(task["folder"]).joinpath(fullname))
+    fullname = str(pathlib.Path(task["folder"]).joinpath(filename))
 
     size = 0
+
+
     with open(fullname, "wb") as fd:
 
         for chunk in r.iter_content(chunk_size=MINIMUM_CHUNK_SIZE):
@@ -184,6 +188,9 @@ def worker(progress: Progress, task_id: int, task: dict, decompress=True) -> NoR
                     task_id, completed=size, total=total, visible=task["visible"]
                 )
 
+    # Verify checksum on file
+    toolviper.utils.verify(filename, task["folder"])
+
     if decompress:
         if zipfile.is_zipfile(fullname):
             shutil.unpack_archive(filename=fullname, extract_dir=task["folder"])
@@ -192,7 +199,7 @@ def worker(progress: Progress, task_id: int, task: dict, decompress=True) -> NoR
             os.remove(fullname)
 
 
-def list_files() -> NoReturn:
+def list_files() -> None:
     """
     List all files in cloudflare
     """
@@ -232,7 +239,7 @@ def list_files() -> NoReturn:
     console.print(table)
 
 
-def get_files() -> NoReturn:
+def get_files() -> list[Any]:
     """
     Get all files available in cloudflare manifest. This is retrieved from the local cloudflare
     metadata file.
@@ -251,7 +258,7 @@ def get_files() -> NoReturn:
         return list(file_meta_data["metadata"].keys())
 
 
-def update() -> NoReturn:
+def update() -> None:
     """
     Update cloudflare manifest.
     """
@@ -315,7 +322,7 @@ def get_file_size(path: str) -> Optional[dict]:
     return file_size_dict
 
 
-def _print_file_queue(files: list) -> NoReturn:
+def _print_file_queue(files: list) -> None:
     from rich.table import Table
     from rich.console import Console
     from rich import box
@@ -354,5 +361,5 @@ def _verify_metadata_file():
     )
 
     if not meta_data_path.exists():
-        logger.warning(f"Couldn't find {colorize.blue(meta_data_path)}.")
+        logger.warning(f"Couldn't find {colorize.blue(str(meta_data_path))}.")
         update()
