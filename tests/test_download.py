@@ -87,6 +87,7 @@ class TestToolViperDownload:
         toolviper.utils.data.download(file=file, folder=str(path), overwrite=True)
         original_file_timestamp = file_path.stat().st_mtime
 
+        file_path.touch(exist_ok=True)
         # Download second time
         toolviper.utils.data.download(file=file, folder=str(path), overwrite=True)
         final_file_timestamp = file_path.stat().st_mtime
@@ -119,6 +120,8 @@ class TestToolViperDownload:
             "utils/data/.cloudflare/file.download.json"
         )
         original_file_timestamp = meta_data_path.stat().st_mtime
+
+        meta_data_path.touch(exist_ok=True)
 
         toolviper.utils.data.update()
         final_file_timestamp = meta_data_path.stat().st_mtime
