@@ -149,4 +149,4 @@ class TestToolViperDownload:
 
         file_size_dict = toolviper.utils.data.get_file_size(path=str(path))
 
-        assert str(file_size_dict[file]) ==  meta_data_file["metadata"][file]["size"]
+        assert str(file_size_dict[file]) == meta_data_file["metadata"][file]["size"]
