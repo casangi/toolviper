@@ -82,10 +82,10 @@ def verify(filename, folder):
             metadata = open_json(str(metadata_address))
 
             # Verify the downloaded file
-            if (
-                not metadata["metadata"][filename]["hash"]
-                == toolviper.utils.tools.calculate_checksum(fullname)[:2]
-            ):
+            if not metadata["metadata"][filename][
+                "hash"
+            ] == toolviper.utils.tools.calculate_checksum(fullname):
+                logger.error()
                 line_number = inspect.currentframe().f_back.f_lineno
                 raise ChecksumError(
                     message="Checksum verification failed.",

@@ -1,5 +1,6 @@
 import pathlib
 
+import toolviper
 import toolviper.utils.logger as logger
 
 
@@ -23,10 +24,12 @@ class TestToolViperDownload:
 
     def teardown_method(self):
         """teardown any state that was previously setup for all methods of the given class"""
-        pass
+        import shutil
+
+        path = pathlib.Path.cwd().joinpath("data")
+        shutil.rmtree(str(path), ignore_errors=True)
 
     def test_download_fallback(self):
-        import toolviper
 
         # Make data-path
         path = pathlib.Path.cwd().joinpath("data")
@@ -41,3 +44,71 @@ class TestToolViperDownload:
         finally:
             if not path.joinpath("dropbox.txt").exists():
                 raise FileNotFoundError("dropbox.txt")
+
+    def test_download_verification(self):
+
+        path = pathlib.Path.cwd().joinpath("data")
+        path.mkdir(parents=True, exist_ok=True)
+
+        # Only test the first three for now.
+        files = toolviper.utils.data.get_files()[:3]
+        toolviper.utils.data.download(file=files, folder=str(path))
+
+        # Get metadate json
+        base_address = pathlib.Path(toolviper.__file__).parent
+        metadata_address = base_address.joinpath(
+            "utils/data/.cloudflare/file.download.json"
+        )
+
+        metadata = toolviper.utils.tools.open_json(str(metadata_address))
+
+        for file in files:
+            toolviper.utils.tools.verify(filename=file, folder=path)
+
+    def test_download_folder(self):
+
+        path = pathlib.Path.cwd().joinpath("data")
+        path.mkdir(parents=True, exist_ok=True)
+
+        file = toolviper.utils.data.get_files()[0]
+        toolviper.utils.data.download(file=file, folder=str(path))
+
+        assert path.joinpath(file).exists() == True
+
+    def test_download_overwrite(self):
+
+        path = pathlib.Path.cwd().joinpath("data")
+        path.mkdir(parents=True, exist_ok=True)
+
+        file = toolviper.utils.data.get_files()[0]
+        file_path = path.joinpath(file)
+
+        # Download first time
+        toolviper.utils.data.download(file=file, folder=str(path), overwrite=True)
+        original_file_timestamp = file_path.stat().st_mtime
+
+        # Download second time
+        toolviper.utils.data.download(file=file, folder=str(path), overwrite=True)
+        final_file_timestamp = file_path.stat().st_mtime
+
+        assert original_file_timestamp != final_file_timestamp
+
+    def test_download_decompress(self):
+
+        path = pathlib.Path.cwd().joinpath("data")
+        path.mkdir(parents=True, exist_ok=True)
+
+        file = toolviper.utils.data.get_files()[0]
+
+        toolviper.utils.data.download(
+            file=file, folder=str(path), decompress=False, overwrite=True
+        )
+
+        # Check that the zip file exists
+        assert path.joinpath(f"{file}.zip").exists() == True
+
+        # Check that folder does not exist
+        assert path.joinpath(file).exists() == False
+
+        # Check that file isn't a folder
+        assert path.joinpath(file).is_dir() == False

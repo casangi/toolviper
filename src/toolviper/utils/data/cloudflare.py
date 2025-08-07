@@ -23,7 +23,7 @@ PROGRESS_MAX_CHARACTERS = 28
 MINIMUM_CHUNK_SIZE = 1024
 
 
-def version() -> NoReturn:
+def version() -> None:
     # Load the file dropbox file meta data.
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
         ".cloudflare/file.download.json"
