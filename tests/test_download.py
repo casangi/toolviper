@@ -119,6 +119,7 @@ class TestToolViperDownload:
         meta_data_path = pathlib.Path(toolviper.__file__).parent.joinpath(
             "utils/data/.cloudflare/file.download.json"
         )
+
         original_file_timestamp = meta_data_path.stat().st_mtime
 
         meta_data_path.touch(exist_ok=True)
@@ -128,3 +129,24 @@ class TestToolViperDownload:
 
         # Check that the file was updated
         assert original_file_timestamp != final_file_timestamp
+
+    def test_get_file_size(self):
+
+        path = pathlib.Path.cwd().joinpath("data")
+        path.mkdir(parents=True, exist_ok=True)
+
+        meta_data_path = pathlib.Path(toolviper.__file__).parent.joinpath(
+            "utils/data/.cloudflare/file.download.json"
+        )
+
+        meta_data_file = toolviper.utils.tools.open_json(str(meta_data_path))
+
+        file = toolviper.utils.data.get_files()[0]
+
+        toolviper.utils.data.download(
+            file=file, folder=str(path), decompress=False, overwrite=True
+        )
+
+        file_size_dict = toolviper.utils.data.get_file_size(path=str(path))
+
+        assert str(file_size_dict[file]) ==  meta_data_file["metadata"][file]["size"]
