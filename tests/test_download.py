@@ -20,7 +20,7 @@ class TestToolViperDownload:
 
     def setup_method(self):
         """setup any state specific to all methods of the given class"""
-        pass
+        toolviper.utils.data.update()
 
     def teardown_method(self):
         """teardown any state that was previously setup for all methods of the given class"""
@@ -112,3 +112,16 @@ class TestToolViperDownload:
 
         # Check that file isn't a folder
         assert path.joinpath(file).is_dir() == False
+
+    def test_update(self):
+
+        meta_data_path = pathlib.Path(toolviper.__file__).parent.joinpath(
+            "utils/data/.cloudflare/file.download.json"
+        )
+        original_file_timestamp = meta_data_path.stat().st_mtime
+
+        toolviper.utils.data.update()
+        final_file_timestamp = meta_data_path.stat().st_mtime
+
+        # Check that the file was updated
+        assert original_file_timestamp != final_file_timestamp
