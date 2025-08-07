@@ -137,7 +137,7 @@ def get_files():
 def update():
     meta_data_path = pathlib.Path(__file__).parent.joinpath(".dropbox")
 
-    _makedir(str(pathlib.Path(__file__).parent), ".dropbox")
+    _make_dir(str(pathlib.Path(__file__).parent), ".dropbox")
 
     file_meta_data = {
         "metadata": {
@@ -318,7 +318,7 @@ def _download(file: str, folder: str = ".") -> NoReturn:
         os.remove(fullname)
 
 
-def _makedir(path, folder):
+def _make_dir(path, folder):
     p = pathlib.Path(path).joinpath(folder)
     try:
         p.mkdir()

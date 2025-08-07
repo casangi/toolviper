@@ -150,3 +150,24 @@ class TestToolViperDownload:
         file_size_dict = toolviper.utils.data.get_file_size(path=str(path))
 
         assert str(file_size_dict[file]) == meta_data_file["metadata"][file]["size"]
+
+    def test_private_print_file_queue(self):
+        from toolviper.utils.data.cloudflare import _print_file_queue
+
+        try:
+            _print_file_queue(files="")
+
+        except AssertionError as e:
+            logger.info("Failure test passed!")
+            return None
+
+        # If error isn't as expected, fail the test.
+        raise AssertionError()
+
+    def test_private_make_dir(self):
+        from toolviper.utils.data.cloudflare import _make_dir
+
+        _make_dir(path=str(pathlib.Path.cwd()), folder="data")
+
+        if not pathlib.Path.cwd().joinpath("data").exists():
+            raise FileNotFoundError("data")

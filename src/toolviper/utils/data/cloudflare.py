@@ -263,7 +263,7 @@ def update() -> None:
     """
     meta_data_path = pathlib.Path(__file__).parent.joinpath(".cloudflare")
 
-    _makedir(str(pathlib.Path(__file__).parent), ".cloudflare")
+    _make_dir(str(pathlib.Path(__file__).parent), ".cloudflare")
 
     file_meta_data = {
         "file": "file.download.json",
@@ -326,6 +326,8 @@ def _print_file_queue(files: list) -> None:
     from rich.console import Console
     from rich import box
 
+    assert type(files) == list
+
     console = Console()
     table = Table(show_header=True, box=box.SIMPLE)
 
@@ -337,7 +339,7 @@ def _print_file_queue(files: list) -> None:
     console.print(table)
 
 
-def _makedir(path, folder):
+def _make_dir(path, folder):
     p = pathlib.Path(path).joinpath(folder)
     try:
         p.mkdir()
