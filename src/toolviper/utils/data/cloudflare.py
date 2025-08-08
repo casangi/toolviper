@@ -13,9 +13,7 @@ import toolviper.utils.console as console
 from threading import Thread
 from rich.progress import Progress, TaskID
 
-from typing import NoReturn, Union, Optional, Any
-
-from toolviper.utils.tools import ChecksumError
+from typing import Union, Optional, Any
 
 colorize = console.Colorize()
 
@@ -28,6 +26,10 @@ def version() -> None:
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
         ".cloudflare/file.download.json"
     )
+
+    if not meta_data_path.parent.exists():
+        logger.debug("metadata path doesn't exist... creating")
+        meta_data_path.parent.mkdir(parents=True)
 
     # Verify that the download metadata exists and updates if not.
     _verify_metadata_file()
@@ -263,7 +265,8 @@ def update() -> None:
     """
     meta_data_path = pathlib.Path(__file__).parent.joinpath(".cloudflare")
 
-    _make_dir(str(pathlib.Path(__file__).parent), ".cloudflare")
+    if not meta_data_path.exists():
+        _make_dir(str(pathlib.Path(__file__).parent), ".cloudflare")
 
     file_meta_data = {
         "file": "file.download.json",
