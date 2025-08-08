@@ -16,6 +16,9 @@ class Protego(cerberus.Validator):
 
     @staticmethod
     def custom_allowed_function(*args, **kwargs):
+        """
+        This is a dummy function. It returns None when not externally set in the validator.
+        """
         return None
 
     def _validate_check_allowed_with(self, constraint, field, value):
@@ -24,6 +27,10 @@ class Protego(cerberus.Validator):
         The rule's arguments are validated against this schema:
         {'type': 'string'}
         """
+
+        # This does nothing as long as the user does not specifically set the custom_allowed_function
+        # in the validation code. So it seems useless bit is not.
+
         custom_constraint = self.custom_allowed_function(constraint)
         if custom_constraint is None:
             self._error(field, "Custom constraint checking function not valid")
