@@ -99,6 +99,58 @@ def verify(filename, folder):
         raise FileNotFoundError
 
 
+def add_entry(file, path, dtype, telescope, mode):
+    import toolviper
+
+    try:
+        metadata = {}
+
+        manifest_path = pathlib.Path(toolviper.__path__[0]).joinpath(
+            "utils/data/.cloudflare/file.download.json"
+        )
+
+        if not manifest_path.exists():
+            logger.error(f"Couldn't find download manifest at: {manifest_path}")
+            return None
+
+        json_file = toolviper.utils.tools.open_json(str(manifest_path))
+
+        filename = pathlib.Path(file)
+        if filename.is_dir():
+            logger.warning(
+                f"{filename.name} is a folder, run your favorite compression algorithm to calculate the checksum"
+            )
+
+            return None
+
+        file_key = str(filename.name)
+        if str(filename).endswith(".zip"):
+            file_key = str(filename.name).split(".zip")[0]
+
+        size = toolviper.utils.data.get_file_size(path=str(filename.parent))[file_key]
+
+        metadata = {
+            "file": filename.name,
+            "path": path,
+            "dtype": dtype,
+            "telescope": telescope,
+            "size": str(size),
+            "mode": mode,
+            "hash": toolviper.utils.tools.calculate_checksum(filename),
+        }
+
+        json_file["metadata"][file_key] = metadata
+
+    except KeyError:
+        logger.error(f"{file_key} not found in metadata ...")
+        return None
+
+    with open("file.download.json", "w") as file_:
+        json.dump(json_file, file_)
+
+    return json_file
+
+
 class ChecksumError(Exception):
     def __init__(self, message, filename, folder, line_number):
         self.message = message
