@@ -1,7 +1,10 @@
+import pathlib
+import toolviper
+
 import toolviper.utils.logger as logger
 
 
-class TestToolViperDownload:
+class TestToolViperTools:
     @classmethod
     def setup_class(cls):
         """setup any state specific to the execution of the given test class
@@ -60,3 +63,23 @@ class TestToolViperDownload:
             return None
 
         raise AssertionError
+
+    def test_calculate_checksum(self):
+        from toolviper.utils.tools import calculate_checksum
+
+        base_address = pathlib.Path(toolviper.__file__).parent
+        metadata_address = base_address.joinpath(
+            "utils/data/.cloudflare/file.download.json"
+        )
+
+        metadata = toolviper.utils.tools.open_json(str(metadata_address))
+
+        path = pathlib.Path.cwd().joinpath("data")
+        path.mkdir(parents=True, exist_ok=True)
+
+        toolviper.utils.data.download(file="checksum.hash", folder=str(path))
+
+        assert (
+            toolviper.utils.tools.calculate_checksum(file="data/checksum.hash")
+            == metadata["metadata"]["checksum.hash"]["hash"]
+        )
