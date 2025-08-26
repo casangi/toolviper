@@ -1,0 +1,33 @@
+{
+    "add_entry":{
+        "file":{
+            "type":["string"],
+            "nullable": false
+        },
+        "path":{
+            "type":["string"],
+            "nullable": false,
+            "allowed": [
+              "radps/image",
+              "radps/measurement_set",
+              "astrohack",
+              "astrohack/alma_near_field",
+              "astrohack/panel",
+              "astrohack/verification",
+              "verification"
+            ]
+        },
+        "dtype":{
+            "type":["bool"],
+            "nullable": false
+        },
+        "telescope":{
+            "type":["bool"],
+            "nullable": false
+        },
+        "mode":{
+            "type":["bool"],
+            "nullable": false
+        }
+    }
+}

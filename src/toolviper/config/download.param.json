@@ -1,0 +1,26 @@
+{
+    "download":{
+        "file":{
+            "type":["string"],
+            "nullable": false
+        },
+        "folder":{
+            "type":["string"],
+            "nullable": false
+        },
+        "overwrite":{
+            "type":["bool"],
+            "nullable": false
+        },
+        "decompress":{
+            "type":["bool"],
+            "nullable": false
+        }
+    },
+    "get_file_size":{
+        "path":{
+            "type":["string"],
+            "nullable": false
+        }
+    }
+}

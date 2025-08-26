@@ -5,6 +5,8 @@ import inspect
 
 import toolviper.utils.logger as logger
 
+from toolviper.utils import parameter
+
 from typing import Union, NoReturn
 
 
@@ -19,7 +21,7 @@ def open_json(file: str) -> Union[dict, NoReturn]:
     return json_file
 
 
-def calculate_checksum(file) -> str:
+def calculate_checksum(file: str) -> str:
     with open(file, "rb") as file_:
         digest = hashlib.file_digest(file_, "sha256")
 
@@ -36,7 +38,7 @@ def iter_files_(path):
         yield item.name
 
 
-def update_hash(file, folder):
+def update_hash(file: str, folder: str):
     json_file = open_json(file)
 
     for filename in iter_files_(folder):
@@ -62,7 +64,7 @@ def update_hash(file, folder):
         json.dump(json_file, file_)
 
 
-def verify(filename, folder):
+def verify(filename: str, folder: str):
     import toolviper
 
     fullname = str(pathlib.Path(folder).joinpath(filename))
@@ -99,7 +101,30 @@ def verify(filename, folder):
         raise FileNotFoundError
 
 
-def add_entry(file, path, dtype, telescope, mode):
+@parameter.validate()
+def add_entry(
+    file: str, path: str, dtype: str, telescope: str, mode: str
+) -> Union[None, dict]:
+    """
+        Build new file.download.json with added metadata.
+
+    Parameters
+    ----------
+    file : str
+        Filename of file to upload.
+    path : str
+        Cloudflare path.
+    dtype : bool
+        File type of file to upload.
+    telescope : bool
+        Telescope data was taken with.
+    mode : bool
+        Telescope data mode.
+
+    Returns
+    -------
+        No return
+    """
     import toolviper
 
     try:
@@ -136,7 +161,7 @@ def add_entry(file, path, dtype, telescope, mode):
             "telescope": telescope,
             "size": str(size),
             "mode": mode,
-            "hash": toolviper.utils.tools.calculate_checksum(filename),
+            "hash": toolviper.utils.tools.calculate_checksum(str(filename)),
         }
 
         json_file["metadata"][file_key] = metadata

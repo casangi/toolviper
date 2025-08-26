@@ -10,6 +10,7 @@ import toolviper
 import toolviper.utils.logger as logger
 import toolviper.utils.console as console
 
+from toolviper.utils import parameter
 from threading import Thread
 from rich.progress import Progress, TaskID
 
@@ -40,6 +41,7 @@ def version() -> None:
         logger.info(f'{file_meta_data["version"]}')
 
 
+@parameter.validate()
 def download(
     file: Union[str, list],
     folder: str = ".",
@@ -157,8 +159,7 @@ def download(
             thread.join()
 
     if len(missing_files) > 0:
-        logger.info(f"Trying to retrieve missing files dropbox: {missing_files}")
-        toolviper.utils.data.dropbox(file=missing_files, folder=folder)
+        logger.error(f"Missing files: {missing_files}")
 
 
 def worker(progress: Progress, task_id: TaskID, task: dict, decompress=True) -> None:
@@ -300,6 +301,7 @@ def update() -> None:
         )
 
 
+@parameter.validate()
 def get_file_size(path: str) -> Optional[dict]:
     """
     Get list file sizes in bytes for a given path. Only works for files; isn't recursive.
