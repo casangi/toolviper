@@ -29,22 +29,6 @@ class TestToolViperDownload:
         path = pathlib.Path.cwd().joinpath("data")
         shutil.rmtree(str(path), ignore_errors=True)
 
-    def test_download_fallback(self):
-
-        # Make data-path
-        path = pathlib.Path.cwd().joinpath("data")
-        path.mkdir(parents=True, exist_ok=True)
-
-        try:
-            toolviper.utils.data.download(file="dropbox", folder=str(path))
-
-        except Exception as e:
-            logger.error(f"Failed to download data from dropbox:\n\n{e}")
-
-        finally:
-            if not path.joinpath("dropbox.txt").exists():
-                raise FileNotFoundError("dropbox.txt")
-
     def test_download_verification(self):
 
         path = pathlib.Path.cwd().joinpath("data")

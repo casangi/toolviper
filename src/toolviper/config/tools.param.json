@@ -1,11 +1,11 @@
 {
     "add_entry":{
         "file":{
-            "type":["string"],
+            "type":["str"],
             "nullable": false
         },
         "path":{
-            "type":["string"],
+            "type":["str"],
             "nullable": false,
             "allowed": [
               "radps/image",
@@ -18,15 +18,15 @@
             ]
         },
         "dtype":{
-            "type":["bool"],
+            "type":["boolean"],
             "nullable": false
         },
         "telescope":{
-            "type":["bool"],
+            "type":["boolean"],
             "nullable": false
         },
         "mode":{
-            "type":["bool"],
+            "type":["boolean"],
             "nullable": false
         }
     }
