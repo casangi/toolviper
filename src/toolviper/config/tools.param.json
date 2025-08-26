@@ -18,15 +18,20 @@
             ]
         },
         "dtype":{
-            "type":["boolean"],
+            "type":["str"],
             "nullable": false
         },
         "telescope":{
-            "type":["boolean"],
+            "type":["str"],
             "nullable": false
         },
         "mode":{
-            "type":["boolean"],
+            "type":["str"],
+            "nullable": false
+        },
+      "versioning":{
+            "type":["str"],
+            "allowed": ["major", "minor", "patch"],
             "nullable": false
         }
     }

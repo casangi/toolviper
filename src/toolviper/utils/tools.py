@@ -103,7 +103,12 @@ def verify(filename: str, folder: str):
 
 @parameter.validate()
 def add_entry(
-    file: str, path: str, dtype: str, telescope: str, mode: str
+    file: str,
+    path: str,
+    dtype: str,
+    telescope: str,
+    mode: str,
+    versioning: str = "patch",
 ) -> Union[None, dict]:
     """
         Build new file.download.json with added metadata.
@@ -120,6 +125,9 @@ def add_entry(
         Telescope data was taken with.
     mode : bool
         Telescope data mode.
+
+    versioning : str
+        Type of version update: major, minor, patch
 
     Returns
     -------
@@ -139,6 +147,8 @@ def add_entry(
             return None
 
         json_file = toolviper.utils.tools.open_json(str(manifest_path))
+
+        json_file["version"] = update_version(versioning=versioning)
 
         filename = pathlib.Path(file)
         if filename.is_dir():
@@ -174,6 +184,47 @@ def add_entry(
         json.dump(json_file, file_)
 
     return json_file
+
+
+def update_version(versioning="patch"):
+    import toolviper
+
+    manifest_path = pathlib.Path(toolviper.__path__[0]).joinpath(
+        "utils/data/.cloudflare/file.download.json"
+    )
+
+    if not manifest_path.exists():
+        logger.error(f"Couldn't find download manifest at: {manifest_path}")
+        return None
+
+    json_file = toolviper.utils.tools.open_json(str(manifest_path))
+
+    version_number = json_file["version"]
+
+    major, minor, patch = version_number.split(".")
+
+    major = major.lstrip("v")
+
+    match versioning:
+        case "major":
+            major = int(major) + 1
+            major = str(major)
+
+        case "minor":
+            minor = int(minor) + 1
+            minor = str(minor)
+
+        case "patch":
+            patch = int(patch) + 1
+            patch = str(patch)
+
+        case _:
+            logger.error(f"Unknown option: {versioning}")
+            return None
+
+    version_number = f"v{major}.{minor}.{patch}"
+
+    return version_number
 
 
 class ChecksumError(Exception):
