@@ -34,8 +34,11 @@ class TestToolViperDownload:
         path = pathlib.Path.cwd().joinpath("data")
         path.mkdir(parents=True, exist_ok=True)
 
-        # Only test the first three for now.
-        files = toolviper.utils.data.get_files()[:3]
+        # Only test the first two for now.
+        files = [
+            "ea25_cal_small_after_fixed.split.ms",
+            "ea25_cal_small_before_fixed.split.ms",
+        ]
         toolviper.utils.data.download(file=files, folder=str(path))
 
         # Get metadate json
@@ -83,7 +86,7 @@ class TestToolViperDownload:
         path = pathlib.Path.cwd().joinpath("data")
         path.mkdir(parents=True, exist_ok=True)
 
-        file = toolviper.utils.data.get_files()[0]
+        file = "ea25_cal_small_after_fixed.split.ms"
 
         toolviper.utils.data.download(
             file=file, folder=str(path), decompress=False, overwrite=True
