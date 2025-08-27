@@ -87,7 +87,7 @@ def verify(filename: str, folder: str):
             if not metadata["metadata"][filename][
                 "hash"
             ] == toolviper.utils.tools.calculate_checksum(fullname):
-                logger.error()
+
                 line_number = inspect.currentframe().f_back.f_lineno
                 raise ChecksumError(
                     message="Checksum verification failed.",
