@@ -21,4 +21,4 @@ on:
 
 jobs:
   test:
-    uses: casangi/toolviper/.github/workflows/python-testing-integration-template.yml@main
+    uses: casangi/toolviper/.github/workflows/python-testing-integration-template.yml@19-add-more-tests-to-toolviper
