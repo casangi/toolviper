@@ -21,7 +21,7 @@ on:
       xradio_ref:
         description: "Branch or tag for XRADIO"
         required: false
-        default: "main"
+        default: "471-fix-data-type-used-in-tests-with-toolviper-download"
         type: string
       graphviper_ref:
         description: "Branch or tag for GraphVIPER"
