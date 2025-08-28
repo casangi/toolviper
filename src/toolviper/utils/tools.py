@@ -30,7 +30,7 @@ def calculate_checksum(file: str) -> str:
 
 def iter_files_(path):
     if not pathlib.Path(path).resolve().exists():
-        logger.error(f"Path not found...: {path}")
+        logger.error(f"Path not found ... : {path}")
 
         raise FileNotFoundError
 
