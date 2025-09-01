@@ -29,11 +29,23 @@ jobs:
     if: github.event_name == 'push'
     
     steps:
+    - name: Log dispatch attempt
+      run: |
+        echo "🚀 Preparing to send repository dispatch to testviper..."
+        echo "📦 Repository: ${{ github.repository }}"
+        echo "🌿 Branch: ${{ github.ref }}"
+        echo "🔑 Commit: ${{ github.sha }}"
+        echo "👤 Actor: ${{ github.actor }}"
+        echo "⚙️  Workflow: ${{ github.workflow }}"
+        echo "🆔 Run ID: ${{ github.run_id }}"
+        echo "🔢 Run Number: ${{ github.run_number }}"
+    
     - name: Repository Dispatch to testviper
       uses: peter-evans/repository-dispatch@v2
       with:
         token: ${{ secrets.DISPATCH_TOKEN }}
         repository: casangi/testviper
+        ref: dispatch-receiver-branch
         event-type: integration-test-trigger
         client-payload: |
           {
@@ -45,3 +57,10 @@ jobs:
             "run_id": "${{ github.run_id }}",
             "run_number": "${{ github.run_number }}"
           }
+    
+    - name: Log dispatch success
+      run: |
+        echo "✅ Repository dispatch sent successfully to testviper!"
+        echo "📋 Event type: integration-test-trigger"
+        echo "🎯 Target: casangi/testviper (branch: dispatch-receiver-branch)"
+        echo "📝 Check testviper Actions tab for integration test execution"
