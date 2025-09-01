@@ -45,7 +45,7 @@ jobs:
       with:
         token: ${{ secrets.DISPATCH_TOKEN }}
         repository: casangi/testviper
-        ref: dispatch-receiver-branch
+        ref: 19-repository-dispatch
         event-type: integration-test-trigger
         client-payload: |
           {
@@ -62,5 +62,5 @@ jobs:
       run: |
         echo "✅ Repository dispatch sent successfully to testviper!"
         echo "📋 Event type: integration-test-trigger"
-        echo "🎯 Target: casangi/testviper (branch: dispatch-receiver-branch)"
+        echo "🎯 Target: casangi/testviper (branch: 19-repository-dispatch)"
         echo "📝 Check testviper Actions tab for integration test execution"
