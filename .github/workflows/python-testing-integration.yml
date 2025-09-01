@@ -22,3 +22,26 @@ on:
 jobs:
   test:
     uses: casangi/toolviper/.github/workflows/python-testing-integration-template.yml@main
+
+  dispatch-integration-tests:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'
+    
+    steps:
+    - name: Repository Dispatch to testviper
+      uses: peter-evans/repository-dispatch@v2
+      with:
+        token: ${{ secrets.DISPATCH_TOKEN }}
+        repository: casangi/testviper
+        event-type: integration-test-trigger
+        client-payload: |
+          {
+            "repository": "${{ github.repository }}",
+            "ref": "${{ github.ref }}",
+            "sha": "${{ github.sha }}",
+            "actor": "${{ github.actor }}",
+            "workflow": "${{ github.workflow }}",
+            "run_id": "${{ github.run_id }}",
+            "run_number": "${{ github.run_number }}"
+          }
