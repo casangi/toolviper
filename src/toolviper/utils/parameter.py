@@ -69,25 +69,6 @@ def validate(
     return function_wrapper
 
 
-# DEPRECATED
-def _get_path(function: Callable) -> str:
-    module = inspect.getmodule(function)
-    module_path = inspect.getfile(module).rstrip(".py")
-
-    if "src" in module_path:
-        # This represents a local developer install
-
-        base_module_path = module_path.split("src/")[0]
-        return base_module_path
-
-    else:
-        # Here we hope that we can find the package in site-packages and it is unique
-        # otherwise the user should provide the configuration path in the decorator.
-
-        base_module_path = module_path.split("site-packages/")[0]
-        return str(pathlib.Path(base_module_path).joinpath("site-packages/"))
-
-
 def get_path(function: Callable) -> tuple[str, str]:
     module = inspect.getmodule(function)
     module_path = inspect.getfile(module).removesuffix(".py")
@@ -148,7 +129,7 @@ def config_search(root: str = "/", module_name=None) -> Union[None, str]:
     return None
 
 
-def set_config_directory(path: str, create: bool = False) -> NoReturn:
+def set_config_directory(path: str, create: bool = False) -> None:
     colorize = console.Colorize()
     if pathlib.Path(path).exists():
         toolviper.utils.logger.info(
@@ -170,6 +151,10 @@ def set_config_directory(path: str, create: bool = False) -> NoReturn:
                 )
             )
             pathlib.Path(path).mkdir()
+            if not pathlib.Path(path).exists():
+                toolviper.utils.logger.error(
+                    f"Failed to create configuration directory [{path}]"
+                )
 
 
 def verify_configuration(path: str, module: ModuleType) -> List[str]:
@@ -199,7 +184,7 @@ def verify(
     add_data_type: Any = None,
     custom_checker: Callable = None,
     external_logger: Callable = None,
-) -> NoReturn:
+) -> None:
     colorize = console.Colorize()
     function_name, module_name = meta_data.values()
 
