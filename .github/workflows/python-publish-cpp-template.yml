@@ -1,0 +1,92 @@
+name: Build & Publish to PyPI
+
+on:
+  workflow_call:
+    inputs:
+      pypi-url:
+        required: true
+        type: string
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-wheels:
+    name: Build wheels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # macos-13 = Intel (x86_64), macos-14/15 = Apple Silicon (arm64)
+        os: [ubuntu-latest, macos-13, macos-14, macos-15]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python (driver, cibuildwheel installs its own Pythons)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install cibuildwheel
+        run: python -m pip install --upgrade pip cibuildwheel==2.21.3
+
+      - name: Build wheels
+        env:
+          # Build CPython 3.11, 3.12, 3.13
+          CIBW_BUILD: "cp311-* cp312-* cp313-*"
+
+          # Manylinux baseline for Linux wheels
+          CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
+          CIBW_MANYLINUX_AARCH64_IMAGE: "manylinux_2_28"  # kept for symmetry; only used if you enable aarch64
+
+          # Optional quick import test
+          CIBW_TEST_COMMAND: "python -c \"import astroviper; print(astroviper.__version__)\""
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+
+      - name: Upload wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ runner.os }}
+          path: wheelhouse/*.whl
+
+  build-sdist:
+    name: Build sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build --sdist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  publish:
+    name: Publish to PyPI
+    needs: [build-wheels, build-sdist]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    environment:
+      name: release
+      url: ${{ inputs.pypi-url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: "__token__"
+          password: ${{ secrets.PYPI_TOKEN }}
+          # skip-existing: true
