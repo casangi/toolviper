@@ -43,6 +43,7 @@ jobs:
     - name: Repository Dispatch to testviper
       uses: actions/github-script@v6
       with:
+        github-token: ${{ secrets.DISPATCH_TOKEN }}
         script: |
           const payload = {
             event_type: 'integration-test-trigger',
@@ -53,30 +54,23 @@ jobs:
               actor: '${{ github.actor }}',
               workflow: '${{ github.workflow }}',
               run_id: '${{ github.run_id }}',
-              run_number: '${{ github.run_number }}'
+              run_number: '${{ github.run_number }}',
+              // Target branch in casangi/testviper to run the receiver's workflow
+              target_ref: '19-repository-dispatch'
             }
           };
           
-          // Send repository dispatch to specific branch
+          // Send repository dispatch to target repository
           await github.rest.repos.createDispatchEvent({
             owner: 'casangi',
             repo: 'testviper',
-            ref: '19-repository-dispatch',
             event_type: payload.event_type,
             client_payload: payload.client_payload
           });
           
-          // To target the default main branch later, use the snippet below
-          // and replace the call above. Keeping it commented for now:
-          // await github.rest.repos.createDispatchEvent({
-          //   owner: 'casangi',
-          //   repo: 'testviper',
-          //   ref: 'main',
-          //   event_type: payload.event_type,
-          //   client_payload: payload.client_payload
-          // });
+          // Note: repository_dispatch is repository-wide and not branch-specific.
 
-          console.log('Repository dispatch sent successfully to testviper (19-repository-dispatch branch)');
+          console.log('Repository dispatch sent successfully to testviper');
     
     - name: Log dispatch success
       run: |
