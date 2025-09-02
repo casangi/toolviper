@@ -54,9 +54,7 @@ jobs:
               actor: '${{ github.actor }}',
               workflow: '${{ github.workflow }}',
               run_id: '${{ github.run_id }}',
-              run_number: '${{ github.run_number }}',
-              // Target branch in casangi/testviper to run the receiver's workflow
-              target_ref: '19-repository-dispatch'
+              run_number: '${{ github.run_number }}'
             }
           };
           
@@ -76,5 +74,5 @@ jobs:
       run: |
         echo "✅ Repository dispatch sent successfully to testviper!"
         echo "📋 Event type: integration-test-trigger"
-        echo "🎯 Target: casangi/testviper (branch: 19-repository-dispatch)"
+        echo "🎯 Target: casangi/testviper (branch: main)"
         echo "📝 Check testviper Actions tab for integration test execution"
