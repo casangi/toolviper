@@ -31,6 +31,9 @@ jobs:
       - name: Install cibuildwheel
         run: python -m pip install --upgrade pip cibuildwheel==2.21.3
 
+      - name: Show build matrix cibuildwheel sees
+        run: python -m cibuildwheel --print-build-identifiers
+
       - name: Build wheels
         env:
           # Build CPython 3.11, 3.12, 3.13
@@ -38,6 +41,8 @@ jobs:
 
           # Only 64-bit Linux (avoid i686)
           CIBW_ARCHS_LINUX: "x86_64"
+
+          CIBW_SKIP: "*-musllinux_* *-manylinux_i686"
 
           # Manylinux baseline for Linux wheels
           CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
