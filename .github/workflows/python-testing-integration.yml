@@ -7,7 +7,7 @@ on:
       - '**.rst'
   push:
     branches:
-      - "**"  # Run on pushes to all branches for testing
+      - main  
     paths-ignore:
       - '**.md'
       - '**.rst'
