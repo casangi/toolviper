@@ -41,22 +41,42 @@ jobs:
         echo "🔢 Run Number: ${{ github.run_number }}"
     
     - name: Repository Dispatch to testviper
-      uses: peter-evans/repository-dispatch@v2
+      uses: actions/github-script@v6
       with:
-        token: ${{ secrets.DISPATCH_TOKEN }}
-        repository: casangi/testviper
-        ref: 19-repository-dispatch
-        event-type: integration-test-trigger
-        client-payload: |
-          {
-            "repository": "${{ github.repository }}",
-            "ref": "${{ github.ref }}",
-            "sha": "${{ github.sha }}",
-            "actor": "${{ github.actor }}",
-            "workflow": "${{ github.workflow }}",
-            "run_id": "${{ github.run_id }}",
-            "run_number": "${{ github.run_number }}"
-          }
+        script: |
+          const payload = {
+            event_type: 'integration-test-trigger',
+            client_payload: {
+              repository: '${{ github.repository }}',
+              ref: '${{ github.ref }}',
+              sha: '${{ github.sha }}',
+              actor: '${{ github.actor }}',
+              workflow: '${{ github.workflow }}',
+              run_id: '${{ github.run_id }}',
+              run_number: '${{ github.run_number }}'
+            }
+          };
+          
+          // Send repository dispatch to specific branch
+          await github.rest.repos.createDispatchEvent({
+            owner: 'casangi',
+            repo: 'testviper',
+            ref: '19-repository-dispatch',
+            event_type: payload.event_type,
+            client_payload: payload.client_payload
+          });
+          
+          // To target the default main branch later, use the snippet below
+          // and replace the call above. Keeping it commented for now:
+          // await github.rest.repos.createDispatchEvent({
+          //   owner: 'casangi',
+          //   repo: 'testviper',
+          //   ref: 'main',
+          //   event_type: payload.event_type,
+          //   client_payload: payload.client_payload
+          // });
+
+          console.log('Repository dispatch sent successfully to testviper (19-repository-dispatch branch)');
     
     - name: Log dispatch success
       run: |
