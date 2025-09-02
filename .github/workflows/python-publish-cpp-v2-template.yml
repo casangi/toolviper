@@ -36,6 +36,9 @@ jobs:
           # Build CPython 3.11, 3.12, 3.13
           CIBW_BUILD: "cp311-* cp312-* cp313-*"
 
+          # Only 64-bit Linux (avoid i686)
+          CIBW_ARCHS_LINUX: "x86_64"
+
           # Manylinux baseline for Linux wheels
           CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
 
