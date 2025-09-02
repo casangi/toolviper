@@ -10,10 +10,11 @@ import toolviper
 import toolviper.utils.logger as logger
 import toolviper.utils.console as console
 
+from toolviper.utils import parameter
 from threading import Thread
-from rich.progress import Progress
+from rich.progress import Progress, TaskID
 
-from typing import NoReturn, Union, Optional
+from typing import Union, Optional, Any
 
 colorize = console.Colorize()
 
@@ -21,11 +22,15 @@ PROGRESS_MAX_CHARACTERS = 28
 MINIMUM_CHUNK_SIZE = 1024
 
 
-def version() -> NoReturn:
+def version() -> None:
     # Load the file dropbox file meta data.
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
         ".cloudflare/file.download.json"
     )
+
+    if not meta_data_path.parent.exists():
+        logger.debug("metadata path doesn't exist... creating")
+        meta_data_path.parent.mkdir(parents=True)
 
     # Verify that the download metadata exists and updates if not.
     _verify_metadata_file()
@@ -36,11 +41,13 @@ def version() -> NoReturn:
         logger.info(f'{file_meta_data["version"]}')
 
 
+@parameter.validate()
 def download(
     file: Union[str, list],
     folder: str = ".",
     overwrite: bool = False,
-) -> NoReturn:
+    decompress: bool = True,
+) -> None:
     """
         Download tool for data stored externally.
     Parameters
@@ -51,6 +58,8 @@ def download(
         Destination folder.
     overwrite : bool
         Should file be overwritten.
+    decompress : bool
+        Should file be unzipped.
 
     Returns
     -------
@@ -136,14 +145,13 @@ def download(
 
     with progress:
         task_ids = [
-            # progress.add_task(task["description"], total=task["size"])
-            progress.add_task(task["description"])
-            for task in tasks
-            if len(tasks) > 0
+            progress.add_task(task["description"]) for task in tasks if len(tasks) > 0
         ]
 
         for i, task in enumerate(tasks):
-            thread = Thread(target=worker, args=(progress, task_ids[i], task))
+            thread = Thread(
+                target=worker, args=(progress, task_ids[i], task, decompress)
+            )
             thread.start()
             threads.append(thread)
 
@@ -151,14 +159,13 @@ def download(
             thread.join()
 
     if len(missing_files) > 0:
-        logger.info(f"Trying to retrieve missing files dropbox: {missing_files}")
-        toolviper.utils.data.dropbox(file=missing_files, folder=folder)
+        logger.error(f"Missing files: {missing_files}")
 
 
-def worker(progress: Progress, task_id: int, task: dict) -> NoReturn:
+def worker(progress: Progress, task_id: TaskID, task: dict, decompress=True) -> None:
     """Simulate work being done in a thread"""
 
-    fullname = task["metadata"]["file"]
+    filename = task["metadata"]["file"]
 
     url = (
         f"http://downloadnrao.org/{task['metadata']['path']}/{task['metadata']['file']}"
@@ -170,9 +177,10 @@ def worker(progress: Progress, task_id: int, task: dict) -> NoReturn:
     if total == 0:
         total = task["size"]
 
-    fullname = str(pathlib.Path(task["folder"]).joinpath(fullname))
+    fullname = str(pathlib.Path(task["folder"]).joinpath(filename))
 
     size = 0
+
     with open(fullname, "wb") as fd:
 
         for chunk in r.iter_content(chunk_size=MINIMUM_CHUNK_SIZE):
@@ -182,14 +190,18 @@ def worker(progress: Progress, task_id: int, task: dict) -> NoReturn:
                     task_id, completed=size, total=total, visible=task["visible"]
                 )
 
-    if zipfile.is_zipfile(fullname):
-        shutil.unpack_archive(filename=fullname, extract_dir=task["folder"])
+    # Verify checksum on file
+    toolviper.utils.verify(filename, task["folder"])
 
-        # Let's clean up after ourselves
-        os.remove(fullname)
+    if decompress:
+        if zipfile.is_zipfile(fullname):
+            shutil.unpack_archive(filename=fullname, extract_dir=task["folder"])
+
+            # Let's clean up after ourselves
+            os.remove(fullname)
 
 
-def list_files() -> NoReturn:
+def list_files() -> None:
     """
     List all files in cloudflare
     """
@@ -229,7 +241,7 @@ def list_files() -> NoReturn:
     console.print(table)
 
 
-def get_files() -> NoReturn:
+def get_files() -> list[Any]:
     """
     Get all files available in cloudflare manifest. This is retrieved from the local cloudflare
     metadata file.
@@ -248,13 +260,14 @@ def get_files() -> NoReturn:
         return list(file_meta_data["metadata"].keys())
 
 
-def update() -> NoReturn:
+def update() -> None:
     """
     Update cloudflare manifest.
     """
     meta_data_path = pathlib.Path(__file__).parent.joinpath(".cloudflare")
 
-    _makedir(str(pathlib.Path(__file__).parent), ".cloudflare")
+    if not meta_data_path.exists():
+        _make_dir(str(pathlib.Path(__file__).parent), ".cloudflare")
 
     file_meta_data = {
         "file": "file.download.json",
@@ -288,6 +301,7 @@ def update() -> NoReturn:
         )
 
 
+@parameter.validate()
 def get_file_size(path: str) -> Optional[dict]:
     """
     Get list file sizes in bytes for a given path. Only works for files; isn't recursive.
@@ -312,10 +326,12 @@ def get_file_size(path: str) -> Optional[dict]:
     return file_size_dict
 
 
-def _print_file_queue(files: list) -> NoReturn:
+def _print_file_queue(files: list) -> None:
     from rich.table import Table
     from rich.console import Console
     from rich import box
+
+    assert type(files) == list
 
     console = Console()
     table = Table(show_header=True, box=box.SIMPLE)
@@ -328,7 +344,7 @@ def _print_file_queue(files: list) -> NoReturn:
     console.print(table)
 
 
-def _makedir(path, folder):
+def _make_dir(path, folder):
     p = pathlib.Path(path).joinpath(folder)
     try:
         p.mkdir()
@@ -351,5 +367,5 @@ def _verify_metadata_file():
     )
 
     if not meta_data_path.exists():
-        logger.warning(f"Couldn't find {colorize.blue(meta_data_path)}.")
+        logger.warning(f"Couldn't find {colorize.blue(str(meta_data_path))}.")
         update()
