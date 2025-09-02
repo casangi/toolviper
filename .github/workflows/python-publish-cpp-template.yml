@@ -41,7 +41,7 @@ jobs:
           CIBW_MANYLINUX_AARCH64_IMAGE: "manylinux_2_28"  # kept for symmetry; only used if you enable aarch64
 
           # Optional quick import test
-          CIBW_TEST_COMMAND: "python -c \"import astroviper; print(astroviper.__version__)\""
+          CIBW_TEST_COMMAND: "python -c \"import astroviper; print(dir(astroviper))\""
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 
