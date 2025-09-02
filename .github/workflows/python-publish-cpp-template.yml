@@ -38,7 +38,6 @@ jobs:
 
           # Manylinux baseline for Linux wheels
           CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
-          CIBW_MANYLINUX_AARCH64_IMAGE: "manylinux_2_28"  # kept for symmetry; only used if you enable aarch64
 
           # Optional quick import test
           CIBW_TEST_COMMAND: "python -c \"import astroviper; print(dir(astroviper))\""
