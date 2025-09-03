@@ -6,9 +6,6 @@ on:
       pypi-url:
         required: true
         type: string
-  push:
-    tags:
-      - "v*"
 
 jobs:
   build-wheels:
