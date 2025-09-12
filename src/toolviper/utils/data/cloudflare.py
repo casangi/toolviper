@@ -167,10 +167,8 @@ def worker(progress: Progress, task_id: TaskID, task: dict, decompress=True) -> 
 
     filename = task["metadata"]["file"]
 
-    url = (
-        f"https://downloadnrao.org/{task['metadata']['path']}/{task['metadata']['file']}"
-    )
-    
+    url = f"https://downloadnrao.org/{task['metadata']['path']}/{task['metadata']['file']}"
+
     r = requests.get(url, stream=True, headers={"user-agent": "Wget/1.16 (linux-gnu)"})
     total = int(r.headers.get("Content-Length", 0))
 
@@ -191,7 +189,7 @@ def worker(progress: Progress, task_id: TaskID, task: dict, decompress=True) -> 
                 )
 
     # Verify checksum on file
-    #toolviper.utils.verify(filename, task["folder"])
+    # toolviper.utils.verify(filename, task["folder"])
 
     if decompress:
         if zipfile.is_zipfile(fullname):
@@ -261,7 +259,7 @@ def get_files() -> list[Any]:
 
 
 @parameter.validate()
-def update(path: str=None) -> None:
+def update(path: str = None) -> None:
     """
     Update cloudflare manifest.
 

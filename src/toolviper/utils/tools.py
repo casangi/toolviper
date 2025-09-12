@@ -54,7 +54,9 @@ def update_hash(file: str, folder: str):
             if str(full_filename).endswith(".zip"):
                 filename = str(filename).split(".zip")[0]
 
-            json_file["metadata"][filename]["hash"] = calculate_checksum(str(full_filename))
+            json_file["metadata"][filename]["hash"] = calculate_checksum(
+                str(full_filename)
+            )
 
         except KeyError:
             logger.error(f"{filename} not found in metadata ...")
@@ -100,14 +102,10 @@ def verify(filename: str, folder: str):
         logger.error(f"{metadata_address} doesn't exist ... exiting.")
         raise FileNotFoundError
 
+
 @parameter.validate()
 def process_entry_(
-        file: str,
-        path: str,
-        dtype: str,
-        telescope: str,
-        mode: str,
-        json_file: dict
+    file: str, path: str, dtype: str, telescope: str, mode: str, json_file: dict
 ):
     import toolviper
 
@@ -137,6 +135,7 @@ def process_entry_(
     }
 
     json_file["metadata"][file_key] = metadata
+
 
 @parameter.validate()
 def add_entry(
@@ -184,7 +183,7 @@ def add_entry(
 
         for entry in entries:
             process_entry_(**entry, json_file=json_file)
-        '''
+        """
         filename = pathlib.Path(file)
         if filename.is_dir():
             logger.warning(
@@ -210,7 +209,7 @@ def add_entry(
         }
 
         json_file["metadata"][file_key] = metadata
-        '''
+        """
 
     except KeyError:
         logger.error("entry not found in metadata ... skipping")
