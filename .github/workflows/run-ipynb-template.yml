@@ -36,6 +36,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install ".[all]" #The magic if not present download fails in ipynb
         pip install graphviz
+        pip install holoviews
 
     - name: Run Jupyter notebooks
       run: |
