@@ -1,5 +1,5 @@
 {
-    "add_entry":{
+    "process_entry":{
         "file":{
             "type":["str"],
             "nullable": false
@@ -29,7 +29,21 @@
             "type":["str"],
             "nullable": false
         },
-      "versioning":{
+        "json_file":{
+            "type": ["dict"],
+            "nullable": false
+        }
+    },
+    "add_entry":{
+        "entries":{
+            "type":["list"],
+            "nullable": false
+        },
+        "manifest":{
+            "type":["str"],
+            "nullable": true
+        },
+        "versioning":{
             "type":["str"],
             "allowed": ["major", "minor", "patch"],
             "nullable": false

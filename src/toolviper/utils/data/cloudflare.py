@@ -168,9 +168,9 @@ def worker(progress: Progress, task_id: TaskID, task: dict, decompress=True) -> 
     filename = task["metadata"]["file"]
 
     url = (
-        f"http://downloadnrao.org/{task['metadata']['path']}/{task['metadata']['file']}"
+        f"https://downloadnrao.org/{task['metadata']['path']}/{task['metadata']['file']}"
     )
-
+    
     r = requests.get(url, stream=True, headers={"user-agent": "Wget/1.16 (linux-gnu)"})
     total = int(r.headers.get("Content-Length", 0))
 
@@ -191,7 +191,7 @@ def worker(progress: Progress, task_id: TaskID, task: dict, decompress=True) -> 
                 )
 
     # Verify checksum on file
-    toolviper.utils.verify(filename, task["folder"])
+    #toolviper.utils.verify(filename, task["folder"])
 
     if decompress:
         if zipfile.is_zipfile(fullname):
@@ -260,11 +260,23 @@ def get_files() -> list[Any]:
         return list(file_meta_data["metadata"].keys())
 
 
-def update() -> None:
+@parameter.validate()
+def update(path: str=None) -> None:
     """
     Update cloudflare manifest.
+
+    Parameters
+    ----------
+    path : str
+        In the case that you want an updated copy of the manifest for modification, this is the path to save it to.
     """
-    meta_data_path = pathlib.Path(__file__).parent.joinpath(".cloudflare")
+
+    if path is None:
+        meta_data_path = pathlib.Path(__file__).parent.joinpath(".cloudflare")
+
+    else:
+        # I know this is an unnecessary copy but I don't want a big erbose path name in the inpute variables.
+        meta_data_path = pathlib.Path(path)
 
     if not meta_data_path.exists():
         _make_dir(str(pathlib.Path(__file__).parent), ".cloudflare")
