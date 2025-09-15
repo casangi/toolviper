@@ -8,7 +8,6 @@ on:
   push:
     branches:
       - main  
-      - 25-fix-repo-dispatch-in-integration-workflow
     paths-ignore:
       - '**.md'
       - '**.rst'
@@ -22,6 +21,6 @@ on:
 
 jobs:
   test:
-    uses: casangi/toolviper/.github/workflows/python-testing-integration-template.yml@25-fix-repo-dispatch-in-integration-workflow
+    uses: casangi/toolviper/.github/workflows/python-testing-integration-template.yml@main
     secrets:
       DISPATCH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}

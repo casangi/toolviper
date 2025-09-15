@@ -140,7 +140,7 @@ jobs:
   dispatch-integration-tests:
     runs-on: ubuntu-latest
     needs: test-all
-    if: github.event_name == 'push' && github.ref == 'refs/heads/25-fix-repo-dispatch-in-integration-workflow'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
     - name: Log dispatch attempt
