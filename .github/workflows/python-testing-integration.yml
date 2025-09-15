@@ -23,3 +23,5 @@ on:
 jobs:
   test:
     uses: casangi/toolviper/.github/workflows/python-testing-integration-template.yml@25-fix-repo-dispatch-in-integration-workflow
+with:
+    dispatch_token: ${{ secrets.DISPATCH_TOKEN }}

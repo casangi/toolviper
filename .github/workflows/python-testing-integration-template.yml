@@ -33,6 +33,10 @@ on:
         required: false
         default: "main"
         type: string
+      dispatch_token:
+        description: "Token for repository dispatch to TestVIPER"
+        required: true
+        type: string
 
 jobs:
   test-all:
@@ -154,7 +158,7 @@ jobs:
     - name: Repository Dispatch to testviper
       uses: actions/github-script@v6
       with:
-        github-token: ${{ secrets.DISPATCH_TOKEN }}
+        github-token: ${{ inputs.dispatch_token }}
         script: |
           const payload = {
             event_type: 'integration-test-trigger',
