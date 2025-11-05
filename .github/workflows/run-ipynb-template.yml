@@ -10,6 +10,14 @@ jobs:
     defaults:
       run:
         shell: bash -l {0}
+    env:
+      MPLBACKEND: Agg
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      JUPYTER_CLIENT_DEBUG: "1"
+      
     strategy:
       fail-fast: false
       matrix:
@@ -48,7 +56,6 @@ jobs:
         NOTEBOOK_FILE=$(basename "$notebook")
 
         cd "$NOTEBOOK_DIR"
-
-        jupyter nbconvert --to notebook --execute "$NOTEBOOK_FILE" --output "$NOTEBOOK_FILE" 
+        jupyter nbconvert --to notebook --execute "$NOTEBOOK_FILE" --output "$NOTEBOOK_FILE" --ExecutePreprocessor.timeout=1800 --ExecutePreprocessor.iopub_timeout=1800 
         cd "$ORIGINAL_DIR"
        done
