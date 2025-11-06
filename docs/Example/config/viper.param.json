@@ -1,0 +1,26 @@
+{
+  "snake_danger_checker":{
+    "number": {
+      "required": true,
+      "type": ["int"]
+    },
+    "poison": {
+      "required": true,
+      "type": "boolean"
+    },
+    "species": {
+      "required": true,
+      "type": "string"
+    }
+  },
+  "snake_object_danger_checker": {
+    "number": {
+      "required": true,
+      "type": ["int"]
+    },
+    "snake_info": {
+      "required": true,
+      "type": ["SnakeObject"]
+    }
+  }
+}

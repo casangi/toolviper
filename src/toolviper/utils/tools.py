@@ -54,7 +54,9 @@ def update_hash(file: str, folder: str):
             if str(full_filename).endswith(".zip"):
                 filename = str(filename).split(".zip")[0]
 
-            json_file["metadata"][filename]["hash"] = calculate_checksum(full_filename)
+            json_file["metadata"][filename]["hash"] = calculate_checksum(
+                str(full_filename)
+            )
 
         except KeyError:
             logger.error(f"{filename} not found in metadata ...")
@@ -102,29 +104,56 @@ def verify(filename: str, folder: str):
 
 
 @parameter.validate()
+def process_entry_(
+    file: str, path: str, dtype: str, telescope: str, mode: str, json_file: dict
+):
+    import toolviper
+
+    filename = pathlib.Path(file)
+    if filename.is_dir():
+        logger.warning(
+            f"{filename.name} is a folder, run your favorite compression algorithm to calculate the checksum"
+        )
+
+        return None
+
+    file_key = str(filename.name)
+
+    if str(filename).endswith(".zip"):
+        file_key = str(filename.name).split(".zip")[0]
+
+    size = toolviper.utils.data.get_file_size(path=str(filename.parent))[file_key]
+
+    metadata = {
+        "file": filename.name,
+        "path": path,
+        "dtype": dtype,
+        "telescope": telescope,
+        "size": str(size),
+        "mode": mode,
+        "hash": toolviper.utils.tools.calculate_checksum(str(filename)),
+    }
+
+    json_file["metadata"][file_key] = metadata
+
+
+@parameter.validate()
 def add_entry(
-    file: str,
-    path: str,
-    dtype: str,
-    telescope: str,
-    mode: str,
+    entries: list,
+    manifest: Union[str, None] = None,
     versioning: str = "patch",
-) -> Union[None, dict]:
+) -> Union[dict, None]:
     """
         Build new file.download.json with added metadata.
 
     Parameters
     ----------
-    file : str
-        Filename of file to upload.
-    path : str
-        Cloudflare path.
-    dtype : bool
-        File type of file to upload.
-    telescope : bool
-        Telescope data was taken with.
-    mode : bool
-        Telescope data mode.
+
+    entries : dict
+        Dictionary of metadata info that are needed to build the new entry.
+
+    manifest : str
+        Points to the manifest you want to modify.
 
     versioning : str
         Type of version update: major, minor, patch
@@ -136,20 +165,25 @@ def add_entry(
     import toolviper
 
     try:
-        metadata = {}
+        if manifest is None:
+            manifest = pathlib.Path(toolviper.__path__[0]).joinpath(
+                "utils/data/.cloudflare/file.download.json"
+            )
 
-        manifest_path = pathlib.Path(toolviper.__path__[0]).joinpath(
-            "utils/data/.cloudflare/file.download.json"
-        )
+        else:
+            manifest = pathlib.Path(manifest)
 
-        if not manifest_path.exists():
-            logger.error(f"Couldn't find download manifest at: {manifest_path}")
+        if not manifest.exists():
+            logger.error(f"Couldn't find download manifest at: {manifest}")
             return None
 
-        json_file = toolviper.utils.tools.open_json(str(manifest_path))
+        json_file = toolviper.utils.tools.open_json(str(manifest))
 
         json_file["version"] = update_version(versioning=versioning)
 
+        for entry in entries:
+            process_entry_(**entry, json_file=json_file)
+        """
         filename = pathlib.Path(file)
         if filename.is_dir():
             logger.warning(
@@ -175,9 +209,10 @@ def add_entry(
         }
 
         json_file["metadata"][file_key] = metadata
+        """
 
     except KeyError:
-        logger.error(f"{file_key} not found in metadata ...")
+        logger.error("entry not found in metadata ... skipping")
         return None
 
     with open("file.download.json", "w") as file_:
