@@ -116,3 +116,164 @@ class Database:
     def entry(self, name: str, age: Union[str, int]):
         print(f"{name}: {age}")
 ```
+
+### Optional Details
+
+The parameter checking is applied to any function decorated with the function `toolviper.utils.parameter.validate(...)`. The verification
+function has the following input parameters available.
+
+- `config_dir`: This specifies the configuration directory
+- `logger`: This allows the user to pass a specific logger instance to the parameter checking. If this is not done, `toolviper`
+  will spawn its own internal logger. The only difference will be the logger name in the output.
+- `add_data_type`: Not all data types are available from teh default setup more importantly though there are a number of
+  instance in the framework(s) where custom data objects are passed to function and there needs to be a way to check these
+  as well. This allows the user to register a custom data ype for checking. All that is needed if to pass an instance of
+  the data type.
+- `custom_checker`: This allows the user to register a function that will return all allowed data types for a parameter.
+
+Taking the example from the code, to implement the verification on the `snake_danger_checker(...)` function, assuming the
+configuration directory is set up in `__init__.py`:
+
+### Another Standard Function Implementation Example:
+```angular2html
+import toolviper
+
+@toolviper.utils.parameter.validate
+def snake_danger_checker(number: int, poison: bool, species: str)->Union[int, NoReturn]:
+    ...
+```
+
+The configuration file for this would be as follows (though the user could add more layers)
+
+```angular2html
+snake/config/viper.param.json:
+
+{
+  "snake_danger_checker":{
+    "number": {
+      "required": true,
+      "type": ["int"]
+    },
+    "poison": {
+      "required": true,
+      "type": "boolean"
+    },
+    "species": {
+      "required": true,
+      "type": "string"
+    }
+  }
+```
+
+If this was a checker on a class method the only change to be made would be that that function name would change to
+`ClassName.snake_danger_checker`.
+
+This is only a very sparse version of a configuration file, the requirements can be made quite strict with some work. A
+full list of supported parameter checks at [cerberus::validation](https://docs.python-cerberus.org/validation-rules.html).
+In addition, `toolviper` also supports:
+
+- Custom data types: `ndarray` is supported by default in `toolviper` and any valid data type can be registered.
+- Custom checking function
+- Sequence validation
+- Structure data type
+
+The framework is fully extensible so additional checks can be added without too much work.
+
+### Function with Custom Data Implementation:
+
+Extending our previous example, let's say we have a custom data object that we can use to dynamically store snake
+information, and we want to pass this instead. If we define the object as follows,
+
+```angular2html
+snake_info = snake.viper.SnakeObject(
+    object_name="snake-info-list",
+    poison=True,
+    species="cobra",
+    color="brown",
+    angry=True
+)
+```
+
+We can use this in a modified snake checking function and verify it by simply passing an instance of the `SnakeObject` to
+the validation using the `add_data_type` parameter.
+
+```angular2html
+@toolviper.utils.parameter.validate(
+    logger=toolviper.utils.logger.get_logger(logger_name="viper-logger"),
+    add_data_type=SnakeObject
+)
+def snake_object_danger_checker(number: int, snake_info: SnakeObject) -> Union[float, NoReturn]:
+    ...
+```
+
+### Custom Data Checker
+
+This option is for the case that the user wants to define a function that will use some sort of custom logic to decide the
+acceptable values for a given parameter and then return them to the validation scheme. The vest example of this is in `astrohack`
+where some of the plotting functions have a different set of acceptable units depending on the plot being made, therefore
+we want a easily modifiable list of units that can be returned instead of hard-coding each function separately. The primary
+requirement for a custom checking function is that it take a string parameter and return a list of acceptable values to
+check against. In the case of `astrohack` this was a list of acceptable plotting units depending on whether teh function
+needs trigonometric, time or radian units. The custom check function in this case was,
+
+```angular2html
+def custom_unit_checker(unit_type):
+    if unit_type == "units.trig":
+        return trigo_units
+
+    elif unit_type == "units.length":
+        return length_units
+
+    elif unit_type == "units.time":
+        return time_units
+
+    else:
+        return "Not found"
+```
+
+where the units are defined in a constants module as,
+
+```angular2html
+# Length units
+length_units = ['km', 'mi', 'm', 'yd', 'ft', 'in', 'cm', 'mm', 'um', 'mils']
+
+# Trigonometric units
+trigo_units = ['rad', 'deg', 'hour', 'asec', 'amin']
+
+# Time units
+time_units = ['nsec', 'usec', 'msec', 'sec', 'min', 'hour', 'day']
+```
+
+In order to add this to the plotting function
+
+```angular2html
+ @toolviper.utils.parameter.validate(
+        logger=logger.get_logger(logger_name="astrohack"),
+        custom_checker=custom_unit_checker
+    )
+    def plot_array_configuration(
+            self,
+            destination: str,
+            stations: bool = True,
+            zoff: bool = False,
+            unit: str = 'm',
+            box_size: Union[int, float] = 5000,
+            display: bool = False,
+            figure_size: Union[Tuple, List[float], np.array] = None,
+            dpi: int = 300
+    ) -> None:
+    ...
+```
+
+and in the configuration file this function has teh following parameter check for the unit parameter,
+
+```angular2html
+...
+    "unit":{
+            "nullable": false,
+            "required": false,
+            "type": ["string"],
+            "check allowed with": "units.length"
+    },
+...
+```
