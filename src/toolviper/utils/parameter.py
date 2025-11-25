@@ -1,20 +1,17 @@
-import os
-import glob
-import json
-import pkgutil
-import pathlib
-import inspect
-
 import functools
+import glob
 import importlib
-
-import toolviper.utils.logger
-import toolviper.utils.console as console
-
-from toolviper.utils.protego import Protego
-
-from typing import Callable, Any, Union, NoReturn, Dict, List, Optional, Tuple
+import inspect
+import json
+import os
+import pathlib
+import pkgutil
 from types import ModuleType
+from typing import Any, Callable, Dict, List, NoReturn, Optional, Tuple, Union
+
+import toolviper.utils.console as console
+import toolviper.utils.logger
+from toolviper.utils.protego import Protego
 
 
 def is_notebook() -> bool:
@@ -209,7 +206,7 @@ def verify(
     path = None
 
     package_path, module_path = get_path(function)
-    logger.info(f"Module path: {colorize.blue(package_path)}")
+    logger.debug(f"Module path: {colorize.blue(package_path)}")
 
     # First we need to find the parameter configuration files
     if (

@@ -1,13 +1,11 @@
-import json
-import pathlib
 import hashlib
 import inspect
+import json
+import pathlib
+from typing import NoReturn, Union
 
 import toolviper.utils.logger as logger
-
 from toolviper.utils import parameter
-
-from typing import Union, NoReturn
 
 
 def open_json(file: str) -> Union[dict, NoReturn]:
@@ -89,7 +87,6 @@ def verify(filename: str, folder: str):
             if not metadata["metadata"][filename][
                 "hash"
             ] == toolviper.utils.tools.calculate_checksum(fullname):
-
                 line_number = inspect.currentframe().f_back.f_lineno
                 raise ChecksumError(
                     message="Checksum verification failed.",
@@ -111,11 +108,11 @@ def process_entry_(
 
     filename = pathlib.Path(file)
     if filename.is_dir():
-        logger.warning(
-            f"{filename.name} is a folder, run your favorite compression algorithm to calculate the checksum"
+        logger.error(
+            f"{filename.name} is a folder, run zip on the file to calculate the checksum and/or file size"
         )
 
-        return None
+        raise TypeError
 
     file_key = str(filename.name)
 
@@ -139,8 +136,8 @@ def process_entry_(
 
 @parameter.validate()
 def add_entry(
-    entries: list,
-    manifest: Union[str, None] = None,
+    entries: Union[list, dict],
+    manifest: Union[str, pathlib.Path, None] = None,
     versioning: str = "patch",
 ) -> Union[dict, None]:
     """
@@ -149,8 +146,8 @@ def add_entry(
     Parameters
     ----------
 
-    entries : dict
-        Dictionary of metadata info that are needed to build the new entry.
+    entries : dict, list
+        Dictionary or list of metadata info that are needed to build the new entry.
 
     manifest : str
         Points to the manifest you want to modify.
@@ -160,9 +157,13 @@ def add_entry(
 
     Returns
     -------
-        No return
+    dict, None
     """
     import toolviper
+
+    # Make sure entries is a list even if it's a single entry
+    if isinstance(entries, dict):
+        entries = [entries]
 
     try:
         if manifest is None:
@@ -183,38 +184,21 @@ def add_entry(
 
         for entry in entries:
             process_entry_(**entry, json_file=json_file)
-        """
-        filename = pathlib.Path(file)
-        if filename.is_dir():
-            logger.warning(
-                f"{filename.name} is a folder, run your favorite compression algorithm to calculate the checksum"
-            )
-
-            return None
-
-        file_key = str(filename.name)
-        if str(filename).endswith(".zip"):
-            file_key = str(filename.name).split(".zip")[0]
-
-        size = toolviper.utils.data.get_file_size(path=str(filename.parent))[file_key]
-
-        metadata = {
-            "file": filename.name,
-            "path": path,
-            "dtype": dtype,
-            "telescope": telescope,
-            "size": str(size),
-            "mode": mode,
-            "hash": toolviper.utils.tools.calculate_checksum(str(filename)),
-        }
-
-        json_file["metadata"][file_key] = metadata
-        """
 
     except KeyError:
         logger.error("entry not found in metadata ... skipping")
         return None
 
+    except TypeError:
+        logger.error(
+            "The file you are trying to add is likely the wrong type. Try zipping it."
+        )
+
+    except OSError:
+        logger.error("Error opening specified json manifest file.")
+        return None
+
+    json_file = None
     with open("file.download.json", "w") as file_:
         json.dump(json_file, file_)
 

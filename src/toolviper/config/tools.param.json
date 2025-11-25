@@ -1,52 +1,53 @@
 {
-    "process_entry_":{
-        "file":{
-            "type":["str"],
-            "nullable": false
-        },
-        "path":{
-            "type":["str"],
-            "nullable": false,
-            "allowed": [
-              "radps/image",
-              "radps/measurement_set",
-              "astrohack",
-              "astrohack/alma_near_field",
-              "astrohack/panel",
-              "astrohack/verification",
-              "verification"
-            ]
-        },
-        "dtype":{
-            "type":["str"],
-            "nullable": false
-        },
-        "telescope":{
-            "type":["str"],
-            "nullable": false
-        },
-        "mode":{
-            "type":["str"],
-            "nullable": false
-        },
-        "json_file":{
-            "type": ["dict"],
-            "nullable": false
-        }
+  "process_entry_": {
+    "file": {
+      "type": ["str"],
+      "nullable": false
     },
-    "add_entry":{
-        "entries":{
-            "type":["list"],
-            "nullable": false
-        },
-        "manifest":{
-            "type":["str"],
-            "nullable": true
-        },
-        "versioning":{
-            "type":["str"],
-            "allowed": ["major", "minor", "patch"],
-            "nullable": false
-        }
+    "path": {
+      "type": ["str"],
+      "nullable": false,
+      "allowed": [
+        "radps/image",
+        "radps/measurement_set",
+        "astrohack",
+        "astrohack/alma_near_field",
+        "astrohack/panel",
+        "astrohack/verification",
+        "verification",
+        "single-dish"
+      ]
+    },
+    "dtype": {
+      "type": ["str"],
+      "nullable": false
+    },
+    "telescope": {
+      "type": ["str"],
+      "nullable": false
+    },
+    "mode": {
+      "type": ["str"],
+      "nullable": false
+    },
+    "json_file": {
+      "type": ["dict"],
+      "nullable": false
     }
+  },
+  "add_entry": {
+    "entries": {
+      "type": ["list", "dict"],
+      "nullable": false
+    },
+    "manifest": {
+      "type": ["str"],
+      "nullable": true
+    },
+    "versioning": {
+      "type": ["str"],
+      "allowed": ["major", "minor", "patch"],
+      "nullable": false
+    }
+  }
 }
