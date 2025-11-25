@@ -3,6 +3,7 @@ import inspect
 import json
 import pathlib
 from argparse import FileType
+from turtle import onkeyrelease
 from typing import NoReturn, Union
 
 from dask.typing import Key
@@ -160,7 +161,7 @@ def add_entry(
 
     Returns
     -------
-        No return
+    dict, None
     """
     import toolviper
 
@@ -183,33 +184,6 @@ def add_entry(
 
         for entry in entries:
             process_entry_(**entry, json_file=json_file)
-        """
-        filename = pathlib.Path(file)
-        if filename.is_dir():
-            logger.warning(
-                f"{filename.name} is a folder, run your favorite compression algorithm to calculate the checksum"
-            )
-
-            return None
-
-        file_key = str(filename.name)
-        if str(filename).endswith(".zip"):
-            file_key = str(filename.name).split(".zip")[0]
-
-        size = toolviper.utils.data.get_file_size(path=str(filename.parent))[file_key]
-
-        metadata = {
-            "file": filename.name,
-            "path": path,
-            "dtype": dtype,
-            "telescope": telescope,
-            "size": str(size),
-            "mode": mode,
-            "hash": toolviper.utils.tools.calculate_checksum(str(filename)),
-        }
-
-        json_file["metadata"][file_key] = metadata
-        """
 
     except KeyError:
         logger.error("entry not found in metadata ... skipping")
@@ -220,6 +194,11 @@ def add_entry(
             "The file you are trying to add is likely the wrong type. Try zipping it."
         )
 
+    except OSError:
+        logger.error("Error opening specified json manifest file.")
+        return None
+
+    json_file = None
     with open("file.download.json", "w") as file_:
         json.dump(json_file, file_)
 
