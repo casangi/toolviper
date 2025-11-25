@@ -2,11 +2,7 @@ import hashlib
 import inspect
 import json
 import pathlib
-from argparse import FileType
-from turtle import onkeyrelease
 from typing import NoReturn, Union
-
-from dask.typing import Key
 
 import toolviper.utils.logger as logger
 from toolviper.utils import parameter
@@ -150,8 +146,8 @@ def add_entry(
     Parameters
     ----------
 
-    entries : list
-        Dictionary of metadata info that are needed to build the new entry.
+    entries : dict, list
+        Dictionary or list of metadata info that are needed to build the new entry.
 
     manifest : str
         Points to the manifest you want to modify.
@@ -164,6 +160,10 @@ def add_entry(
     dict, None
     """
     import toolviper
+
+    # Make sure entries is a list even if it's a single entry
+    if isinstance(entries, dict):
+        entries = [entries]
 
     try:
         if manifest is None:
