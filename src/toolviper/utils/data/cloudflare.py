@@ -1,20 +1,18 @@
-import os
-import shutil
-import requests
-import zipfile
 import json
+import os
 import pathlib
-
-import toolviper
-
-import toolviper.utils.logger as logger
-import toolviper.utils.console as console
-
-from toolviper.utils import parameter
+import shutil
+import zipfile
 from threading import Thread
+from typing import Any, Optional, Union
+
+import requests
 from rich.progress import Progress, TaskID
 
-from typing import Union, Optional, Any
+import toolviper
+import toolviper.utils.console as console
+import toolviper.utils.logger as logger
+from toolviper.utils import parameter
 
 colorize = console.Colorize()
 
@@ -38,7 +36,7 @@ def version() -> None:
     with open(meta_data_path) as json_file:
         file_meta_data = json.load(json_file)
 
-        logger.info(f'{file_meta_data["version"]}')
+        logger.info(f"{file_meta_data['version']}")
 
 
 @parameter.validate()
@@ -125,7 +123,7 @@ def download(
                 continue
 
             name_format = lambda string: (
-                f"{string[:(PROGRESS_MAX_CHARACTERS - 4)]} ..."
+                f"{string[: (PROGRESS_MAX_CHARACTERS - 4)]} ..."
                 if len(string) > PROGRESS_MAX_CHARACTERS
                 else string
             )
@@ -180,7 +178,6 @@ def worker(progress: Progress, task_id: TaskID, task: dict, decompress=True) -> 
     size = 0
 
     with open(fullname, "wb") as fd:
-
         for chunk in r.iter_content(chunk_size=MINIMUM_CHUNK_SIZE):
             if chunk:
                 size += fd.write(chunk)
@@ -204,8 +201,8 @@ def list_files() -> None:
     List all files in cloudflare
     """
 
-    from rich.table import Table
     from rich.console import Console
+    from rich.table import Table
 
     console = Console()
 
@@ -259,7 +256,7 @@ def get_files() -> list[Any]:
 
 
 @parameter.validate()
-def update(path: str = None) -> None:
+def update(path: Union[str, None] = None) -> None:
     """
     Update cloudflare manifest.
 
@@ -337,9 +334,9 @@ def get_file_size(path: str) -> Optional[dict]:
 
 
 def _print_file_queue(files: list) -> None:
-    from rich.table import Table
-    from rich.console import Console
     from rich import box
+    from rich.console import Console
+    from rich.table import Table
 
     assert type(files) == list
 
