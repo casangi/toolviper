@@ -46,16 +46,47 @@ jobs:
         pip install graphviz
         pip install holoviews
 
-    - name: Run Jupyter notebooks
+    - name: Run Jupyter notebooks with localized cleanup
       run: |
-       ORIGINAL_DIR=$(pwd)
-       for notebook in $(find docs -name '*.ipynb'); do
-        echo "Running notebook: $notebook"
-  
-        NOTEBOOK_DIR=$(dirname "$notebook")
-        NOTEBOOK_FILE=$(basename "$notebook")
+        ORIGINAL_DIR=$(pwd)
+        
+        # Initial check (optional but good practice)
+        echo "Starting notebook execution loop..."
+        
+        for notebook in $(find docs -name '*.ipynb'); do
+         echo "--- Running notebook: $notebook ---"
+         
+         NOTEBOOK_DIR=$(dirname "$notebook")
+         NOTEBOOK_FILE=$(basename "$notebook")
 
-        cd "$NOTEBOOK_DIR"
-        jupyter nbconvert --to notebook --execute "$NOTEBOOK_FILE" --output "$NOTEBOOK_FILE" --ExecutePreprocessor.timeout=1800 --ExecutePreprocessor.iopub_timeout=1800 
-        cd "$ORIGINAL_DIR"
-       done
+         # Change directory to the notebook's location
+         cd "$NOTEBOOK_DIR"
+         
+         # 1. Execute the notebook
+         # The execution creates the large files (.zarr, .ms, etc.) in the current directory.
+         jupyter nbconvert --to notebook --execute "$NOTEBOOK_FILE" --output "$NOTEBOOK_FILE" \
+                           --ExecutePreprocessor.timeout=1800 \
+                           --ExecutePreprocessor.iopub_timeout=1800 \
+                           --Application.log_level=INFO
+         
+         # 2. Localized Cleanup: Delete all .zarr and .ms files/directories 
+         # ONLY within the current NOTEBOOK_DIR.
+         echo "Performing localized cleanup in $(pwd)..."
+         
+         # Delete all .zarr directories (recursive)
+         find . -maxdepth 1 -name '*.zarr' -type d -exec rm -rf {} +
+         
+         # Delete all .ms files
+         find . -maxdepth 1 -name '*.ms' -type f -exec rm -f {} +
+         
+         # 3. Return to the original directory
+         cd "$ORIGINAL_DIR"
+         
+         # 4. Introduce a pause
+         # This pause is still crucial for allowing the OS to fully release memory and 
+         # file handles before the next Jupyter kernel is launched.
+         echo "Pausing for 5 seconds to release resources..."
+         sleep 5
+         
+         echo "--- Notebook execution complete. ---"
+        done
