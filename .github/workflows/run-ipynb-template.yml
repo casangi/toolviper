@@ -42,7 +42,7 @@ jobs:
     - name: Install dependencies with pip
       run: |
         python -m pip install --upgrade pip
-        pip install ".[all]" #The magic if not present download fails in ipynb
+        pip install --extra-index-url https://test.pypi.org/simple/ ".[all]" #The magic if not present download fails in ipynb
         pip install graphviz
         pip install holoviews
 
