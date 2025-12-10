@@ -165,6 +165,8 @@ def add_entry(
     if isinstance(entries, dict):
         entries = [entries]
 
+    json_file = None
+
     try:
         if manifest is None:
             manifest = pathlib.Path(toolviper.__path__[0]).joinpath(
@@ -198,7 +200,6 @@ def add_entry(
         logger.error("Error opening specified json manifest file.")
         return None
 
-    json_file = None
     with open("file.download.json", "w") as file_:
         json.dump(json_file, file_)
 
