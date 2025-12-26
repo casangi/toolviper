@@ -18,6 +18,8 @@ dependencies = [
     'numpy',
     'psutil',
     'rich',
+    'polars',
+    'itables',
     'requests',
     'tqdm',
 ]

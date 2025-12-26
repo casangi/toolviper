@@ -14,6 +14,10 @@ import toolviper.utils.console as console
 import toolviper.utils.logger as logger
 from toolviper.utils import parameter
 
+from collections import defaultdict
+from toolviper.utils.parameter import is_notebook
+import polars as pl
+
 colorize = console.Colorize()
 
 PROGRESS_MAX_CHARACTERS = 28
@@ -196,7 +200,72 @@ def worker(progress: Progress, task_id: TaskID, task: dict, decompress=True) -> 
             os.remove(fullname)
 
 
-def list_files() -> None:
+class ToolviperFiles:
+    def __init__(self, manifest, dataframe=None):
+
+        self.manifest = manifest
+        self.dataframe = dataframe
+        self.notebook_mode = False
+
+        if is_notebook():
+            import itables
+
+            self.notebook_mode = True
+
+            itables.init_notebook_mode()
+
+    def __call__(self):
+        if not self.notebook_mode:
+            return print(self.dataframe)
+
+        else:
+            return self.dataframe
+
+    @classmethod
+    def from_manifest(cls, manifest: str):
+        meta_data_path = pathlib.Path(manifest)
+
+        # Verify that the download metadata exist and update if not.
+        # _verify_metadata_file()
+
+        with open(meta_data_path) as json_file:
+            file_meta_data = json.load(json_file)
+
+            files = file_meta_data["metadata"].keys()
+
+            data = defaultdict(list)
+            data["file"] = list(files)
+
+            for file_, metadata_ in file_meta_data["metadata"].items():
+                for key_, value_ in metadata_.items():
+                    if key_ == "file":
+                        continue
+
+                    # I think we could do this with a JSON ENCODER
+                    # but this is easier since the file is small
+                    # and everything is a string already
+                    if value_ == "size":
+                        value_ = int(value_)
+
+                    data[key_].append(value_)
+
+        return cls(manifest=manifest, dataframe=pl.DataFrame(data))
+
+
+def list_files(truncate=None) -> pl.DataFrame:
+    pl.Config.set_tbl_rows(-1)
+    pl.Config.set_tbl_hide_dataframe_shape(True)
+    pl.Config.set_fmt_str_lengths(truncate)
+    meta_data_path = pathlib.Path(__file__).parent.joinpath(
+        ".cloudflare/file.download.json"
+    )
+
+    table = ToolviperFiles.from_manifest(str(meta_data_path))
+    return table.dataframe
+
+
+# This version of the function is now deprecated
+def list_files_() -> None:
     """
     List all files in cloudflare
     """
@@ -218,7 +287,7 @@ def list_files() -> None:
     with open(meta_data_path) as json_file:
         file_meta_data = json.load(json_file)
 
-        table.add_column("file", style="blue")
+        table.add_column("file", style="blue", no_wrap=False)
         table.add_column("dtype", style="green")
         table.add_column("telescope", style="green")
         table.add_column("size", style="green")
