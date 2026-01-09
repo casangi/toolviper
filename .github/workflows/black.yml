@@ -3,4 +3,4 @@ on: [push, pull_request]
 
 jobs:
     call-testing-linux:
-      uses: nrao/gh-actions-templates-public/.github/workflows/black-template.yml@2-ipynb-workflow-is-getting-stuck
+      uses: nrao/gh-actions-templates-public/.github/workflows/black-template.yml@main

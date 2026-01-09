@@ -13,7 +13,7 @@ jobs:
   #       run: echo "2 PYPI_TOKEN=${{ secrets.PYPI_TOKEN }}"
 
   call-publish:
-    uses: nrao/gh-actions-templates-public/.github/workflows/python-publish-template.yml@2-ipynb-workflow-is-getting-stuck
+    uses: nrao/gh-actions-templates-public/.github/workflows/python-publish-template.yml@main
     with:
       pypi-url: "https://pypi.org/project/toolviper"
     secrets: inherit

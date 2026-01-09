@@ -13,5 +13,5 @@ on:
 
 jobs:
   call-testing-ipynb:
-    uses: nrao/gh-actions-templates-public/.github/workflows/run-ipynb-template.yml@2-ipynb-workflow-is-getting-stuck
+    uses: nrao/gh-actions-templates-public/.github/workflows/run-ipynb-template.yml@main
     secrets: inherit
