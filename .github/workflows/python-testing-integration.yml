@@ -21,6 +21,6 @@ on:
 
 jobs:
   test:
-    uses: nrao/gh-actions-templates-public/.github/workflows/python-testing-integration-template.yml@main
+    uses: nrao/gh-actions-templates-public/.github/workflows/python-testing-integration-template.yml@2-ipynb-workflow-is-getting-stuck
     secrets:
       DISPATCH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
