@@ -16,7 +16,7 @@ from toolviper.utils import parameter
 
 from collections import defaultdict
 from toolviper.utils.parameter import is_notebook
-import polars as pl
+import pandas as pd
 
 colorize = console.Colorize()
 
@@ -221,6 +221,15 @@ class ToolviperFiles:
         else:
             return self.dataframe
 
+    def print(self)->Union[None, pd.DataFrame]:
+        if not self.notebook_mode:
+            import tabulate
+            print(tabulate.tabulate(self.dataframe, showindex=False, headers=self.dataframe.columns))
+            return None
+
+        return self.dataframe
+
+
     @classmethod
     def from_manifest(cls, manifest: str):
         meta_data_path = pathlib.Path(manifest)
@@ -229,6 +238,7 @@ class ToolviperFiles:
         # _verify_metadata_file()
 
         with open(meta_data_path) as json_file:
+
             file_meta_data = json.load(json_file)
 
             files = file_meta_data["metadata"].keys()
@@ -244,24 +254,29 @@ class ToolviperFiles:
                     # I think we could do this with a JSON ENCODER
                     # but this is easier since the file is small
                     # and everything is a string already
+
                     if value_ == "size":
                         value_ = int(value_)
 
+
                     data[key_].append(value_)
 
-        return cls(manifest=manifest, dataframe=pl.DataFrame(data))
+            return cls(manifest=manifest, dataframe=pd.DataFrame(data))
 
 
-def list_files(truncate=None) -> pl.DataFrame:
-    pl.Config.set_tbl_rows(-1)
-    pl.Config.set_tbl_hide_dataframe_shape(True)
-    pl.Config.set_fmt_str_lengths(truncate)
+
+def list_files(truncate=None) -> pd.DataFrame:
+
+    pd.set_option('display.max_rows', truncate)
+    pd.set_option('display.colheader_justify', 'left')
+
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
         ".cloudflare/file.download.json"
     )
 
     table = ToolviperFiles.from_manifest(str(meta_data_path))
-    return table.dataframe
+
+    return table.print()
 
 
 # This version of the function is now deprecated

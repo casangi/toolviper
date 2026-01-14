@@ -21,6 +21,7 @@ dependencies = [
     'polars',
     'itables',
     'requests',
+    'tabulate',
     'tqdm',
 ]
 
