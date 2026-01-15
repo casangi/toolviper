@@ -18,7 +18,7 @@ dependencies = [
     'numpy',
     'psutil',
     'rich',
-    'polars',
+    'pandas',
     'itables',
     'requests',
     'tabulate',
