@@ -18,7 +18,10 @@ dependencies = [
     'numpy',
     'psutil',
     'rich',
+    'pandas',
+    'itables',
     'requests',
+    'tabulate',
     'tqdm',
 ]
 
