@@ -221,14 +221,18 @@ class ToolviperFiles:
         else:
             return self.dataframe
 
-    def print(self)->Union[None, pd.DataFrame]:
+    def print(self) -> Union[None, pd.DataFrame]:
         if not self.notebook_mode:
             import tabulate
-            print(tabulate.tabulate(self.dataframe, showindex=False, headers=self.dataframe.columns))
+
+            print(
+                tabulate.tabulate(
+                    self.dataframe, showindex=False, headers=self.dataframe.columns
+                )
+            )
             return None
 
         return self.dataframe
-
 
     @classmethod
     def from_manifest(cls, manifest: str):
@@ -258,17 +262,15 @@ class ToolviperFiles:
                     if value_ == "size":
                         value_ = int(value_)
 
-
                     data[key_].append(value_)
 
             return cls(manifest=manifest, dataframe=pd.DataFrame(data))
 
 
-
 def list_files(truncate=None) -> pd.DataFrame:
 
-    pd.set_option('display.max_rows', truncate)
-    pd.set_option('display.colheader_justify', 'left')
+    pd.set_option("display.max_rows", truncate)
+    pd.set_option("display.colheader_justify", "left")
 
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
         ".cloudflare/file.download.json"
