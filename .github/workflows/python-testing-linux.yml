@@ -24,7 +24,8 @@ jobs:
       cov_project: "toolviper"
       test-path: "tests/"
       python-versions: '["3.11", "3.12", "3.13"]'
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
 
 #This is now in a template
