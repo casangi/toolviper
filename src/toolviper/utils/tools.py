@@ -116,6 +116,7 @@ def process_entry_(
 
     file_key = str(filename.name)
 
+
     if str(filename).endswith(".zip"):
         file_key = str(filename.name).split(".zip")[0]
 
@@ -130,7 +131,7 @@ def process_entry_(
         "mode": mode,
         "hash": toolviper.utils.tools.calculate_checksum(str(filename)),
     }
-
+    
     json_file["metadata"][file_key] = metadata
 
 
@@ -160,11 +161,11 @@ def add_entry(
     dict, None
     """
     import toolviper
-
+    logger.get_logger("viperlog").setLevel("DEBUG")
     # Make sure entries is a list even if it's a single entry
     if isinstance(entries, dict):
         entries = [entries]
-
+    json_file = None
     try:
         if manifest is None:
             manifest = pathlib.Path(toolviper.__path__[0]).joinpath(
@@ -185,8 +186,9 @@ def add_entry(
         for entry in entries:
             process_entry_(**entry, json_file=json_file)
 
-    except KeyError:
-        logger.error("entry not found in metadata ... skipping")
+
+    except KeyError as key_error:
+        logger.error(f"entry not found in metadata ... skipping: {key_error}")
         return None
 
     except TypeError:
@@ -194,11 +196,11 @@ def add_entry(
             "The file you are trying to add is likely the wrong type. Try zipping it."
         )
 
-    except OSError:
+    except OSError as os_error:
         logger.error("Error opening specified json manifest file.")
+        logger.error(str(os_error))
         return None
 
-    json_file = None
     with open("file.download.json", "w") as file_:
         json.dump(json_file, file_)
 
