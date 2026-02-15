@@ -116,7 +116,6 @@ def process_entry_(
 
     file_key = str(filename.name)
 
-
     if str(filename).endswith(".zip"):
         file_key = str(filename.name).split(".zip")[0]
 
@@ -131,7 +130,7 @@ def process_entry_(
         "mode": mode,
         "hash": toolviper.utils.tools.calculate_checksum(str(filename)),
     }
-    
+
     json_file["metadata"][file_key] = metadata
 
 
@@ -161,6 +160,7 @@ def add_entry(
     dict, None
     """
     import toolviper
+
     logger.get_logger("viperlog").setLevel("DEBUG")
     # Make sure entries is a list even if it's a single entry
     if isinstance(entries, dict):
@@ -185,7 +185,6 @@ def add_entry(
 
         for entry in entries:
             process_entry_(**entry, json_file=json_file)
-
 
     except KeyError as key_error:
         logger.error(f"entry not found in metadata ... skipping: {key_error}")
