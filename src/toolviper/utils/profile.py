@@ -8,6 +8,7 @@ import psutil
 
 import toolviper.utils.logger as logger
 
+
 def cpu_usage_(stop_event, filename):
     if filename is None:
         filename = f"cpu_usage_{uuid.uuid4()}.csv"
