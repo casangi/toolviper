@@ -68,7 +68,7 @@ def download(
         No return
     """
 
-    logger.info("Downloading from [cloudflare] ....")
+    logger.info("Downloading from ....")
 
     if not isinstance(file, list):
         file = [file]
@@ -86,7 +86,7 @@ def download(
             )
             pathlib.Path(folder).resolve().mkdir()
 
-    logger.debug(f"Initializing [cloudflare] downloader ...")
+    logger.debug(f"Initializing downloader ...")
 
     meta_data_path = pathlib.Path(__file__).parent.joinpath(
         ".cloudflare/file.download.json"
@@ -426,7 +426,7 @@ def _print_file_queue(files: list) -> None:
 
     assert type(files) == list
 
-    console = Console()
+    console_ = Console()
     table = Table(show_header=True, box=box.SIMPLE)
 
     table.add_column("Download List", justify="left")
@@ -434,7 +434,7 @@ def _print_file_queue(files: list) -> None:
     for file in files:
         table.add_row(f"[magenta]{file}[/magenta]")
 
-    console.print(table)
+    console_.print(table)
 
 
 def _make_dir(path, folder):

@@ -8,7 +8,6 @@ import psutil
 
 import toolviper.utils.logger as logger
 
-
 def cpu_usage_(stop_event, filename):
     if filename is None:
         filename = f"cpu_usage_{uuid.uuid4()}.csv"
@@ -24,7 +23,7 @@ def cpu_usage_(stop_event, filename):
             writer.writerow(usage)
 
 
-def monitor(filename=None):
+def cpu_usage(filename=None):
     def function_wrapper(function):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
@@ -52,7 +51,7 @@ def monitor(filename=None):
 
 
 # Not for production. Yet.
-def memory():
+def memory_usage():
     def decorator(function):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
@@ -86,7 +85,7 @@ def memory():
             field_names = ["index", "filename", "lineno", "memory"]
 
             with open(
-                f"memory_usage_{function.__name__}.csv",
+                f"memory_usage_{function.__name__}_{uuid.uuid4()}.csv",
                 "w",
                 newline="",
                 encoding="utf-8",
