@@ -2,6 +2,7 @@ import re
 import operator
 from IPython.core.display import HTML
 
+
 def dict_to_html(d, indent=0):
     print(f"THIS FUNCTION WILL BE DEPRECATED SOON")
 
@@ -15,7 +16,7 @@ def dict_to_html(d, indent=0):
     return html
 
 
-class DisplayDict(dict):
+class DataDict(dict):
     def __init__(self, dictionary):
         super().__init__()
         self._dict = dictionary
@@ -40,7 +41,7 @@ class DisplayDict(dict):
         if in_place:
             self._dict = _result
 
-        return DisplayDict.from_dict({key: value for key, value in zip(keys, _result)})
+        return DataDict.from_dict({key: value for key, value in zip(keys, _result)})
 
     def get_entries_(self, keys):
         return {key: value for key, value in self._dict.items() if key in keys}
@@ -60,9 +61,7 @@ class DisplayDict(dict):
             self._dict = _result
             return None
 
-        return DisplayDict.from_dict(_result)
-
-
+        return DataDict.from_dict(_result)
 
     def display(self, interactive=True):
         import rich
