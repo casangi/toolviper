@@ -173,25 +173,29 @@ class TestToolViperClient:
         _set_up_dask(local_directory=pathlib.Path(".").cwd())
 
         assert dask.config.config["distributed"]["scheduler"]["allowed-failures"] == 10
-        
+
 
 def test_print_libraries_availability():
     from toolviper.dask.client import print_libraries_availability
     import toolviper.utils.logger as logger
-    
-    with patch.object(logger, 'debug') as mock_debug:
+
+    with patch.object(logger, "debug") as mock_debug:
         print_libraries_availability({"CUDA": True, "MPI": False})
         mock_debug.assert_called_once()
         args, kwargs = mock_debug.call_args
         assert "CUDA" in args[0]
         assert "MPI" not in args[0]
 
+
 def test_get_client_none():
     from toolviper.dask.client import get_client
+
     with patch("distributed.Client.current", side_effect=ValueError):
         assert get_client() is None
 
+
 def test_get_cluster_none():
     from toolviper.dask.client import get_cluster
+
     with patch("toolviper.dask.client.get_client", return_value=None):
         assert get_cluster() is None
