@@ -1,5 +1,4 @@
 import pytest
-import os
 import logging
 from unittest.mock import MagicMock, patch
 from toolviper.utils.logger import (
