@@ -105,7 +105,7 @@ def test_log_logging(mock_logger):
 
 
 def test_get_logger_no_env_no_worker(monkeypatch):
-    monkeypatch.delenv("LOGGER_NAME", raising=False)
+    monkeypatch.delenv("VIPER_LOGGER_NAME", raising=False)
     with patch("toolviper.utils.logger.get_worker", side_effect=ValueError):
         logger = get_logger()
         assert logger.name == "viperlog"
@@ -114,7 +114,7 @@ def test_get_logger_no_env_no_worker(monkeypatch):
 
 
 def test_get_logger_existing_logger(monkeypatch):
-    monkeypatch.delenv("LOGGER_NAME", raising=False)
+    monkeypatch.delenv("VIPER_LOGGER_NAME", raising=False)
     # Pre-create logger
     existing_logger = logging.getLogger("existing_log")
     with patch("toolviper.utils.logger.get_worker", side_effect=ValueError):
@@ -124,7 +124,7 @@ def test_get_logger_existing_logger(monkeypatch):
 
 def test_get_logger_env():
     with (
-        patch("os.environ", {"LOGGER_NAME": "env_logger"}),
+        patch("os.environ", {"VIPER_LOGGER_NAME": "env_logger"}),
         patch("toolviper.utils.logger.get_worker", side_effect=ValueError),
     ):
         logger = get_logger()
