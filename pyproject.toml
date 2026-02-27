@@ -21,6 +21,7 @@ dependencies = [
     'pandas',
     'itables',
     'requests',
+    'responses',
     'tabulate',
     'tqdm',
 ]
