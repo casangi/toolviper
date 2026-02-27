@@ -6,12 +6,11 @@ import dask
 import dask_jobqueue
 import distributed
 import psutil
-import inspect
 import functools
 
 from importlib import import_module
 from importlib.util import find_spec
-from typing import Dict, Union
+from typing import Dict, Union, Any, Optional
 
 import toolviper.dask.menrva
 import toolviper.utils.console as console
@@ -20,43 +19,64 @@ import toolviper.utils.parameter as parameter
 
 colorize = console.Colorize()
 
+DEFAULT_CLIENT_LOG_PARAMS = {
+    "logger_name": "client",
+    "log_to_term": True,
+    "log_level": "INFO",
+    "log_to_file": False,
+    "log_file": "client.log",
+}
+
+DEFAULT_WORKER_LOG_PARAMS = {
+    "logger_name": "worker",
+    "log_to_term": True,
+    "log_level": "INFO",
+    "log_to_file": False,
+    "log_file": "client_worker.log",
+}
+
+
+def _get_log_params(
+    log_params: Optional[Dict[str, Any]], defaults: Dict[str, Any]
+) -> Dict[str, Any]:
+    if log_params is None:
+        log_params = {}
+    return {**defaults, **log_params}
+
 
 def load_libraries(name: str, libs: Union[str, list[str]]) -> dict[str, bool]:
     """Load libraries if they were installed and can be loaded.
 
     Parameters
     ----------
-    name : library group name
-        A library group name based on a function of a distributed environment will be imported.
+    name : str
+        A library group name based on a function of a distributed environment.
     libs : Union[str, list[str]]
-        a library or a list of libraries to import
+        A library or a list of libraries to import.
 
     Returns
     -------
-        an item of dict has the name and the flag whether all libraries were loaded successfully.
+    dict[str, bool]
+        A dictionary mapping the group name to a boolean indicating if all libraries were loaded successfully.
     """
 
     def _load_library(_lib):
         if find_spec(_lib) is not None:
             import_module(_lib)
-            return [True, f"   {colorize.blue(_lib)} is available"]
-        else:
-            return [False, f"   {colorize.blue(_lib)} is unavailable"]
+            return True, f"   {colorize.blue(_lib)} is available"
+        return False, f"   {colorize.blue(_lib)} is unavailable"
 
-    if isinstance(libs, list):
-        _tmp = list(map(_load_library, libs))
-        _avail = [all([x[0] for x in _tmp]), [x[1] for x in _tmp]]
-    elif isinstance(libs, str):
-        _tmp = _load_library(libs)
-        _avail = [_tmp[0], [_tmp[1]]]
-    else:
-        _avail = [False, "   illegal module specification"]
+    if isinstance(libs, str):
+        libs = [libs]
 
-    _result = "Success" if _avail[0] else "Fail"
-    logger.info(f"Loading module: {name} -- {_result}")
-    [logger.info(x) for x in _avail[1]]
+    results = [_load_library(lib) for lib in libs]
+    all_available = all(res[0] for res in results)
 
-    return {name: _avail[0]}
+    logger.info(f"Loading module: {name} -- {'Success' if all_available else 'Fail'}")
+    for _, message in results:
+        logger.info(message)
+
+    return {name: all_available}
 
 
 def print_libraries_availability(spec: dict[str, bool]):
@@ -117,109 +137,53 @@ def get_cluster() -> Union[None, distributed.LocalCluster]:
 
 @parameter.validate()
 def local_client(
-    cores: int = None,
-    memory_limit: str = None,
+    cores: Optional[int] = None,
+    memory_limit: Optional[str] = None,
     autorestrictor: bool = False,
-    dask_local_dir: str = None,
-    local_dir: str = None,
+    dask_local_dir: Optional[str] = None,
+    local_dir: Optional[str] = None,
     wait_for_workers: bool = True,
-    log_params: Union[None, Dict] = None,
-    worker_log_params: Union[None, Dict] = None,
+    log_params: Optional[Dict[str, Any]] = None,
+    worker_log_params: Optional[Dict[str, Any]] = None,
     dashboard_address: str = ":8787",
     serial_execution: bool = False,
-) -> Union[distributed.Client, None]:
-    """ Creates a local client, scheduler and workers using Dask Distributed LocalCluster (https://docs.dask.org/en/stable/deploying-python.html#reference)
-    with Dask configuration tuned for VIPER and the option to use autorestrictor plugin and local cache.
+) -> Optional[distributed.Client]:
+    """Create a local client, scheduler and workers using Dask Distributed LocalCluster.
+
+    With Dask configuration tuned for VIPER and the option to use autorestrictor plugin and local cache.
+    See https://docs.dask.org/en/stable/deploying-python.html#reference for more details.
 
     Parameters
     ----------
-    cores : int
-        Number of cores in Dask cluster, defaults to None
-    memory_limit : str
-        Amount of memory per core. It is suggested to use '8GB', defaults to None
-    autorestrictor : bool
-        Boolean determining usage of autorestrictor plugin, defaults to False
-    dask_local_dir : str
-        Where Dask should store temporary files, defaults to None. If None Dask will use \
-        `./dask-worker-space`, defaults to None
-    local_dir : str
-        Defines client local directory, defaults to None
-
-    wait_for_workers : bool
-        Boolean determining usage of wait_for_workers option in dask, defaults to False
-    log_params : dict
-        The logger for the main process (code that does not run in parallel), defaults to {}
-    worker_log_params : dict
-        worker_log_params: Keys as same as log_params, default values given in `Additional \
-        Information`_.
-
-    dashboard_address: str
-        Address on which to listen for the Bokeh diagnostics server like ‘localhost:8787’ or ‘0.0.0.0:8787’. Defaults to ‘:8787’.
-        Set to None to disable the dashboard. Use ‘:0’ for a random port. See https://docs.dask.org/en/stable/deploying-python.html#reference for more information.
-
-    serial_execution : bool
-        This is an option that forces dask to run in serial mode while also setting up the logger to work. This is
-        really only appropriate for debugging.
-
-    .. _Description:
-
-    ** _log_params **
-
-    The log_params (worker_log_params) dictionary stores initialization information for the logger and associated
-    workers. the following are the acceptable key: value pairs and their usage information.
-
-    log_params["logger_name"] : str
-        Defines the logger name to use
-    log_params["log_to_term"] : bool
-        Should messages log to the terminal output.
-    log_params["log_level"] : str
-        Defines logging level, valid options:
-            - DEBUG
-            - INFO
-            - WARNING
-            - ERROR
-            - CRITICAL
-
-        Only messages flagged as at the given level or below are logged.
-
-    log_params["log_to_file"] : str
-        Should messages log to file.
-
-    log_params["log_file"] : str
-        Name of log file to create. If none is given, the file name 'logger' will be used.
+    cores : int, optional
+        Number of cores in Dask cluster. Defaults to number of physical cores.
+    memory_limit : str, optional
+        Amount of memory per core. Suggested: '8GB'. Defaults to available memory divided by cores.
+    autorestrictor : bool, optional
+        Whether to use the autorestrictor plugin. Defaults to False.
+    dask_local_dir : str, optional
+        Temporary files directory for Dask. Defaults to None.
+    local_dir : str, optional
+        Client local directory. Defaults to None.
+    wait_for_workers : bool, optional
+        Whether to wait for workers to start. Defaults to True.
+    log_params : dict, optional
+        Logger configuration for the main process.
+    worker_log_params : dict, optional
+        Logger configuration for workers.
+    dashboard_address : str, optional
+        Address for the Bokeh diagnostics server (e.g., 'localhost:8787'). Defaults to ':8787'.
+    serial_execution : bool, optional
+        If True, runs Dask in serial mode (synchronous) for debugging. Defaults to False.
 
     Returns
     -------
-        Dask Distributed Client
+    distributed.Client or None
+        Dask Distributed Client, or None if serial_execution is True.
     """
 
-    if log_params is None:
-        log_params = {}
-
-    log_params = {
-        **{
-            "logger_name": "client",
-            "log_to_term": True,
-            "log_level": "INFO",
-            "log_to_file": False,
-            "log_file": "client.log",
-        },
-        **log_params,
-    }
-
-    if worker_log_params is None:
-        worker_log_params = {}
-
-    worker_log_params = {
-        **{
-            "logger_name": "worker",
-            "log_to_term": True,
-            "log_level": "INFO",
-            "log_to_file": False,
-            "log_file": "client_worker.log",
-        },
-        **worker_log_params,
-    }
+    log_params = _get_log_params(log_params, DEFAULT_CLIENT_LOG_PARAMS)
+    worker_log_params = _get_log_params(worker_log_params, DEFAULT_WORKER_LOG_PARAMS)
 
     # If the user wants to change the global logger name from the
     # default value of toolviper
@@ -329,82 +293,34 @@ def local_client(
     return client
 
 
+@parameter.validate()
 def distributed_client(
-    cluster: None,
-    dask_local_dir: str = None,
-    log_params: Union[None, Dict] = None,
-    worker_log_params: Union[None, Dict] = None,
-) -> Union[distributed.Client, None]:
-    """ Setup dask cluster and logger.
+    cluster: Any,
+    dask_local_dir: Optional[str] = None,
+    log_params: Optional[Dict[str, Any]] = None,
+    worker_log_params: Optional[Dict[str, Any]] = None,
+) -> distributed.Client:
+    """Setup dask cluster and logger.
 
     Parameters
     ----------
-    cluster
-    log_params : dict
-        The logger for the main process (code that does not run in parallel), defaults to {}
-    worker_log_params : dict
-        worker_log_params: Keys as same as log_params, default values given in `Additional \
-        Information`_.
-
-    .. _Description:
-
-    ** _log_params **
-
-    The log_params (worker_log_params) dictionary stores initialization information for the logger and associated
-    workers. the following are the acceptable key: value pairs and their usage information.
-
-    log_params["logger_name"] : str
-        Defines the logger name to use
-    log_params["log_to_term"] : bool
-        Should messages log to the terminal output.
-    log_params["log_level"] : str
-        Defines logging level, valid options:
-            - DEBUG
-            - INFO
-            - WARNING
-            - ERROR
-            - CRITICAL
-
-        Only messages flagged as at the given level or below are logged.
-
-    log_params["log_to_file"] : str
-        Should messages log to file.
-
-    log_params["log_filee"] : str
-        Name of log file to create. If none is given, the file name 'logger' will be used.
+    cluster : Any
+        An existing dask cluster instance.
+    dask_local_dir : str, optional
+        Where Dask should store temporary files.
+    log_params : dict, optional
+        The logger for the main process.
+    worker_log_params : dict, optional
+        The logger for the workers.
 
     Returns
     -------
+    distributed.Client
         Dask Distributed Client
     """
 
-    if log_params is None:
-        log_params = {}
-
-    log_params = {
-        **{
-            "logger_name": "client",
-            "log_to_term": True,
-            "log_level": "INFO",
-            "log_to_file": False,
-            "log_file": "client.log",
-        },
-        **log_params,
-    }
-
-    if worker_log_params is None:
-        worker_log_params = {}
-
-    worker_log_params = {
-        **{
-            "logger_name": "worker",
-            "log_to_term": True,
-            "log_level": "INFO",
-            "log_to_file": False,
-            "log_file": "client_worker.log",
-        },
-        **worker_log_params,
-    }
+    log_params = _get_log_params(log_params, DEFAULT_CLIENT_LOG_PARAMS)
+    worker_log_params = _get_log_params(worker_log_params, DEFAULT_WORKER_LOG_PARAMS)
 
     # If the user wants to change the global logger name from the
     # default value of toolviper
@@ -420,11 +336,6 @@ def distributed_client(
 
     _set_up_dask(dask_local_dir)
 
-    """
-    load libraries related functions of a distributed environment
-    'available_specs' contains the function name and a flag that the function was loaded successfully 
-    """
-
     logger.debug(colorize.green("Checking functions availability:"))
     available_specs = {
         **load_libraries("slurm", "dask_jobqueue"),
@@ -434,16 +345,13 @@ def distributed_client(
 
     print_libraries_availability(available_specs)
 
-    # This will work as long as the scheduler path isn't in some outside directory. Being that it is a plugin specific
-    # to this module, I think keeping it static in the module directory it good.
-    plugin_path = str(pathlib.Path(__file__).parent.resolve().joinpath("plugins/"))
-
     client = toolviper.dask.menrva.MenrvaClient(cluster)
     client.get_versions(check=True)
     logger.info("Created client " + str(client))
     return client
 
 
+@parameter.validate()
 def slurm_cluster_client(
     workers_per_node: int,
     cores_per_node: int,
@@ -456,120 +364,67 @@ def slurm_cluster_client(
     dask_log_dir: str,
     exclude_nodes: str = "",
     dashboard_port: int = 8787,
-    local_dir: str = None,
+    local_dir: Optional[str] = None,
     autorestrictor: bool = False,
     wait_for_workers: bool = True,
-    log_params: Union[None, Dict] = None,
-    worker_log_params: Union[None, Dict] = None,
-):
-    """Creates a Dask slurm_cluster_client on a multinode cluster.
-
-        interface eth0, ib0
+    log_params: Optional[Dict[str, Any]] = None,
+    worker_log_params: Optional[Dict[str, Any]] = None,
+) -> distributed.Client:
+    """Create a SLURM cluster and return a client.
 
     Parameters
     ----------
     workers_per_node : int
-        Number of workers per node ...
-
+        Number of workers per node.
     cores_per_node : int
-        Number of cores per node ...
-
+        Number of cores per node.
     memory_per_node : str
-        Memory allocation per node ...
-
+        Memory per node (e.g., '64GB').
     number_of_nodes : int
-        Number of nodes ...
-
+        Number of nodes to request.
     queue : str
-        Destination queue for each worker job. Passed to #SBATCH -p option
-
+        SLURM queue name.
     interface : str
-        Network interface like ‘eth0’ or ‘ib0’. This will be used both for the Dask scheduler and the Dask workers
-        interface. If you need a different interface for the Dask scheduler you can pass it through the
-        scheduler_options argument: interface=your_worker_interface,
-        scheduler_options={'interface': your_scheduler_interface}.
-
+        Network interface to use (e.g., 'ib0').
     python_env_dir : str
-        Python executable used to launch Dask workers. Defaults to the Python that is submitting these jobs.
-
+        Path to the python executable in the environment.
     dask_local_dir : str
-        Where Dask should store temporary files, defaults to None. If None Dask will use \
-        `./dask-worker-space`, defaults to None
-
-    local_dir : str
-        Defines client local directory, defaults to None
-
+        Local directory for dask workers.
     dask_log_dir : str
-        Destination directory for dask log files.
-
-    exclude_nodes : str
-        Nodes to exclude.
-
-    dashboard_port : int
-        Port to use for dashboard connection.
-
-    autorestrictor : bool
-        Boolean determining usage of autorestrictor plugin, defaults to False
-
-    wait_for_workers : bool
-        Boolean determining usage of wait_for_workers option in dask, defaults to False
-
-    log_params : dict
-        Dictionary containing parameters to using for logging.
-
-    worker_log_params : dict
-        Dictionary containing parameters to using for worker logging.
-
-    .. _Description:
-
-    ** _log_params **
-
-    The log_params (worker_log_params) dictionary stores initialization information for the logger and associated
-    workers. the following are the acceptable key: value pairs and their usage information.
-
-    log_params["logger_name"] : str
-        Defines the logger name to use
-    log_params["log_to_term"] : bool
-        Should messages log to the terminal output.
-    log_params["log_level"] : str
-        Defines logging level, valid options:
-            - DEBUG
-            - INFO
-            - WARNING
-            - ERROR
-            - CRITICAL
-
-        Only messages flagged as at the given level or below are logged.
-
-    log_params["log_to_file"] : str
-        Should messages log to file.
-
-    log_params["log_filee"] : str
-        Name of log file to create. If none is given, the file name 'logger' will be used.
+        Directory for dask logs.
+    exclude_nodes : str, optional
+        Comma-separated list of nodes to exclude.
+    dashboard_port : int, optional
+        Port for the dask dashboard.
+    local_dir : str, optional
+        Client local directory.
+    autorestrictor : bool, optional
+        Whether to use the autorestrictor plugin.
+    wait_for_workers : bool, optional
+        Whether to wait for workers to start.
+    log_params : dict, optional
+        Logger parameters for the client.
+    worker_log_params : dict, optional
+        Logger parameters for the workers.
 
     Returns
     -------
-        distributed.Client
+    distributed.Client
+        The dask client connected to the SLURM cluster.
     """
 
     # https://github.com/dask/dask/issues/5577
 
     # from distributed import Client
 
-    if log_params is None:
-        log_params = {}
-
-    if worker_log_params is None:
-        worker_log_params = {}
+    log_params = _get_log_params(log_params, DEFAULT_CLIENT_LOG_PARAMS)
+    worker_log_params = _get_log_params(worker_log_params, DEFAULT_WORKER_LOG_PARAMS)
 
     if local_dir:
         os.environ["VIPER_LOCAL_DIR"] = local_dir
         local_cache = True
     else:
         local_cache = False
-
-    # Viper logger for code that is not part of the Dask graph. The worker logger is setup in the _worker plugin.
-    # from viper._utils._logger import setup_logger
 
     logger.setup_logger(**log_params)
 
@@ -606,22 +461,6 @@ def slurm_cluster_client(
             }
         )
 
-    # This method of assigning a worker plugin does not seem to work when using dask_jobqueue. Consequently, using
-    # client.register_plugin so that the method of assigning a worker plugin is the same for local_client and
-    # slurm_cluster_client.
-    #
-    # if local_cache or worker_log_params:
-    #    dask.config.set({"distributed.worker.preload": os.path.join(plugin_path,"_utils/_worker.py")})
-    #    dask.config.set({
-    #    "distributed.worker.preload-argv": [
-    #    "--local_cache",local_cache,
-    #    "--log_to_term",worker_log_params["log_to_term"],
-    #    "--log_to_file",worker_log_params["log_to_file"],
-    #    "--log_file",worker_log_params["log_file"],
-    #    "--log_level",worker_log_params["log_level"]]
-    #    })
-    #
-
     cluster = dask_jobqueue.SLURMCluster(
         processes=workers_per_node,
         cores=cores_per_node,
@@ -634,16 +473,13 @@ def slurm_cluster_client(
         local_directory=dask_local_dir,
         log_directory=dask_log_dir,
         job_extra_directives=["--exclude=" + exclude_nodes],
-        # job_extra_directives=["--exclude=nmpost087,nmpost089,nmpost088"],
         scheduler_options={"dashboard_address": ":" + str(dashboard_port)},
-    )  # interface="ib0"
+    )
 
     client = toolviper.dask.menrva.MenrvaClient(cluster)
-
     cluster.scale(workers_per_node * number_of_nodes)
 
     # When constructing a graph that has local cache enabled all workers need to be up and running.
-
     if local_cache or wait_for_workers:
         client.wait_for_workers(n_workers=workers_per_node * number_of_nodes)
 
@@ -662,34 +498,39 @@ def slurm_cluster_client(
 
 
 def auto_client():
+    """
+    A decorator that automatically manages a Dask client for the decorated function.
+
+    If a client already exists, it uses the existing one.
+    Otherwise, it creates a new local_client and shuts it down after the function completes.
+    """
+
     def function_wrapper(function):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
-            persistent_client = False
+            client = get_client()
+            persistent_client = client is not None
 
-            if not get_client() is None:
-                client = get_client()
-                persistent_client = True
-            else:
-
+            if not persistent_client:
                 # Get client inputs if they exist
-                arguments = inspect.getcallargs(function, *args, **kwargs)
-                if "client" in kwargs.keys():
-                    client = local_client(**kwargs["client"])
-
+                if "client" in kwargs:
+                    client_kwargs = kwargs["client"]
+                    if isinstance(client_kwargs, dict):
+                        client = local_client(**client_kwargs)
+                    else:
+                        client = local_client()
                 else:
                     client = local_client()
 
             try:
-                print(f"Dask dashboard started at: {client.dashboard_link}")
+                if client:
+                    logger.info(f"Dask dashboard started at: {client.dashboard_link}")
 
                 # Run the decorated function
-                result = function(*args, **kwargs)
-
-                return result
+                return function(*args, **kwargs)
             finally:
                 # Ensure the client is closed even if the function raises an exception
-                if not persistent_client:
+                if not persistent_client and client:
                     client.shutdown()
 
         return wrapper

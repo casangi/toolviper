@@ -12,252 +12,321 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import logging
 import os
 import sys
-import dask
-import logging
-
 from datetime import datetime
-from toolviper.utils.console import Colorize
-from toolviper.utils.console import add_verbose_info
+from typing import Any, Dict, Optional, Union
 
+import dask
+import dask.distributed
+from contextvars import ContextVar
 from dask.distributed import get_worker
 
-from contextvars import ContextVar
+from toolviper.utils.console import Colorize, add_verbose_info
 
-from typing import Union
+# Global verbosity flag
+verbosity: ContextVar[Optional[bool]] = ContextVar("message_verbosity", default=None)
 
-VERBOSE = True
-DEFAULT = False
-
-# global verbosity flag
-verbosity: Union[ContextVar[bool], ContextVar[None]] = ContextVar(
-    "message_verbosity", default=None
-)
+# Constants for default values
+DEFAULT_LOGGER_NAME = "viperlog"
+LOGGER_ENV_VAR = "VIPER_LOGGER_NAME"
 
 
-def set_verbosity(state: Union[None, bool] = None):
-    print(f"Setting verbosity to {state}")
+def set_verbosity(state: Optional[bool] = None) -> None:
+    """
+    Set the global verbosity state.
 
+    Parameters
+    ----------
+    state : bool, optional
+        The verbosity state to set. If None, it uses the default.
+    """
     verbosity.set(state)
 
 
-def info(message: str, verbose: bool = False):
-    logger_name = os.getenv("LOGGER_NAME")
+def _log_message(
+    level: str, message: str, verbose: bool = False, color: Optional[str] = None
+) -> None:
+    """
+    Helper function to process and log a message.
 
-    if verbosity.get() is True or False:
-        verbose = verbosity.get()
+    Parameters
+    ----------
+    level : str
+        The logging level (e.g., 'info', 'debug', 'warning').
+    message : str
+        The message to log.
+    verbose : bool, optional
+        Whether to include verbose information. Defaults to False.
+    color : str, optional
+        The color to use for verbose information.
+    """
+    logger_name = os.getenv(LOGGER_ENV_VAR, DEFAULT_LOGGER_NAME)
+
+    current_verbosity = verbosity.get()
+    if current_verbosity is not None:
+        verbose = current_verbosity
+
+    if verbose and color:
+        message = add_verbose_info(message=message, color=color)
+
+    logger = get_logger(logger_name=logger_name)
+    log_func = getattr(logger, level.lower())
+    log_func(message)
+
+
+def info(message: str, verbose: bool = False) -> None:
+    """
+    Log an info level message.
+
+    Parameters
+    ----------
+    message : str
+        The message to log.
+    verbose : bool, optional
+        Whether to include verbose information. Defaults to False.
+    """
+    _log_message("info", message, verbose, color="blue")
+
+
+def log(message: str, verbose: bool = False) -> None:
+    """
+    Log a message at the current logger's level.
+
+    Parameters
+    ----------
+    message : str
+        The message to log.
+    verbose : bool, optional
+        Whether to include verbose information. Defaults to False.
+    """
+    logger_name = os.getenv(LOGGER_ENV_VAR, DEFAULT_LOGGER_NAME)
+    current_verbosity = verbosity.get()
+    if current_verbosity is not None:
+        verbose = current_verbosity
 
     if verbose:
         message = add_verbose_info(message=message, color="blue")
 
     logger = get_logger(logger_name=logger_name)
-    logger.info(message)
-
-
-def log(message: str, verbose: bool = False):
-    logger_name = os.getenv("LOGGER_NAME")
-
-    if verbosity.get() is True or False:
-        verbose = verbosity.get()
-
-    if verbose:
-        message = add_verbose_info(message=message, color="blue")
-
-    logger = get_logger(logger_name=logger_name)
-
     logger.log(logger.level, message)
 
 
-def exception(message: str, verbose: bool = False):
-    logger_name = os.getenv("LOGGER_NAME")
+def exception(message: str, verbose: bool = False) -> None:
+    """
+    Log an exception level message.
 
-    if verbosity.get() is True or False:
-        verbose = verbosity.get()
-
-    if verbose:
-        message = add_verbose_info(message=message, color="blue")
-
-    logger = get_logger(logger_name=logger_name)
-
-    logger.exception(message)
-
-
-def debug(message: str, verbose: bool = False):
-    logger_name = os.getenv("LOGGER_NAME")
-
-    if verbosity.get() is True or False:
-        verbose = verbosity.get()
-
-    if verbose:
-        message = add_verbose_info(message=message, color="green")
-
-    logger = get_logger(logger_name=logger_name)
-    logger.debug(message)
+    Parameters
+    ----------
+    message : str
+        The message to log.
+    verbose : bool, optional
+        Whether to include verbose information. Defaults to False.
+    """
+    _log_message("exception", message, verbose, color="blue")
 
 
-def warning(message: str, verbose: bool = False):
-    logger_name = os.getenv("LOGGER_NAME")
+def debug(message: str, verbose: bool = False) -> None:
+    """
+    Log a debug level message.
 
-    if verbosity.get() is True or False:
-        verbose = verbosity.get()
-
-    if verbose:
-        message = add_verbose_info(message=message, color="orange")
-
-    logger = get_logger(logger_name=logger_name)
-    logger.warning(message)
-
-
-def error(message: str, verbose: bool = True):
-    logger_name = os.getenv("LOGGER_NAME")
-
-    if verbosity.get() is True or False:
-        verbose = verbosity.get()
-
-    if verbose:
-        message = add_verbose_info(message=message, color="red")
-
-    logger = get_logger(logger_name=logger_name)
-    logger.error(message)
+    Parameters
+    ----------
+    message : str
+        The message to log.
+    verbose : bool, optional
+        Whether to include verbose information. Defaults to False.
+    """
+    _log_message("debug", message, verbose, color="green")
 
 
-def critical(message: str, verbose: bool = True):
-    logger_name = os.getenv("LOGGER_NAME")
+def warning(message: str, verbose: bool = False) -> None:
+    """
+    Log a warning level message.
 
-    if verbosity.get() is True or False:
-        verbose = verbosity.get()
+    Parameters
+    ----------
+    message : str
+        The message to log.
+    verbose : bool, optional
+        Whether to include verbose information. Defaults to False.
+    """
+    _log_message("warning", message, verbose, color="orange")
 
-    if verbose:
-        message = add_verbose_info(message=message, color="alert")
 
-    logger = get_logger(logger_name=logger_name)
-    logger.critical(message)
+def error(message: str, verbose: bool = True) -> None:
+    """
+    Log an error level message.
+
+    Parameters
+    ----------
+    message : str
+        The message to log.
+    verbose : bool, optional
+        Whether to include verbose information. Defaults to True.
+    """
+    _log_message("error", message, verbose, color="red")
+
+
+def critical(message: str, verbose: bool = True) -> None:
+    """
+    Log a critical level message.
+
+    Parameters
+    ----------
+    message : str
+        The message to log.
+    verbose : bool, optional
+        Whether to include verbose information. Defaults to True.
+    """
+    _log_message("critical", message, verbose, color="alert")
 
 
 class ColorLoggingFormatter(logging.Formatter):
+    """
+    A logging formatter that adds colors to the output based on the log level.
+    """
+
     colorize = Colorize()
 
-    function = " [{function}] ".format(function=colorize.blue("%(funcName)s"))
-    verbose = " [{exechain}] ".format(
-        exechain=colorize.blue("%(filename)s:%(lineno)s : %(module)s.%(funcName)s")
-    )
+    def __init__(self, fmt: Optional[str] = None, datefmt: Optional[str] = None):
+        super().__init__(fmt, datefmt)
+        self.start_msg = f"[{self.colorize.purple('%(asctime)s')}] "
 
-    start_msg = "[{time}] ".format(time=colorize.purple("%(asctime)s"))
-    middle_msg = "{level}".format(level="%(levelname)8s")
-    execution_msg = " {name} [ {filename} ]: {exec_info}: ".format(
-        name="%(name)10s",
-        filename="%(filename)-20s",
-        exec_info=colorize.blue("%(callchain)-45s"),
-    )
+        self.FORMATS = {
+            logging.DEBUG: self.start_msg
+            + self.colorize.green("%(levelname)8s")
+            + self.colorize.grey("  %(name)10s: ")
+            + " %(message)s",
+            logging.INFO: self.start_msg
+            + self.colorize.blue("%(levelname)8s")
+            + self.colorize.grey("  %(name)10s: ")
+            + " %(message)s ",
+            logging.WARNING: self.start_msg
+            + self.colorize.orange("%(levelname)8s")
+            + self.colorize.grey("  %(name)10s: ")
+            + " %(message)s ",
+            logging.ERROR: self.start_msg
+            + self.colorize.red("%(levelname)8s")
+            + self.colorize.grey("  %(name)10s: ")
+            + " %(message)s",
+            logging.CRITICAL: self.start_msg
+            + self.colorize.format(
+                text="%(levelname)8s", color=[220, 60, 20], highlight=True
+            )
+            + self.colorize.grey("  %(name)10s: ")
+            + " %(message)s",
+        }
 
-    FORMATS = {
-        logging.DEBUG: start_msg
-        + colorize.green(middle_msg)
-        + colorize.grey("  %(name)10s: ")
-        + " %(message)s",
-        logging.INFO: start_msg
-        + colorize.blue(middle_msg)
-        + colorize.grey("  %(name)10s: ")
-        + " %(message)s ",
-        logging.WARNING: start_msg
-        + colorize.orange(middle_msg)
-        + colorize.grey("  %(name)10s: ")
-        + " %(message)s ",
-        logging.ERROR: start_msg
-        + colorize.red(middle_msg)
-        + colorize.grey("  %(name)10s: ")
-        + " %(message)s",
-        logging.CRITICAL: start_msg
-        + colorize.format(text=middle_msg, color=[220, 60, 20], highlight=True)
-        + colorize.grey("  %(name)10s: ")
-        + " %(message)s",
-    }
+    def format(self, record: logging.LogRecord) -> str:
+        log_fmt = self.FORMATS.get(record.levelno, self._fmt)
+        formatter = logging.Formatter(log_fmt, self.datefmt)
 
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 
 
 class LoggingFormatter(logging.Formatter):
-    function = " [{function}] ".format(function="%(funcName)s")
-    verbose = " [{exechain}] ".format(
-        exechain="%(filename)s:%(lineno)s : %(module)s.%(funcName)s"
-    )
+    """
+    A standard logging formatter for file output.
+    """
 
-    start_msg = "[{time}] ".format(time="%(asctime)s")
-    middle_msg = "{level}".format(level="%(levelname)8s")
-    execution_msg = " {name} [ {filename} ]: {exec_info}: ".format(
-        name="%(name)10s", filename="%(filename)-20s", exec_info="%(callchain)-45s"
-    )
+    def __init__(self, fmt: Optional[str] = None, datefmt: Optional[str] = None):
+        super().__init__(fmt, datefmt)
+        self.start_msg = "[%(asctime)s] "
+        self.middle_msg = "%(levelname)8s"
 
-    FORMATS = {
-        logging.DEBUG: start_msg + middle_msg + "  %(name)10s: " + " %(message)s",
-        logging.INFO: start_msg + middle_msg + "  %(name)10s: " + " %(message)s ",
-        logging.WARNING: start_msg + middle_msg + "  %(name)10s: " + " %(message)s ",
-        logging.ERROR: start_msg + middle_msg + "  %(name)10s: " + " %(message)s",
-        logging.CRITICAL: start_msg + middle_msg + "  %(name)10s: " + " %(message)s",
-    }
+        self.FORMATS = {
+            level: f"{self.start_msg}{self.middle_msg}  %(name)10s:  %(message)s"
+            for level in [
+                logging.DEBUG,
+                logging.INFO,
+                logging.WARNING,
+                logging.ERROR,
+                logging.CRITICAL,
+            ]
+        }
 
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
+    def format(self, record: logging.LogRecord) -> str:
+        log_fmt = self.FORMATS.get(record.levelno, self._fmt)
+        formatter = logging.Formatter(log_fmt, self.datefmt)
+
         return formatter.format(record)
 
 
-def get_logger(logger_name: Union[str, None] = None):
+def get_logger(logger_name: Optional[str] = None) -> logging.Logger:
+    """
+    Get a logger instance by name, with fallback to environment or defaults.
+
+    Parameters
+    ----------
+    logger_name : str, optional
+        The name of the logger to retrieve.
+
+    Returns
+    -------
+    logging.Logger
+        The logger instance.
+    """
     if logger_name is None:
-        if os.getenv("LOGGER_NAME"):
-            # Return default logger from env if none is specified.
-            logger_name = os.getenv("LOGGER_NAME")
-        else:
-            logger_name = "viperlog"
+        logger_name = os.getenv(LOGGER_ENV_VAR, DEFAULT_LOGGER_NAME)
 
     try:
         worker = get_worker()
+        # If we're on a worker, try to get the worker-specific logger from the plugin
+        if hasattr(worker, "plugins") and "worker_logger" in worker.plugins:
+            return worker.plugins["worker_logger"].get_logger()
 
-    except ValueError:
-        # Scheduler processes
-        logger_dict = logging.Logger.manager.loggerDict
-        if logger_name in logger_dict:
-            logger = logging.getLogger(logger_name)
-        else:
-            # If main logger is not started using client function it defaults to printing to term.
-            logger = logging.getLogger(logger_name)
-            stream_handler = logging.StreamHandler(sys.stdout)
-            stream_handler.setFormatter(ColorLoggingFormatter())
-            logger.addHandler(stream_handler)
-            logger.setLevel(logging.getLevelName("INFO"))
+    except (ValueError, AttributeError, KeyError):
+        # Not on a worker, or worker logger plugin not available
+        pass
 
-        return logger
+    logger = logging.getLogger(logger_name)
 
-    try:
-        logger = worker.plugins["worker_logger"].get_logger()
+    # If the logger has no handlers, it hasn't been set up yet.
+    if not logger.handlers:
+        # Default to a simple stream handler if not explicitly set up
+        stream_handler = logging.StreamHandler(sys.stdout)
+        stream_handler.setFormatter(ColorLoggingFormatter())
+        logger.addHandler(stream_handler)
+        logger.setLevel(logging.INFO)
 
-        return logger
-
-    except Exception as e:
-        print("Could not load worker logger: {}".format(e))
-        print(worker.plugins.keys())
-
-        return logging.getLogger()
+    return logger
 
 
 def setup_logger(
-    logger_name: Union[str, None] = None,
+    logger_name: Optional[str] = None,
     log_to_term: bool = False,
     log_to_file: bool = True,
     log_file: str = "logger",
     log_level: str = "INFO",
-):
-    """To set up as many loggers as you want"""
+) -> logging.Logger:
+    """
+    Configure and return a logger.
+
+    Parameters
+    ----------
+    logger_name : str, optional
+        The name of the logger to set up.
+    log_to_term : bool, optional
+        Whether to log to the terminal. Defaults to False.
+    log_to_file : bool, optional
+        Whether to log to a file. Defaults to True.
+    log_file : str, optional
+        The base name of the log file.
+    log_level : str, optional
+        The logging level (e.g., 'DEBUG', 'INFO'). Defaults to 'INFO'.
+
+    Returns
+    -------
+    logging.Logger
+        The configured logger.
+    """
     if logger_name is None:
-        logger_name = "viperlog"
+        logger_name = DEFAULT_LOGGER_NAME
 
     logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.getLevelName(log_level))
-
+    logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
     logger.handlers.clear()
 
     if log_to_term:
@@ -266,19 +335,38 @@ def setup_logger(
         logger.addHandler(stream_handler)
 
     if log_to_file:
-        log_file = log_file + datetime.today().strftime("%Y%m%d_%H%M%S") + ".log"
-        log_handler = logging.FileHandler(log_file)
+        timestamp = datetime.today().strftime("%Y%m%d_%H%M%S")
+        full_log_file = f"{log_file}{timestamp}.log"
+        log_handler = logging.FileHandler(full_log_file)
         log_handler.setFormatter(LoggingFormatter())
         logger.addHandler(log_handler)
 
     return logger
 
 
-def get_worker_logger_name(logger_name: Union[str, None] = None):
-    if logger_name is None:
-        logger_name = "viperlog"
+def get_worker_logger_name(logger_name: Optional[str] = None) -> str:
+    """
+    Generate a unique logger name for a Dask worker.
 
-    return "_".join((logger_name, str(get_worker().id)))
+    Parameters
+    ----------
+    logger_name : str, optional
+        The base logger name.
+
+    Returns
+    -------
+    str
+        The worker-specific logger name.
+    """
+    if logger_name is None:
+        logger_name = DEFAULT_LOGGER_NAME
+
+    try:
+        worker_id = get_worker().id
+        return f"{logger_name}_{worker_id}"
+
+    except (ValueError, AttributeError):
+        return logger_name
 
 
 def setup_worker_logger(
@@ -287,12 +375,36 @@ def setup_worker_logger(
     log_to_file: bool,
     log_file: str,
     log_level: str,
-    worker: dask.distributed.worker.Worker,
-):
-    parallel_logger_name = "_".join((logger_name, str(worker.name)))
+    worker: "dask.distributed.worker.Worker",
+) -> logging.Logger:
+    """
+    Configure and return a logger for a Dask worker.
+
+    Parameters
+    ----------
+    logger_name : str
+        The base name of the logger.
+    log_to_term : bool
+        Whether to log to the terminal.
+    log_to_file : bool
+        Whether to log to a file.
+    log_file : str
+        The base name of the log file.
+    log_level : str
+        The logging level.
+    worker : dask.distributed.worker.Worker
+        The Dask worker instance.
+
+    Returns
+    -------
+    logging.Logger
+        The configured worker logger.
+    """
+    parallel_logger_name = f"{logger_name}_{worker.name}"
 
     logger = logging.getLogger(parallel_logger_name)
-    logger.setLevel(logging.getLevelName(log_level))
+    logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
+    logger.handlers.clear()
 
     if log_to_term:
         stream_handler = logging.StreamHandler(sys.stdout)
@@ -300,20 +412,9 @@ def setup_worker_logger(
         logger.addHandler(stream_handler)
 
     if log_to_file:
-        logger.info(f"log_to_file: {log_file}")
-        dask.distributed.print(f"log_to_file: {log_to_file}")
-
-        log_file = (
-            log_file
-            + "_"
-            + str(worker.name)
-            + "_"
-            + datetime.today().strftime("%Y%m%d_%H%M%S")
-            + "_"
-            + str(worker.ip)
-            + ".log"
-        )
-        log_handler = logging.FileHandler(log_file)
+        timestamp = datetime.today().strftime("%Y%m%d_%H%M%S")
+        full_log_file = f"{log_file}_{worker.name}_{timestamp}_{worker.ip}.log"
+        log_handler = logging.FileHandler(full_log_file)
         log_handler.setFormatter(LoggingFormatter())
         logger.addHandler(log_handler)
 

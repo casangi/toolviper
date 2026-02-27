@@ -4,280 +4,326 @@ import pathlib
 import shutil
 import zipfile
 from threading import Thread
-from typing import Any, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import requests
+import pandas as pd
 from rich.progress import Progress, TaskID
 
 import toolviper
 import toolviper.utils.console as console
 import toolviper.utils.logger as logger
 from toolviper.utils import parameter
-
-from collections import defaultdict
 from toolviper.utils.parameter import is_notebook
-import pandas as pd
+from collections import defaultdict
 
 colorize = console.Colorize()
 
+# Constants
 PROGRESS_MAX_CHARACTERS = 28
 MINIMUM_CHUNK_SIZE = 1024
+BASE_URL = "https://downloadnrao.org"
+METADATA_REL_PATH = ".cloudflare/file.download.json"
+USER_AGENT = "Wget/1.16 (linux-gnu)"
+
+
+def _get_metadata_path() -> pathlib.Path:
+    """Get the absolute path to the local metadata file."""
+    return pathlib.Path(__file__).parent.resolve().joinpath(METADATA_REL_PATH)
 
 
 def version() -> None:
-    # Load the file dropbox file meta data.
-    meta_data_path = pathlib.Path(__file__).parent.joinpath(
-        ".cloudflare/file.download.json"
-    )
+    """
+    Print the version of the cloudflare manifest.
+    """
+    meta_data_path = _get_metadata_path()
 
     if not meta_data_path.parent.exists():
-        logger.debug("metadata path doesn't exist... creating")
-        meta_data_path.parent.mkdir(parents=True)
+        logger.debug(f"Metadata path {meta_data_path.parent} doesn't exist... creating")
+        meta_data_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Verify that the download metadata exists and updates if not.
     _verify_metadata_file()
 
-    with open(meta_data_path) as json_file:
-        file_meta_data = json.load(json_file)
+    try:
+        with open(meta_data_path, "r") as json_file:
+            file_meta_data = json.load(json_file)
+            logger.info(f"Manifest version: {file_meta_data.get('version', 'unknown')}")
 
-        logger.info(f"{file_meta_data['version']}")
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.error(f"Failed to read metadata file: {e}")
 
 
 @parameter.validate()
 def download(
-    file: Union[str, list],
+    file: Union[str, List[str]],
     folder: str = ".",
     overwrite: bool = False,
     decompress: bool = True,
 ) -> None:
     """
-        Download tool for data stored externally.
+    Download tool for data stored externally.
+
     Parameters
     ----------
-    file : str
-        Filename as stored on an external source.
-    folder : str
-        Destination folder.
-    overwrite : bool
-        Should file be overwritten.
-    decompress : bool
-        Should file be unzipped.
-
-    Returns
-    -------
-        No return
+    file : str or list of str
+        Filename(s) as stored on an external source.
+    folder : str, optional
+        Destination folder. Defaults to ".".
+    overwrite : bool, optional
+        Whether to overwrite existing files. Defaults to False.
+    decompress : bool, optional
+        Whether to unzip downloaded files. Defaults to True.
     """
+    logger.info("Initializing download...")
 
-    logger.info("Downloading from ....")
-
-    if not isinstance(file, list):
+    if isinstance(file, str):
         file = [file]
 
     try:
         _print_file_queue(file)
-
     except Exception as e:
-        logger.warning(f"There was a problem printing the file list... {e}")
+        logger.warning(f"Problem printing file list: {e}")
 
-    finally:
-        if not pathlib.Path(folder).resolve().exists():
-            toolviper.utils.logger.info(
-                f"Creating path:{colorize.blue(str(pathlib.Path(folder).resolve()))}"
-            )
-            pathlib.Path(folder).resolve().mkdir()
+    dest_path = pathlib.Path(folder).resolve()
+    if not dest_path.exists():
+        logger.info(f"Creating path: {colorize.blue(str(dest_path))}")
+        dest_path.mkdir(parents=True, exist_ok=True)
 
-    logger.debug(f"Initializing downloader ...")
-
-    meta_data_path = pathlib.Path(__file__).parent.joinpath(
-        ".cloudflare/file.download.json"
-    )
-
-    tasks = []
-
-    # Make a list of files that aren't available from cloudflare yet
-    missing_files = []
-
-    # Load the file dropbox file meta data.
+    meta_data_path = _get_metadata_path()
     if not meta_data_path.exists():
         logger.warning(
-            f"Couldn't find file metadata locally in {colorize.blue(str(meta_data_path))}"
+            f"Metadata not found locally at {colorize.blue(str(meta_data_path))}"
+        )
+        update()
+
+    try:
+        with open(meta_data_path, "r") as json_file:
+            file_meta_data = json.load(json_file)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.error(f"Failed to load metadata: {e}")
+        return
+
+    tasks = []
+    missing_files = []
+
+    def name_format(string):
+        return (
+            f"{string[: (PROGRESS_MAX_CHARACTERS - 4)]} ..."
+            if len(string) > PROGRESS_MAX_CHARACTERS
+            else string
         )
 
-        toolviper.utils.data.update()
+    for f_name in file:
+        full_file_path = dest_path.joinpath(f_name)
 
-    with open(meta_data_path) as json_file:
-        file_meta_data = json.load(json_file)
+        if full_file_path.exists() and not overwrite:
+            logger.info(f"File already exists: {full_file_path}")
+            continue
 
-        # Build the task list
-        for file_ in file:
-            full_file_path = pathlib.Path(folder).joinpath(file_)
-
-            if full_file_path.exists() and not overwrite:
-                logger.info(f"File exists: {str(full_file_path)}")
-                continue
-
-            if file_ not in file_meta_data["metadata"].keys():
-                logger.error(f"Requested file not found: {file_}")
-                logger.info(
-                    f"For a list of available files try using "
-                    f"{colorize.blue('toolviper.utils.data.list_files()')}."
-                )
-
-                missing_files.append(file_)
-                continue
-
-            name_format = lambda string: (
-                f"{string[: (PROGRESS_MAX_CHARACTERS - 4)]} ..."
-                if len(string) > PROGRESS_MAX_CHARACTERS
-                else string
+        if f_name not in file_meta_data.get("metadata", {}):
+            logger.error(f"Requested file not found in manifest: {f_name}")
+            logger.info(
+                f"Use {colorize.blue('toolviper.utils.data.list_files()')} for available files."
             )
+            missing_files.append(f_name)
+            continue
 
-            tasks.append(
-                {
-                    "description": name_format(file_),
-                    "metadata": file_meta_data["metadata"][file_],
-                    "folder": folder,
-                    "visible": True,
-                    "size": int(file_meta_data["metadata"][file_]["size"]),
-                }
-            )
+        meta = file_meta_data["metadata"][f_name]
+        tasks.append(
+            {
+                "description": name_format(f_name),
+                "metadata": meta,
+                "folder": str(dest_path),
+                "visible": True,
+                "size": int(meta.get("size", 0)),
+            }
+        )
 
-    threads = []
+    if not tasks:
+        if missing_files:
+            logger.error(f"Missing files: {missing_files}")
+
+        return
+
     progress = Progress()
+    threads = []
 
     with progress:
-        task_ids = [
-            progress.add_task(task["description"]) for task in tasks if len(tasks) > 0
-        ]
-
-        for i, task in enumerate(tasks):
-            thread = Thread(
-                target=worker, args=(progress, task_ids[i], task, decompress)
-            )
+        for task in tasks:
+            task_id = progress.add_task(task["description"])
+            thread = Thread(target=worker, args=(progress, task_id, task, decompress))
             thread.start()
             threads.append(thread)
 
         for thread in threads:
             thread.join()
 
-    if len(missing_files) > 0:
-        logger.error(f"Missing files: {missing_files}")
+    if missing_files:
+        logger.error(f"Could not download: {missing_files}")
 
 
-def worker(progress: Progress, task_id: TaskID, task: dict, decompress=True) -> None:
-    """Simulate work being done in a thread"""
+def worker(
+    progress: Progress, task_id: TaskID, task: dict, decompress: bool = True
+) -> None:
+    """
+    Worker function to download a file in a thread.
 
-    filename = task["metadata"]["file"]
+    Parameters
+    ----------
+    progress : Progress
+        Rich Progress instance.
+    task_id : TaskID
+        ID of the task in the progress bar.
+    task : dict
+        Task details including metadata and destination folder.
+    decompress : bool, optional
+        Whether to decompress the file after download. Defaults to True.
+    """
+    metadata = task["metadata"]
+    filename = metadata["file"]
+    path = metadata.get("path", "").strip("/")
+    url = f"{BASE_URL}/{path}/{filename}" if path else f"{BASE_URL}/{filename}"
 
-    url = f"https://downloadnrao.org/{task['metadata']['path']}/{task['metadata']['file']}"
+    try:
+        response = requests.get(
+            url, stream=True, headers={"user-agent": USER_AGENT}, timeout=30
+        )
+        response.raise_for_status()
+    except Exception as e:
+        logger.error(f"Failed to initiate download for {filename}: {e}")
+        return
 
-    r = requests.get(url, stream=True, headers={"user-agent": "Wget/1.16 (linux-gnu)"})
-    total = int(r.headers.get("Content-Length", 0))
-
+    total = int(response.headers.get("Content-Length", 0))
     if total == 0:
-        total = task["size"]
+        total = task.get("size", 0)
 
-    fullname = str(pathlib.Path(task["folder"]).joinpath(filename))
+    dest_folder = pathlib.Path(task["folder"])
+    fullname = dest_folder.joinpath(filename)
 
-    size = 0
+    try:
+        size = 0
+        with open(fullname, "wb") as fd:
+            for chunk in response.iter_content(chunk_size=MINIMUM_CHUNK_SIZE):
+                if chunk:
+                    size += fd.write(chunk)
+                    progress.update(
+                        task_id, completed=size, total=total, visible=task["visible"]
+                    )
+    except Exception as e:
+        logger.error(f"Error writing file {filename}: {e}")
+        return
 
-    with open(fullname, "wb") as fd:
-        for chunk in r.iter_content(chunk_size=MINIMUM_CHUNK_SIZE):
-            if chunk:
-                size += fd.write(chunk)
-                progress.update(
-                    task_id, completed=size, total=total, visible=task["visible"]
-                )
-
-    # Verify checksum on file
-    # toolviper.utils.verify(filename, task["folder"])
-
-    if decompress:
-        if zipfile.is_zipfile(fullname):
-            shutil.unpack_archive(filename=fullname, extract_dir=task["folder"])
-
-            # Let's clean up after ourselves
+    if decompress and zipfile.is_zipfile(fullname):
+        try:
+            shutil.unpack_archive(filename=str(fullname), extract_dir=str(dest_folder))
             os.remove(fullname)
+        except Exception as e:
+            logger.error(f"Failed to decompress {filename}: {e}")
 
 
 class ToolviperFiles:
-    def __init__(self, manifest, dataframe=None):
+    """
+    Helper class for managing and displaying toolviper data manifests.
+    """
 
+    def __init__(self, manifest: str, dataframe: Optional[pd.DataFrame] = None) -> None:
         self.manifest = manifest
         self.dataframe = dataframe
-        self.notebook_mode = False
+        self.notebook_mode = is_notebook()
 
-        if is_notebook():
-            import itables
+        if self.notebook_mode:
+            try:
+                import itables
 
-            self.notebook_mode = True
+                itables.init_notebook_mode()
 
-            itables.init_notebook_mode()
+            except ImportError:
+                logger.debug("itables not found, falling back to standard display.")
 
-    def __call__(self):
+    def __call__(self) -> Optional[pd.DataFrame]:
         if not self.notebook_mode:
-            return print(self.dataframe)
+            print(self.dataframe)
+            return None
 
-        else:
-            return self.dataframe
+        return self.dataframe
 
-    def print(self) -> Union[None, pd.DataFrame]:
+    def print(self) -> Optional[pd.DataFrame]:
+        """
+        Display the dataframe using appropriate formatting.
+        """
         if not self.notebook_mode:
-            import tabulate
+            try:
+                import tabulate
 
-            print(
-                tabulate.tabulate(
-                    self.dataframe, showindex=False, headers=self.dataframe.columns
+                print(
+                    tabulate.tabulate(
+                        self.dataframe,
+                        showindex=False,
+                        headers=self.dataframe.columns,
+                    )
                 )
-            )
+            except ImportError:
+                print(self.dataframe)
+
             return None
 
         return self.dataframe
 
     @classmethod
-    def from_manifest(cls, manifest: str):
+    def from_manifest(cls, manifest: str) -> "ToolviperFiles":
+        """
+        Create a ToolviperFiles instance from a manifest file.
+        """
         meta_data_path = pathlib.Path(manifest)
 
-        # Verify that the download metadata exist and update if not.
-        # _verify_metadata_file()
+        try:
+            with open(meta_data_path, "r") as json_file:
+                file_meta_data = json.load(json_file)
 
-        with open(meta_data_path) as json_file:
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.error(f"Failed to load manifest {manifest}: {e}")
 
-            file_meta_data = json.load(json_file)
+            return cls(manifest=manifest, dataframe=pd.DataFrame())
 
-            files = file_meta_data["metadata"].keys()
+        metadata_dict = file_meta_data.get("metadata", {})
+        data = defaultdict(list)
 
-            data = defaultdict(list)
-            data["file"] = list(files)
+        for file_name, meta in metadata_dict.items():
+            data["file"].append(file_name)
 
-            for file_, metadata_ in file_meta_data["metadata"].items():
-                for key_, value_ in metadata_.items():
-                    if key_ == "file":
-                        continue
+            for key, value in meta.items():
+                if key == "file":
+                    continue
 
-                    # I think we could do this with a JSON ENCODER
-                    # but this is easier since the file is small
-                    # and everything is a string already
+                if key == "size":
+                    try:
+                        value = int(value)
 
-                    if value_ == "size":
-                        value_ = int(value_)
+                    except (ValueError, TypeError):
+                        pass
 
-                    data[key_].append(value_)
+                data[key].append(value)
 
-            return cls(manifest=manifest, dataframe=pd.DataFrame(data))
+        return cls(manifest=manifest, dataframe=pd.DataFrame(data))
 
 
-def list_files(truncate=None) -> pd.DataFrame:
+def list_files(truncate: Optional[int] = None) -> Optional[pd.DataFrame]:
+    """
+    List all files available in the cloudflare manifest.
 
+    Parameters
+    ----------
+    truncate : int, optional
+        Maximum number of rows to display. Defaults to None.
+    """
     pd.set_option("display.max_rows", truncate)
     pd.set_option("display.colheader_justify", "left")
 
-    meta_data_path = pathlib.Path(__file__).parent.joinpath(
-        ".cloudflare/file.download.json"
-    )
+    meta_data_path = _get_metadata_path()
+    if not meta_data_path.exists():
+        _verify_metadata_file()
 
     table = ToolviperFiles.from_manifest(str(meta_data_path))
-
     return table.print()
 
 
@@ -322,46 +368,44 @@ def list_files_() -> None:
     console.print(table)
 
 
-def get_files() -> list[Any]:
+def get_files() -> List[str]:
     """
-    Get all files available in cloudflare manifest. This is retrieved from the local cloudflare
-    metadata file.
-
+    Get a list of all file names available in the cloudflare manifest.
     """
-    meta_data_path = pathlib.Path(__file__).parent.joinpath(
-        ".cloudflare/file.download.json"
-    )
-
-    # Verify that the download metadata exists and updates if not.
+    meta_data_path = _get_metadata_path()
     _verify_metadata_file()
 
-    with open(meta_data_path) as json_file:
-        file_meta_data = json.load(json_file)
+    try:
+        with open(meta_data_path, "r") as json_file:
+            file_meta_data = json.load(json_file)
+            return list(file_meta_data.get("metadata", {}).keys())
 
-        return list(file_meta_data["metadata"].keys())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
 
 
 @parameter.validate()
-def update(path: Union[str, None] = None) -> None:
+def update(path: Optional[str] = None) -> None:
     """
-    Update cloudflare manifest.
+    Update the local cloudflare manifest by downloading the latest version.
 
     Parameters
     ----------
-    path : str
-        In the case that you want an updated copy of the manifest for modification, this is the path to save it to.
+    path : str, optional
+        Custom path to save the manifest to. Defaults to the internal .cloudflare directory.
     """
-
     if path is None:
-        meta_data_path = pathlib.Path(__file__).parent.joinpath(".cloudflare")
+        meta_data_dir = _get_metadata_path().parent
+        meta_data_path = _get_metadata_path()
 
     else:
-        # I know this is an unnecessary copy but I don't want a big erbose path name in the inpute variables.
-        meta_data_path = pathlib.Path(path)
+        meta_data_dir = pathlib.Path(path)
+        meta_data_path = meta_data_dir.joinpath("file.download.json")
 
-    if not meta_data_path.exists():
-        _make_dir(str(pathlib.Path(__file__).parent), ".cloudflare")
+    if not meta_data_dir.exists():
+        meta_data_dir.mkdir(parents=True, exist_ok=True)
 
+    # Temporary metadata to kickstart the download of the actual manifest
     file_meta_data = {
         "file": "file.download.json",
         "path": "/",
@@ -371,94 +415,81 @@ def update(path: Union[str, None] = None) -> None:
         "mode": "NA",
     }
 
-    tasks = {
-        "description": "file.download.json",
+    task = {
+        "description": "Updating manifest",
         "metadata": file_meta_data,
-        "folder": meta_data_path,
+        "folder": str(meta_data_dir),
         "visible": False,
         "size": 12484,
     }
 
-    logger.info("Updating file metadata information ... ")
+    logger.info("Updating file metadata information...")
 
     progress = Progress()
-    task_id = progress.add_task(tasks["description"])
+    task_id = progress.add_task(task["description"])
 
     with progress:
-        worker(progress, task_id, tasks)
+        worker(progress, task_id, task, decompress=False)
 
     if not meta_data_path.exists():
         logger.error("Unable to retrieve download metadata.")
-        raise FileNotFoundError(
-            "Download metadata file does not exist at the expected path."
-        )
+        raise FileNotFoundError(f"Download metadata file not found at {meta_data_path}")
 
 
 @parameter.validate()
-def get_file_size(path: str) -> Optional[dict]:
+def get_file_size(path: str) -> Dict[str, int]:
     """
-    Get list file sizes in bytes for a given path. Only works for files; isn't recursive.
-    """
-    if not pathlib.Path(path).resolve().exists():
-        logger.error(f"Path not found...: {path}")
+    Get file sizes in bytes for all files in a given path.
 
-        return None
+    Parameters
+    ----------
+    path : str
+        The directory path to scan.
+
+    Returns
+    -------
+    dict
+        A dictionary mapping file names to their sizes in bytes.
+    """
+    path_obj = pathlib.Path(path).resolve()
+    if not path_obj.exists() or not path_obj.is_dir():
+        logger.error(f"Path not found or is not a directory: {path}")
+        return {}
 
     file_size_dict = {}
-
-    for item in pathlib.Path(path).resolve().iterdir():
-        if pathlib.Path(item).resolve().is_file():
-            if item.name.endswith(".zip"):
-                item_ = item.name.split(".zip")[0]
-
-            else:
-                item_ = item.name
-
-            file_size_dict[item_] = os.path.getsize(pathlib.Path(item))
+    for item in path_obj.iterdir():
+        if item.is_file():
+            name = (
+                item.name.split(".zip")[0] if item.name.endswith(".zip") else item.name
+            )
+            file_size_dict[name] = item.stat().st_size
 
     return file_size_dict
 
 
-def _print_file_queue(files: list) -> None:
+def _print_file_queue(files: List[str]) -> None:
+    """
+    Print a formatted list of files to be downloaded.
+    """
     from rich import box
     from rich.console import Console
     from rich.table import Table
 
-    assert type(files) == list
-
     console_ = Console()
     table = Table(show_header=True, box=box.SIMPLE)
-
     table.add_column("Download List", justify="left")
 
-    for file in files:
-        table.add_row(f"[magenta]{file}[/magenta]")
+    for f_name in files:
+        table.add_row(f"[magenta]{f_name}[/magenta]")
 
     console_.print(table)
 
 
-def _make_dir(path, folder):
-    p = pathlib.Path(path).joinpath(folder)
-    try:
-        p.mkdir()
-        logger.info(
-            f"Creating path:{colorize.blue(str(pathlib.Path(folder).resolve()))}"
-        )
-
-    except FileExistsError:
-        logger.warning(f"File exists: {colorize.blue(str(p.resolve()))}")
-
-    except FileNotFoundError:
-        logger.warning(
-            f"One fo the parent directories cannot be found: {colorize.blue(str(p.resolve()))}"
-        )
-
-
-def _verify_metadata_file():
-    meta_data_path = pathlib.Path(__file__).parent.joinpath(
-        ".cloudflare/file.download.json"
-    )
-
+def _verify_metadata_file() -> None:
+    """
+    Ensure the metadata file exists, or trigger an update.
+    """
+    meta_data_path = _get_metadata_path()
     if not meta_data_path.exists():
-        logger.warning(f"Couldn't find {colorize.blue(str(meta_data_path))}.")
+        logger.warning(f"Metadata file {meta_data_path} missing. Updating...")
         update()

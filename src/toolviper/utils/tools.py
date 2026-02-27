@@ -147,7 +147,7 @@ def add_entry(
     ----------
 
     entries : dict, list
-        Dictionary or list of metadata info that are needed to build the new entry.
+        Dictionary, or list of metadata info that are needed to build the new entry.
 
     manifest : str
         Points to the manifest you want to modify.
