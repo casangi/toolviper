@@ -32,6 +32,9 @@ verbosity: ContextVar[Optional[bool]] = ContextVar("message_verbosity", default=
 DEFAULT_LOGGER_NAME = "viperlog"
 LOGGER_ENV_VAR = "VIPER_LOGGER_NAME"
 
+VERBOSE = True
+DEFAULT = False
+
 
 def set_verbosity(state: Optional[bool] = None) -> None:
     """
@@ -267,6 +270,7 @@ def get_logger(logger_name: Optional[str] = None) -> logging.Logger:
     -------
     logging.Logger
         The logger instance.
+
     """
     if logger_name is None:
         logger_name = os.getenv(LOGGER_ENV_VAR, DEFAULT_LOGGER_NAME)
