@@ -475,6 +475,8 @@ def _print_file_queue(files: List[str]) -> None:
     from rich.console import Console
     from rich.table import Table
 
+    assert isinstance(files, list), logger.error("files must be a list")
+
     console_ = Console()
     table = Table(show_header=True, box=box.SIMPLE)
     table.add_column("Download List", justify="left")

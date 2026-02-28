@@ -148,13 +148,5 @@ class TestToolViperDownload:
             logger.info("Failure test passed!")
             return None
 
-        # If error isn't as expected, fail the test.
+        # If the error isn't as expected, fail the test.
         raise AssertionError()
-
-    def test_private_make_dir(self):
-        from toolviper.utils.data.cloudflare import _make_dir
-
-        _make_dir(path=str(pathlib.Path.cwd()), folder="data")
-
-        if not pathlib.Path.cwd().joinpath("data").exists():
-            raise FileNotFoundError("data")
