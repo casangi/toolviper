@@ -8,11 +8,12 @@ from typing import Any, Dict, List, Optional, Union
 
 import requests
 import pandas as pd
+
 from rich.progress import Progress, TaskID
 
-import toolviper
 import toolviper.utils.console as console
 import toolviper.utils.logger as logger
+
 from toolviper.utils import parameter
 from toolviper.utils.parameter import is_notebook
 from collections import defaultdict
@@ -489,7 +490,7 @@ def _print_file_queue(files: List[str]) -> None:
 
 def _verify_metadata_file() -> None:
     """
-    Ensure the metadata file exists, or trigger an update.
+    Ensure the metadata file exists or trigger an update.
     """
     meta_data_path = _get_metadata_path()
     if not meta_data_path.exists():
