@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Union
 import requests
 import pandas as pd
 
+from rich.console import Console
 from rich.progress import Progress, TaskID
 
 import toolviper.utils.console as console
@@ -80,10 +81,10 @@ def download(
     if isinstance(file, str):
         file = [file]
 
-    try:
-        _print_file_queue(file)
-    except Exception as e:
-        logger.warning(f"Problem printing file list: {e}")
+    # try:
+    #    _print_file_queue(file)
+    # except Exception as e:
+    #    logger.warning(f"Problem printing file list: {e}")
 
     dest_path = pathlib.Path(folder).resolve()
     if not dest_path.exists():
@@ -123,6 +124,9 @@ def download(
 
         if f_name not in file_meta_data.get("metadata", {}):
             logger.error(f"Requested file not found in manifest: {f_name}")
+            logger.error(
+                f"Use {colorize.blue('toolviper.utils.data.update()')} for the most recent version of the manifest."
+            )
             logger.info(
                 f"Use {colorize.blue('toolviper.utils.data.list_files()')} for available files."
             )
@@ -137,6 +141,7 @@ def download(
                 "folder": str(dest_path),
                 "visible": True,
                 "size": int(meta.get("size", 0)),
+                "jupyter": is_notebook(),
             }
         )
 
@@ -147,24 +152,32 @@ def download(
         return
 
     progress = Progress()
+    if is_notebook():
+        _ = Console(force_terminal=True, force_jupyter=False)
+        _console = Console(force_jupyter=is_notebook())
+
+        progress = Progress(console=_console)
+
     threads = []
 
     with progress:
         for task in tasks:
             task_id = progress.add_task(task["description"])
-            thread = Thread(target=worker, args=(progress, task_id, task, decompress))
+            thread = Thread(target=worker, args=(task_id, task, progress, decompress))
             thread.start()
             threads.append(thread)
 
         for thread in threads:
             thread.join()
 
+        progress.refresh()
+
     if missing_files:
         logger.error(f"Could not download: {missing_files}")
 
 
 def worker(
-    progress: Progress, task_id: TaskID, task: dict, decompress: bool = True
+    task_id: TaskID, task: dict, progress: Progress = None, decompress: bool = True
 ) -> None:
     """
     Worker function to download a file in a thread.
@@ -190,6 +203,7 @@ def worker(
             url, stream=True, headers={"user-agent": USER_AGENT}, timeout=30
         )
         response.raise_for_status()
+
     except Exception as e:
         logger.error(f"Failed to initiate download for {filename}: {e}")
         return
@@ -207,9 +221,14 @@ def worker(
             for chunk in response.iter_content(chunk_size=MINIMUM_CHUNK_SIZE):
                 if chunk:
                     size += fd.write(chunk)
-                    progress.update(
-                        task_id, completed=size, total=total, visible=task["visible"]
-                    )
+                    if progress is not None:
+                        progress.update(
+                            task_id,
+                            completed=size,
+                            total=total,
+                            visible=task["visible"],
+                        )
+
     except Exception as e:
         logger.error(f"Error writing file {filename}: {e}")
         return
@@ -412,7 +431,7 @@ def update(path: Optional[str] = None) -> None:
         "path": "/",
         "dtype": "JSON",
         "telescope": "NA",
-        "size": "12484",
+        "size": "23879",
         "mode": "NA",
     }
 
@@ -420,17 +439,24 @@ def update(path: Optional[str] = None) -> None:
         "description": "Updating manifest",
         "metadata": file_meta_data,
         "folder": str(meta_data_dir),
-        "visible": False,
-        "size": 12484,
+        "visible": True,
+        "size": 23879,
     }
 
     logger.info("Updating file metadata information...")
 
-    progress = Progress()
-    task_id = progress.add_task(task["description"])
+    task_id = 0
+    # with progress:
+    _console = Console(force_jupyter=is_notebook())
+    tasks = [f"\nManifest update "]
 
-    with progress:
-        worker(progress, task_id, task, decompress=False)
+    with _console.status(
+        "[bold green]Working on download manifest update ..."
+    ) as status:
+        while tasks:
+            worker(task_id, task, progress=None, decompress=False)
+
+            task = tasks.pop(0)
 
     if not meta_data_path.exists():
         logger.error("Unable to retrieve download metadata.")

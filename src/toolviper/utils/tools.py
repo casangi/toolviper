@@ -186,9 +186,9 @@ def add_entry(
         for entry in entries:
             process_entry_(**entry, json_file=json_file)
 
-    except KeyError as key_error:
-        logger.error(f"entry not found in metadata ... skipping: {key_error}")
-        return None
+    # except KeyError as key_error:
+    #    logger.error(f"entry not found in metadata ... skipping: {key_error}")
+    #    return None
 
     except TypeError:
         logger.error(

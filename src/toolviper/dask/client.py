@@ -13,9 +13,11 @@ from importlib.util import find_spec
 from typing import Dict, Union, Any, Optional
 
 import toolviper.dask.menrva
+
 import toolviper.utils.console as console
 import toolviper.utils.logger as logger
 import toolviper.utils.parameter as parameter
+import toolviper.utils.display as display
 
 colorize = console.Colorize()
 
@@ -274,11 +276,13 @@ def local_client(
         client = toolviper.dask.menrva.MenrvaClient(cluster)
         client.get_versions(check=True)
 
-    # When constructing a graph that has local cache enabled, all workers need to be up and running.
+    # When constructing a graph that has local-cache enabled, all workers need to be up and running.
     if local_cache or wait_for_workers:
         client.wait_for_workers(n_workers=cores)
 
-    logger.debug(f"These are the worker log parameters:\n {worker_log_params}")
+    # logger.debug(f"These are the worker log parameters:\n")
+    # logger.debug(f"{display.DataDict.from_dict(worker_log_params).display(interactive=False)}")
+
     if local_cache or worker_log_params:
         client.load_plugin(
             directory=plugin_path,

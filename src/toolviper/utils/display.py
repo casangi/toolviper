@@ -1,19 +1,9 @@
 import re
 import operator
+import sys
+from typing import Dict
+
 from IPython.core.display import HTML
-
-
-def dict_to_html(d, indent=0):
-    print(f"THIS FUNCTION WILL BE DEPRECATED SOON")
-
-    html = ""
-    for key, value in d.items():
-        if isinstance(value, dict):
-            html += f"<div style='margin-left: {indent}em;'><details><summary>{key}</summary>{dict_to_html(value, indent + 1)}</details></div>"
-        else:
-            html += f"<div style='margin-left: {indent}em;'><font color='blue'><strong>{key}:</strong></font> {value}</div>"
-
-    return html
 
 
 class DataDict(dict):
@@ -74,13 +64,38 @@ class DataDict(dict):
 
         return rich.print_json(data=self._dict)
 
-    def html(self, indent=0):
-        html = ""
-        for key, value in self._dict.items():
-            if isinstance(value, dict):
-                html += f"<div style='margin-left: {indent}em;'><details><summary>{key}</summary>{dict_to_html(value, indent + 1)}</details></div>"
+    @staticmethod
+    def html(dictionary: Dict, indent: int = 0):
+        _html = _write_html(dictionary, indent)
 
-            else:
-                html += f"<div style='margin-left: {indent}em;'><font color='blue'><strong>{key}:</strong></font> {value}</div>"
+        return HTML(_html)
 
-        return HTML(html)
+
+def _write_html(d, indent=0):
+    _html = ""
+
+    for key, value in d.items():
+        if isinstance(value, dict):
+            _html += f"<div style='margin-left: {indent}em;'><details><summary>{key}</summary>{_write_html(value, indent + 1)}</details></div>"
+
+        else:
+            _html += f"<div style='margin-left: {indent}em;'><font color='blue'><strong>{key}:</strong></font> {value}</div>"
+
+    return _html
+
+
+def dict_to_html(d, indent=0):
+
+    html = ""
+    for key, value in d.items():
+        if isinstance(value, dict):
+            html += f"<div style='margin-left: {indent}em;'><details><summary>{key}</summary>{dict_to_html(value, indent + 1)}</details></div>"
+        else:
+            html += f"<div style='margin-left: {indent}em;'><font color='blue'><strong>{key}:</strong></font> {value}</div>"
+
+    if indent == 0:
+        print(
+            f"THIS FUNCTION WILL BE DEPRECATED SOON,  switch to: toolviper.utils.display.DataDict.html(d)"
+        )
+
+    return html

@@ -99,7 +99,7 @@ async def dask_setup(
             await worker.client.register_plugin(plugin, name="worker_logger")
 
         else:
-            await worker.client.register_worker_plugin(plugin, name="worker_logger")
+            await worker.client.register_plugin(plugin, name="worker_logger")
 
     else:
         logger.warning("Python version may not be supported.")
