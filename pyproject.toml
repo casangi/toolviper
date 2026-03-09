@@ -82,5 +82,6 @@ all = [
     'sphinx-autosummary-accessors',
     'sphinx_rtd_theme',
     'twine',
-    'pandoc'
+    'pandoc',
+    'xarray'
 ]
