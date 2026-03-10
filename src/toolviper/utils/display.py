@@ -1,6 +1,5 @@
 import re
 import operator
-import sys
 from typing import Dict
 
 from IPython.core.display import HTML

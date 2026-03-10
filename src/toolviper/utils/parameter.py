@@ -1,13 +1,12 @@
 import functools
 import glob
-import importlib
 import inspect
 import json
 import os
 import pathlib
 import pkgutil
 from types import ModuleType
-from typing import Any, Callable, Dict, List, NoReturn, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import toolviper.utils.console as console
 import toolviper.utils.logger
@@ -43,7 +42,7 @@ def validate(
             meta_data["function"] = function.__name__
             meta_data["module"] = function.__module__
 
-            # If this is a class method, drop the self entry.
+            # If this is a class method, drop the self-entry.
             if "self" in list(arguments.keys()):
                 class_name = args[0].__class__.__name__
                 meta_data["function"] = ".".join((class_name, function.__name__))
