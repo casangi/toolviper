@@ -12,27 +12,39 @@ class Graph:
         self._graph = None
         self._results = collections.defaultdict(list)
 
-    def source(self, job, axes, connect=False, node=None):
+    def source(self, job, axes, connect=False, type="", node=None):
         function_name = job["function"].__name__
         previous = None
 
+        logger.info(f"Adding sink node for function: {function_name}")
         if connect:
             previous = self._graph
+            logger.info(f"Connecting to previous node: {previous}")
 
             if node is not None:
                 try:
+                    logger.info(f"Connecting to user-supplied node: {node}")
                     previous = self._results[node]
 
                 except KeyError:
                     logger.error(f"Node {node} not found in results.")
 
-        self._graph = toolviper.utils.sd.distribute(
-            job=job, axes=axes, function=job["function"], previous=previous
-        )
+        logger.info(f"Distributing function: {function_name} on axes: {axes}")
+        if type == "tree":
+            for _previous in previous:
+                self._graph = toolviper.utils.sd.distribute(
+                    job=job, axes=axes, function=job["function"], previous=_previous
+                )
+        else:
+            self._graph = toolviper.utils.sd.distribute(
+                job=job, axes=axes, function=job["function"], previous=previous
+            )
 
         self._results[function_name].append(self._graph)
 
     def sink(self, function, edges=None):
+        logger.info(f"Adding sink node for function: {function.__name__}")
+        self._results[function.__name__].append(self._graph)
         self._graph = dask.delayed(function)(self._graph)
 
     def visualize(self):

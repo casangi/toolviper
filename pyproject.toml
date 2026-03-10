@@ -42,6 +42,7 @@ interactive = [
     'ipympl',
     'ipython',
     'jupyter-client',
+    'textual'
 ]
 
 docs = [
@@ -74,6 +75,7 @@ all = [
     'ipykernel',
     'ipympl',
     'ipython',
+    'ipywidgets',
     'jupyter-client',
     'nbsphinx',
     'recommonmark',

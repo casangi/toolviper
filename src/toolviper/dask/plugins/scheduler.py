@@ -250,7 +250,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 def graph_metrics(dependencies, dependents, total_dependencies):
     r"""Useful measures of a graph used by ``dask.order.order``
 
-    Example DAG (a1 has no dependencies; b2 and c1 are root nodes):
+    example DAG (a1 has no dependencies; b2 and c1 are root nodes):
 
     c1
     |
