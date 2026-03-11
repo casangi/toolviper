@@ -2,6 +2,7 @@ import os
 import re
 import pathlib
 import distributed
+from unittest.mock import patch, MagicMock
 
 from toolviper.dask import menrva
 from toolviper.dask.client import local_client
@@ -78,3 +79,62 @@ class TestToolViperMenerva:
         )
 
         client.shutdown()
+
+
+def test_port_is_free():
+    from toolviper.dask.menrva import port_is_free
+    import socket
+
+    # Test with a definitely free port (hopefully)
+    # We can use port 0 to let the OS pick a free port, but port_is_free binds it and closes it.
+    # Let's try to bind a port ourselves and then check if it's free.
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+
+    # Since 's' is holding the port, port_is_free should return False
+    assert port_is_free(port) is False
+
+    s.close()
+    # Now it should be free
+    assert port_is_free(port) is True
+
+
+def test_close_port():
+    from toolviper.dask.menrva import close_port, port_is_free
+    import socket
+    import time
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.listen(1)
+
+    assert port_is_free(port) is False
+
+    # close_port tries to kill the process holding the port.
+    # Since it's our own process, this might be dangerous if not careful,
+    # but here it's just a socket in the same process.
+    # Actually, close_port uses psutil to find processes with that port and SIGKILLs them.
+    # We should probably mock psutil for this test to avoid killing ourselves.
+
+    with patch("psutil.process_iter") as mock_iter:
+        mock_proc = MagicMock()
+        mock_conn = MagicMock()
+        mock_conn.laddr.port = port
+        mock_proc.connections.return_value = [mock_conn]
+        mock_iter.return_value = [mock_proc]
+
+        close_port(port)
+
+        mock_proc.send_signal.assert_called_once()
+
+
+def test_menrva_client_call():
+    from toolviper.dask.menrva import MenrvaClient
+
+    def my_func(a, b=1):
+        return a + b
+
+    assert MenrvaClient.call(my_func, 2, b=3) == 5
+    assert MenrvaClient.call(my_func, 2) == 3

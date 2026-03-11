@@ -118,17 +118,17 @@ class MenrvaClient(distributed.Client):
     @staticmethod
     def instantiate_module(
         plugin: str, plugin_file: str, *args: Tuple[Any], **kwargs: Dict[str, Any]
-    ) -> WorkerPlugin:
+    ) -> WorkerPlugin | None:
         """
 
         Args:
             plugin (str): Name of plugin module.
-            plugin_file (str): Name of module file. ** This should be moved into the module itself not passed **
-            *args (tuple(Any)): This is any *arg that needs to be passed to the plugin module.
+            plugin_file (str): Name of a module file. ** This should be moved into the module itself, not passed **
+            *args (tuple (Any)): This is any *arg that needs to be passed to the plugin module.
             **kwargs (dict[str, Any]): This is any **kwarg default values that need to be passed to the plugin module.
 
         Returns:
-            Instance of plugin class.
+            Instance of plugin-class.
         """
         spec = importlib.util.spec_from_file_location(plugin, plugin_file)
         module = importlib.util.module_from_spec(spec)
@@ -137,6 +137,8 @@ class MenrvaClient(distributed.Client):
             plugin_instance = getattr(module, member[0])
             logger.debug("Loading plugin module: {}".format(plugin_instance))
             return MenrvaClient.call(plugin_instance, *args, **kwargs)
+
+        return None
 
     def load_plugin(
         self,
@@ -154,13 +156,13 @@ class MenrvaClient(distributed.Client):
                 *args,
                 **kwargs,
             )
-            logger.debug(f"{plugin}")
+
             if sys.version_info.major == 3:
                 if sys.version_info.minor > 8:
                     self.register_plugin(plugin_instance, name=name)
 
                 else:
-                    self.register_worker_plugin(plugin_instance, name=name)
+                    self.register_plugin(plugin_instance, name=name)
             else:
                 logger.warning("Python version may not be supported.")
         else:
