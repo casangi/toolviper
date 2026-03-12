@@ -24,6 +24,7 @@ dependencies = [
     'responses',
     'tabulate',
     'tqdm',
+    'xarray'
 ]
 
 [project.optional-dependencies]
