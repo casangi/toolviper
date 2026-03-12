@@ -16,6 +16,8 @@ ToolVIPER provides a suite of high-level tools designed to simplify Dask cluster
 - **Unified Logging**: Structured, colorized, and worker-aware logging system.
 - **Resource Profiling**: Built-in decorators to monitor CPU and memory usage of functions.
 - **Interactive Utilities**: Enhanced data display for Jupyter notebooks, including interactive JSON and HTML views for complex dictionaries.
+- **Data Management**: Simple interface for downloading and managing external datasets from Cloudflare.
+- **Parameter Validation**: Decorator-based system for validating function arguments using JSON schemas.
 - **Graph Distribution**: Tools to distribute functions across datasets along specific axes using Dask.
 
 ## Installation
@@ -41,8 +43,9 @@ pip install "toolviper[interactive]"
 
 ## Quick Start
 
-### 1. Dask Client Management
-ToolVIPER simplifies setting up a Dask environment.
+### 1. Dask Client Management 
+#### [Example Notebook](docs/client_tutorial.ipynb)
+ToolVIPER simplifies setting up a Dask environment. 
 
 ```python
 from toolviper.dask.client import local_client
@@ -70,6 +73,7 @@ client = slurm_cluster_client(
 ```
 
 ### 2. Logging
+#### [Example Notebook](docs/toolviper-logger-formatting-example.ipynb)
 ToolVIPER provides a pre-configured logger that can be used throughout your application.
 
 ```python
@@ -102,6 +106,36 @@ from toolviper.utils.display import DataDict
 my_data = {"level1": {"level2": {"key": "value"}}}
 dd = DataDict(my_data)
 dd.display()  # Renders an interactive JSON tree in Notebooks
+```
+
+### 5. Data Management
+Access and download external datasets easily.
+
+```python
+import toolviper
+
+# List available files
+toolviper.utils.data.list_files()
+
+# Get a python list available files
+toolviper.utils.data.get_files()
+
+# Download a specific dataset
+toolviper.utils.data.download("example_dataset.zip", folder="./data")
+```
+
+### 6. Parameter Validation
+A detailed write-up can be found here: [Parameter Validation](docs/parameter.md).
+<p>Ensure your functions receive correct arguments using the `@validate` decorator.
+
+```python
+from toolviper.utils.parameter import validate
+
+@validate()
+def my_function(param1: int, param2: str):
+    # This function will automatically validate arguments 
+    # against a corresponding .param.json schema.
+    pass
 ```
 
 ## Development and Testing
