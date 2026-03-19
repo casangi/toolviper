@@ -1,13 +1,10 @@
-
-
-
-
 def get_rss_gb():
     import psutil, os
+
     return psutil.Process(os.getpid()).memory_info().rss / 1e9
 
 
-def memory_setup(threshold: int=131072):
+def memory_setup(threshold: int = 131072):
     """Set malloc mmap threshold to reduce heap fragmentation.
 
     On Linux this calls glibc's mallopt(M_MMAP_THRESHOLD, threshold).
@@ -27,6 +24,7 @@ def free_memory():
     """
     import sys, ctypes
     import gc
+
     gc.collect()
     if sys.platform == "linux":
         ctypes.CDLL("libc.so.6").malloc_trim(0)
