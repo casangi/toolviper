@@ -6,6 +6,7 @@ from .tools import open_json, calculate_checksum, verify, add_entry
 from .profile import memory_usage, cpu_usage
 from .sd import prototype
 from .display import DataDict
+from .application import MetaDataBuilder
 
 from .data import download
 

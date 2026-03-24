@@ -14,6 +14,7 @@ import toolviper.utils.logger as logger
 
 from graphviper.graph_tools.generate_dask_workflow import generate_dask_workflow
 
+
 class Graph:
     def __init__(self):
         self._nodes = {}
@@ -25,9 +26,12 @@ class Graph:
 
     def __getitem__(self, item):
 
-        #convert to a list so we can parse the input
+        # convert to a list so we can parse the input
         item = list(item)
-        trees = {key: value for key, value in zip(item, list(operator.itemgetter(*item)(self._dataset)))}
+        trees = {
+            key: value
+            for key, value in zip(item, list(operator.itemgetter(*item)(self._dataset)))
+        }
 
         return xr.DataTree.from_dict(data=trees)
 
@@ -52,10 +56,10 @@ class Graph:
         if self._dataset is None:
             raise ValueError("Dataset must be set before building node")
 
-        self._node_mapping = graph_tools.coordinate_utils.interpolate_data_coords_onto_parallel_coords(
-            self._coordinates,
-            self._dataset,
-            ps_partition=ps_partition
+        self._node_mapping = (
+            graph_tools.coordinate_utils.interpolate_data_coords_onto_parallel_coords(
+                self._coordinates, self._dataset, ps_partition=ps_partition
+            )
         )
 
     def make_coordinates(self, coords):
@@ -65,22 +69,23 @@ class Graph:
             if coord == "antenna_name":
                 logger.info("Making antenna coordinate ...")
                 xds = self._dataset.xr_ps.get_combined_antenna_xds()
-                self._coordinates[coord] = graph_tools.coordinate_utils.make_parallel_coord(
-                    coord=xds.antenna_name,
-                    n_chunks=xds.antenna_name.shape[0]
+                self._coordinates[coord] = (
+                    graph_tools.coordinate_utils.make_parallel_coord(
+                        coord=xds.antenna_name, n_chunks=xds.antenna_name.shape[0]
+                    )
                 )
 
             elif coord == "field_name":
                 logger.info("Making field coordinate ...")
                 xds = self._dataset.xr_ps.get_combined_field_and_source_xds()
-                self._coordinates[coord] = graph_tools.coordinate_utils.make_parallel_coord(
-                    coord=xds.field_name,
-                    n_chunks=xds.field_name.shape[0]
+                self._coordinates[coord] = (
+                    graph_tools.coordinate_utils.make_parallel_coord(
+                        coord=xds.field_name, n_chunks=xds.field_name.shape[0]
+                    )
                 )
 
             else:
                 logger.error(f"Coordinate {coord} not found in dataset.")
-
 
     def map(self, function, parameters=None, connect=None, make_workflow=False):
 
@@ -101,7 +106,7 @@ class Graph:
             parameters=parameters,
             function=function,
             previous=None if connect is None else self._nodes[connect].result,
-            result=self._graph
+            result=self._graph,
         )
 
     def reduce(self, function, parameters=None, connect=None, mode="tree"):
@@ -120,7 +125,7 @@ class Graph:
             parameters=parameters,
             function=function,
             previous=None if connect is None else self._nodes[connect].result,
-            result=self._graph
+            result=self._graph,
         )
 
     def reset(self):
@@ -149,13 +154,16 @@ class Graph:
     def graph(self):
         return self._graph
 
+
 @dataclasses.dataclass
 class GraphNode:
     """A class representing a node in a graph."""
+
     parameters: dict
     function: callable
     result: dict | list | None
     previous: dict | list | None
+
 
 # class Graph:
 #     """A class representing a directed graph for dependency management."""

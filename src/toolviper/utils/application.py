@@ -103,7 +103,7 @@ class MetaDataBuilder(App):
 
     BINDINGS = [
         Binding("q", "quit", "Quit", show=True),
-        Binding("d", "toggle_dark", "Toggle Dark Mode")
+        Binding("d", "toggle_dark", "Toggle Dark Mode"),
     ]
 
     def __init__(self, **kwargs):
@@ -123,14 +123,19 @@ class MetaDataBuilder(App):
             with Vertical(id="left-pane"):
                 yield Label("Select Output File:")
                 yield DirectoryTree("./", id="directory-tree")
-                yield Label(f"Output: {self.selected_output_file}", id="selected-file-label")
+                yield Label(
+                    f"Output: {self.selected_output_file}", id="selected-file-label"
+                )
                 yield Static("JSON Preview", classes="label")
                 yield Static("", id="json-preview")
             with Vertical(id="right-pane"):
                 with Vertical(id="form-container"):
                     yield Label("Type:")
                     yield Select(
-                        options=[(opt, opt) for opt in ["MSv2", "MSv4", "ZARR", "ASDM", "OTHER"]],
+                        options=[
+                            (opt, opt)
+                            for opt in ["MSv2", "MSv4", "ZARR", "ASDM", "OTHER"]
+                        ],
                         id="input-type",
                         classes="input-field",
                     )
@@ -142,12 +147,19 @@ class MetaDataBuilder(App):
                     )
                     yield Label("Mode:")
                     yield Select(
-                        options=[(opt, opt) for opt in ["HOLOGRAPHY", "INTERFEROMETRY", "SINGLE-DISH"]],
+                        options=[
+                            (opt, opt)
+                            for opt in ["HOLOGRAPHY", "INTERFEROMETRY", "SINGLE-DISH"]
+                        ],
                         id="input-mode",
                         classes="input-field",
                     )
                     yield Label("Filename:")
-                    yield Input(placeholder="Enter filename...", id="input-filename", classes="input-field")
+                    yield Input(
+                        placeholder="Enter filename...",
+                        id="input-filename",
+                        classes="input-field",
+                    )
 
                     yield Label("Entries Added:")
                     yield DataTable(id="entries-table")
@@ -185,7 +197,9 @@ class MetaDataBuilder(App):
         except Exception as e:
             preview.update(f"Error generating preview: {e}")
 
-    def on_directory_tree_file_selected(self, event: DirectoryTree.FileSelected) -> None:
+    def on_directory_tree_file_selected(
+        self, event: DirectoryTree.FileSelected
+    ) -> None:
         """Called when the user selects a file in the directory tree."""
         self.selected_output_file = str(event.path)
         label = self.query_one("#selected-file-label", Label)
@@ -208,7 +222,10 @@ class MetaDataBuilder(App):
             self.notify("Filename is required!", severity="error")
             return
 
-        if any(v in (Select.BLANK, Select.NULL) for v in [type_val, telescope_val, mode_val]):
+        if any(
+            v in (Select.BLANK, Select.NULL)
+            for v in [type_val, telescope_val, mode_val]
+        ):
             self.notify("Please select all options!", severity="error")
             return
 
@@ -219,13 +236,13 @@ class MetaDataBuilder(App):
             "mode": str(mode_val),
         }
         self.entries.append(entry)
-        
+
         # Update table
         table = self.query_one(DataTable)
         table.add_row(filename_val, str(type_val), str(telescope_val), str(mode_val))
-        
+
         self.update_json_preview()
-        
+
         # Clear filename for the next entry
         self.query_one("#input-filename", Input).value = ""
         self.notify(f"Added entry: {filename_val}")
