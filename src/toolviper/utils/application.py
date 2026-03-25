@@ -191,6 +191,32 @@ class MetaDataBuilder(App):
                     yield Button("Write", variant="success", id="btn-done")
         yield Footer()
 
+    def notify(
+        self,
+        message: str,
+        *,
+        title: str = "",
+        severity: str = "information",
+        timeout: float = 3.0,
+    ) -> None:
+        """Override notify to redirect to RichLog."""
+        try:
+            log_widget = self.query_one("#system-log", RichLog)
+            color = {
+                "information": "blue",
+                "warning": "yellow",
+                "error": "red",
+            }.get(severity, "white")
+
+            prefix = f"[{color} bold]{severity.upper()}[/{color} bold]"
+            if title:
+                prefix += f" [[bold]{title}[/bold]]"
+
+            log_widget.write(f"{prefix}: {message}")
+        except Exception:
+            # Fallback to default notify if log widget is not available
+            super().notify(message, title=title, severity=severity, timeout=timeout)
+
     def on_mount(self) -> None:
         # Redirect stdout and stderr to RichLog
         log_widget = self.query_one("#system-log", RichLog)
