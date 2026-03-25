@@ -1,8 +1,7 @@
 import json
-import toolviper
 
 from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Horizontal, Vertical
 from textual.widgets import (
     Header,
     Footer,
@@ -111,6 +110,10 @@ class MetaDataBuilder(App):
     #btn-add, #btn-done {
         margin-left: 1;
     }
+    
+    #btn-add, #btn-clear {
+        margin-left: 1;
+    }
 
     DataTable {
         height: 8;
@@ -182,13 +185,15 @@ class MetaDataBuilder(App):
                     yield Label("Entries Added:")
                     yield DataTable(id="entries-table")
 
+                with Horizontal(id="buttons-container"):
+                    yield Button("Add Entry", variant="primary", id="btn-add")
+                    yield Button("Clear", variant="warning", id="btn-clear")
+                    yield Button("Write", variant="success", id="btn-done")
+
                 with Vertical(id="log-container"):
                     yield Label("System Logs:")
                     yield RichLog(id="system-log", highlight=True, markup=True)
 
-                with Horizontal(id="buttons-container"):
-                    yield Button("Add Entry", variant="primary", id="btn-add")
-                    yield Button("Write", variant="success", id="btn-done")
         yield Footer()
 
     def notify(
@@ -230,6 +235,8 @@ class MetaDataBuilder(App):
 
         self.update_json_preview()
 
+        self.notify(f"Setting up application...")
+
     def on_unmount(self) -> None:
         # Restore stdout and stderr
         sys.stdout = self._stdout_orig
@@ -239,6 +246,7 @@ class MetaDataBuilder(App):
         preview = self.query_one("#json-preview", Static)
         try:
             preview.update(json.dumps(self.entries, indent=2))
+
         except Exception as e:
             preview.update(f"Error generating preview: {e}")
 
@@ -247,13 +255,19 @@ class MetaDataBuilder(App):
     ) -> None:
         """Called when the user selects a file in the directory tree."""
         self.selected_output_file = str(event.path)
+
         label = self.query_one("#selected-file-label", Label)
         label.update(f"Output: {self.selected_output_file}")
+
         self.notify(f"Output file set to: {self.selected_output_file}")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-add":
             self.action_add_entry()
+
+        elif event.button.id == "btn-clear":
+            self.action_clear_entries()
+
         elif event.button.id == "btn-done":
             self.action_save_done()
 
@@ -292,6 +306,25 @@ class MetaDataBuilder(App):
         self.query_one("#input-filename", Input).value = ""
         self.notify(f"Added entry: {filename_val}")
 
+    def action_clear_entries(self) -> None:
+        try:
+            self.query_one("#input-type", Select).clear()
+            self.query_one("#input-telescope", Select).clear()
+            self.query_one("#input-mode", Select).clear()
+            self.query_one("#input-filename", Input).value = ""
+
+            self.entries.clear()
+
+            # Update table
+            table = self.query_one(DataTable)
+            table.clear()
+
+            self.update_json_preview()
+            self.notify("Cleared current values ...")
+
+        except Exception as e:
+            self.notify(f"Error clearing entries: {e}", severity="error")
+
     def action_save_done(self) -> None:
         if not self.entries:
             self.notify("No entries to save!", severity="warning")
@@ -307,6 +340,6 @@ class MetaDataBuilder(App):
             self.notify(f"Error saving file: {e}", severity="error")
 
 
-if __name__ == "__main__":
+def meta_data_builder():
     app = MetaDataBuilder()
     app.run()
