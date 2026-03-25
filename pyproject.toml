@@ -19,6 +19,7 @@ dependencies = [
     'psutil',
     'rich',
     'pandas',
+    'graphviper',
     'itables',
     'requests',
     'responses',
