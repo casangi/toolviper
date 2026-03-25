@@ -68,6 +68,7 @@ all = [
     'pytest-html',
     'matplotlib',
     'prettytable',
+    'graphviper',
     'jupyterlab',
     'ipykernel',
     'ipympl',
@@ -84,6 +85,7 @@ all = [
     'sphinx-autoapi',
     'sphinx-autosummary-accessors',
     'sphinx_rtd_theme',
+    'textual',
     'twine',
     'pandoc',
     'xarray'
