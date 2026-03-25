@@ -192,7 +192,6 @@ def test_add_entry(tmp_path, monkeypatch):
     assert "new_file" in result["metadata"]
 
 
-
 def test_checksum_error_str():
     error = ChecksumError("msg", "file.txt", "/folder", 10)
     assert "[10]: There was an error verifying the checksum of /folder/file.txt" in str(
