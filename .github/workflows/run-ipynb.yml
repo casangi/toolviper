@@ -6,10 +6,12 @@ on:
     paths-ignore:
       - '**.md'
       - '**.rst'
+      - '**.ipynb_'
   pull_request:
     paths-ignore:
       - '**.md'
       - '**.rst'
+      - '**.ipynb_'
 
 jobs:
   call-testing-ipynb:
