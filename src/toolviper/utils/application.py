@@ -1,6 +1,5 @@
 import json
-import pathlib
-from typing import List, Dict
+import toolviper
 
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal, Vertical
@@ -17,7 +16,9 @@ from textual.widgets import (
     RichLog,
 )
 from textual.binding import Binding
+
 import sys
+import logging
 
 
 class RichLogIO:
@@ -32,6 +33,22 @@ class RichLogIO:
 
     def flush(self) -> None:
         pass
+
+
+class RichLogHandler(logging.Handler):
+    """A logging handler that writes to a RichLog."""
+
+    def __init__(self, log: RichLog):
+        super().__init__()
+        self.log = log
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            msg = self.format(record)
+            self.log.write(msg)
+
+        except Exception:
+            self.handleError(record)
 
 
 class MetaDataBuilder(App):
@@ -71,6 +88,7 @@ class MetaDataBuilder(App):
 
     .input-field {
         margin-bottom: 0;
+        border: solid rgba(35, 83, 179, 0.8);
     }
 
     #json-preview {
@@ -108,7 +126,7 @@ class MetaDataBuilder(App):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.entries: List[Dict[str, str]] = []
+        self.entries: list[dict[str, str]] = []
         self.dark = True
         self.selected_output_file: str = "output.json"
 
@@ -183,6 +201,7 @@ class MetaDataBuilder(App):
 
         table = self.query_one(DataTable)
         table.add_columns("Filename", "Type", "Telescope", "Mode")
+
         self.update_json_preview()
 
     def on_unmount(self) -> None:
@@ -257,8 +276,7 @@ class MetaDataBuilder(App):
                 json.dump(self.entries, f, indent=2)
 
             self.notify(f"Saved to {self.selected_output_file}")
-            # Exit after saving
-            self.exit()
+
         except Exception as e:
             self.notify(f"Error saving file: {e}", severity="error")
 
