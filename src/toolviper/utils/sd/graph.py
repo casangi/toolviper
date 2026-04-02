@@ -136,7 +136,7 @@ class Graph:
         self._node_mapping = None
 
     def compute(self):
-        dask.compute(self._graph)
+        return dask.compute(self._graph)
 
     @property
     def datatree(self):
