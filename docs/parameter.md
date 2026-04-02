@@ -3,7 +3,7 @@
 The `parameter` module is based off of another well known verification module called [cerberus](https://docs.python-cerberus.org/). Much of the syntax is the same but there is some added functionality specific to the viper and radps frameworks that is only available using `parameter`. A detailed list of validation type that come standard to the `cerberus` package can be found [here](https://docs.python-cerberus.org/validation-rules.html). As a note, custom types can be added as well as detailed below.
 
 ### Parameter Configuration File
-The parameter configuration files latyout the validation rules for eavh function in a given module and one must be included for the any module that requires validation. The configuration files should be placed in `src/toolviper/config`. The filename should be of the form, `<module_name>.param.json` and is a standard form json file witht he followinf layout.
+The parameter configuration files layout the validation rules for each function in a given module and one must be included for any module that requires validation. The configuration files should be placed in `src/toolviper/config`. The filename should be of the form, `<module_name>.param.json` and is a standard form json file witht he following layout.
 ```
 {
     "function-name-1":{
@@ -62,14 +62,14 @@ Then we define a simple configuration file in the following way,
 }
 ```
 
-This will require each parameter to be included as well as enforce the data type of each input parameter. There are many more useless restrictions that can be added to input parameter by referring to the documentaion. Also, custom rules can be made by opening a ticket on the `toolviper` repository under "new feature". Currently, in addition to the standard parameter rules there are two additional features that have been added. The `sequence` and `struct type` parameter checks. The former checsk that a set of inputs are in a given order and the latter works the same as the `type` keword except it defines a type for values that make up a structure. As an example, if we wanted to set a tpye restriction on a list of ddi values to require that they be a list of integers or stirngs we would use the keyword `struct type` as so to define a parameter rule.
+This will require each parameter to be included as well as enforce the data type of each input parameter. There are many more useless restrictions that can be added to input parameter by referring to the documentaion. Also, custom rules can be made by opening a ticket on the `toolviper` repository under "new feature". Currently, in addition to the standard parameter rules there are two additional features that have been added. The `sequence` and `struct type` parameter checks. The former checks that a set of inputs are in a given order and the latter works the same as the `type` keword except it defines a type for values that make up a structure. As an example, if we wanted to set a tpye restriction on a list of ddi values to require that they be a list of integers or strings we would use the keyword `struct type` as so to define a parameter rule.
 
 ```
 "struct type": ["integer", "string"]
 ```
 
 ### Parameter Checking for Class Members
-The addition of the paramter module to members of of a class requires only a few simple changes. Let's consider the databse example from above and make the entry funtion a class member of the Database class instead of just being part of the module.
+The addition of the parameter module to members of a class requires only a few simple changes. Let's consider the databse example from above and make the entry function a class member of the ``Database`` class instead of just being part of the module.
 
 ```
 [database.py]
@@ -83,7 +83,7 @@ class Database:
         print(f"{name}: {age}")
 ```
 
-In this case the changes to the configuration file are simple. We need only make a small change to how we define the funtion-name section.
+In this case the changes to the configuration file are simple. We need only make a small change to how we define the function-name section.
 
 ```
 [database.param.json]
@@ -125,9 +125,9 @@ function has the following input parameters available.
 - `config_dir`: This specifies the configuration directory
 - `logger`: This allows the user to pass a specific logger instance to the parameter checking. If this is not done, `toolviper`
   will spawn its own internal logger. The only difference will be the logger name in the output.
-- `add_data_type`: Not all data types are available from teh default setup more importantly though there are a number of
-  instance in the framework(s) where custom data objects are passed to function and there needs to be a way to check these
-  as well. This allows the user to register a custom data ype for checking. All that is needed if to pass an instance of
+- `add_data_type`: Not all data types are available from the default setup, more importantly though there are a number of
+  instances in the framework(s) where custom data objects are passed to functions and there needs to be a way to check these
+  as well. This allows the user to register a custom data type for checking. All that is needed is to pass an instance of
   the data type.
 - `custom_checker`: This allows the user to register a function that will return all allowed data types for a parameter.
 
@@ -169,10 +169,10 @@ If this was a checker on a class method the only change to be made would be that
 `ClassName.snake_danger_checker`.
 
 This is only a very sparse version of a configuration file, the requirements can be made quite strict with some work. A
-full list of supported parameter checks at [cerberus::validation](https://docs.python-cerberus.org/validation-rules.html).
+full list of supported parameter checks can be found at [cerberus::validation](https://docs.python-cerberus.org/validation-rules.html).
 In addition, `toolviper` also supports:
 
-- Custom data types: `ndarray` is supported by default in `toolviper` and any valid data type can be registered.
+- Custom data types: `ndarray` is supported by default in `toolviper` and any valid data type can be registered
 - Custom checking function
 - Sequence validation
 - Structure data type
@@ -209,11 +209,11 @@ def snake_object_danger_checker(number: int, snake_info: SnakeObject) -> Union[f
 ### Custom Data Checker
 
 This option is for the case that the user wants to define a function that will use some sort of custom logic to decide the
-acceptable values for a given parameter and then return them to the validation scheme. The vest example of this is in `astrohack`
+acceptable values for a given parameter and then return them to the validation scheme. The best example of this is in `astrohack`
 where some of the plotting functions have a different set of acceptable units depending on the plot being made, therefore
-we want a easily modifiable list of units that can be returned instead of hard-coding each function separately. The primary
+we want an easily modifiable list of units that can be returned instead of hard-coding each function separately. The primary
 requirement for a custom checking function is that it take a string parameter and return a list of acceptable values to
-check against. In the case of `astrohack` this was a list of acceptable plotting units depending on whether teh function
+check against. In the case of `astrohack` this was a list of acceptable plotting units depending on whether the function
 needs trigonometric, time or radian units. The custom check function in this case was,
 
 ```angular2html
@@ -265,7 +265,7 @@ In order to add this to the plotting function
     ...
 ```
 
-and in the configuration file this function has teh following parameter check for the unit parameter,
+and in the configuration file this function has the following parameter check for the unit parameter,
 
 ```angular2html
 ...
