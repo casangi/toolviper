@@ -27,6 +27,7 @@ MINIMUM_CHUNK_SIZE = 1024
 BASE_URL = "https://downloadnrao.org"
 METADATA_REL_PATH = ".cloudflare/file.download.json"
 USER_AGENT = "Wget/1.16 (linux-gnu)"
+DOWNLOAD_READ_TIMEOUT = 120
 
 
 def _get_metadata_path() -> pathlib.Path:
@@ -200,7 +201,10 @@ def worker(
 
     try:
         response = requests.get(
-            url, stream=True, headers={"user-agent": USER_AGENT}, timeout=30
+            url,
+            stream=True,
+            headers={"user-agent": USER_AGENT},
+            timeout=DOWNLOAD_READ_TIMEOUT,
         )
         response.raise_for_status()
 
