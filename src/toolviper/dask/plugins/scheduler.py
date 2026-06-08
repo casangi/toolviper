@@ -256,7 +256,7 @@ class ViperGraphPlugin(SchedulerPlugin):
     Register with a distributed client before submitting the graph::
 
         from toolviper.dask.plugins.scheduler import ViperGraphPlugin
-        client.register_scheduler_plugin(ViperGraphPlugin())
+        client.register_plugin(ViperGraphPlugin())
     """
 
     name = "viper-graph-plugin"

@@ -1,5 +1,3 @@
-import sys
-
 import psutil
 import distributed
 import inspect
@@ -148,27 +146,60 @@ class MenrvaClient(distributed.Client):
         *args: Union[Tuple[Any], Any],
         **kwargs: Union[Dict[str, Any], Any],
     ):
-        plugin_file = ".".join((plugin, "py"))
-        if pathlib.Path(directory).joinpath(plugin_file).exists():
-            plugin_instance = MenrvaClient.instantiate_module(
-                plugin=plugin,
-                plugin_file="/".join((directory, plugin_file)),
-                *args,
-                **kwargs,
-            )
+        """Register a worker plugin from ``directory`` on this client.
 
-            if sys.version_info.major == 3:
-                if sys.version_info.minor > 8:
-                    self.register_plugin(plugin_instance, name=name)
+        Thin wrapper around the module-level :func:`load_plugin`, which works
+        with any ``distributed.Client`` instance.
+        """
+        load_plugin(self, directory, plugin, name, *args, **kwargs)
 
-                else:
-                    self.register_plugin(plugin_instance, name=name)
-            else:
-                logger.warning("Python version may not be supported.")
-        else:
-            logger.error(
-                "Cannot find plugins directory: {}".format(colorize.red(directory))
-            )
+
+def load_plugin(
+    client: distributed.Client,
+    directory: str,
+    plugin: str,
+    name: str,
+    *args: Union[Tuple[Any], Any],
+    **kwargs: Union[Dict[str, Any], Any],
+):
+    """Instantiate a worker plugin module and register it on ``client``.
+
+    Loads ``<directory>/<plugin>.py``, instantiates its plugin class and
+    registers it via the supported ``distributed.Client.register_plugin`` API
+    (``register_worker_plugin`` is deprecated).
+
+    Unlike :meth:`MenrvaClient.load_plugin`, this accepts *any*
+    ``distributed.Client`` instance -- including the plain client returned by
+    ``distributed.Client.current()``. Callers that may reuse an already-running
+    client (e.g. :func:`toolviper.dask.client.local_client`) therefore do not
+    depend on that client being a :class:`MenrvaClient`.
+
+    Parameters
+    ----------
+    client : distributed.Client
+        The client the plugin is registered on.
+    directory : str
+        Directory containing ``<plugin>.py``.
+    plugin : str
+        Plugin module name (without the ``.py`` suffix).
+    name : str
+        Name the plugin is registered under.
+    *args, **kwargs
+        Forwarded to the plugin class constructor.
+    """
+    plugin_file = ".".join((plugin, "py"))
+    if pathlib.Path(directory).joinpath(plugin_file).exists():
+        plugin_instance = MenrvaClient.instantiate_module(
+            plugin=plugin,
+            plugin_file="/".join((directory, plugin_file)),
+            *args,
+            **kwargs,
+        )
+        client.register_plugin(plugin_instance, name=name)
+    else:
+        logger.error(
+            "Cannot find plugins directory: {}".format(colorize.red(directory))
+        )
 
 
 def port_is_free(port):
