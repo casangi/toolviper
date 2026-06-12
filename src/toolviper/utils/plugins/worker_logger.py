@@ -1,9 +1,11 @@
 import click
 
+from distributed.diagnostics.plugin import WorkerPlugin
+
 from toolviper.utils.logger import setup_worker_logger
 
 
-class WorkerLogger:
+class WorkerLogger(WorkerPlugin):
     def __init__(self, local_cache, log_params):
         self.logger = None
         self.worker = None
@@ -74,4 +76,4 @@ async def dask_setup(
 
     plugin = WorkerLogger(local_cache, log_params)
 
-    await worker.client.register_worker_plugin(plugin, name="worker_logger")
+    await worker.client.register_plugin(plugin, name="worker_logger")

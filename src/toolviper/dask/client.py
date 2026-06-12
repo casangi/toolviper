@@ -236,7 +236,7 @@ def local_client(
         return None
 
     # This method of assigning a worker plugin does not seem to work when using dask_jobqueue. Consequently, using \
-    # client.register_worker_plugin so that the method of assigning a worker plugin is the same for local_client\
+    # client.register_plugin so that the method of assigning a worker plugin is the same for local_client\
     # and slurm_cluster_client.
     # if local_cache or worker_log_params:
     #    dask.config.set({"distributed.worker.preload": os.path.join(path,'plugins/worker.py')})
@@ -284,7 +284,12 @@ def local_client(
     # logger.debug(f"{display.DataDict.from_dict(worker_log_params).display(interactive=False)}")
 
     if local_cache or worker_log_params:
-        client.load_plugin(
+        # Use the client-agnostic helper rather than client.load_plugin(): the
+        # client returned by distributed.Client.current() above may be a plain
+        # distributed.Client (e.g. one created elsewhere in the session), which
+        # does not have the MenrvaClient.load_plugin method.
+        toolviper.dask.menrva.load_plugin(
+            client,
             directory=plugin_path,
             plugin="worker",
             name="worker_logger",
@@ -488,7 +493,8 @@ def slurm_cluster_client(
         client.wait_for_workers(n_workers=workers_per_node * number_of_nodes)
 
     if local_cache or worker_log_params:
-        client.load_plugin(
+        toolviper.dask.menrva.load_plugin(
+            client,
             directory=plugin_path,
             plugin="worker",
             name="worker_logger",

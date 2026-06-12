@@ -107,3 +107,40 @@ def test_list_files(mock_metadata, monkeypatch):
     if df is not None:
         assert isinstance(df, pd.DataFrame)
         assert "test_file.zip" in df["file"].values
+
+
+def test_worker_uses_configured_read_timeout(monkeypatch, tmp_path):
+    captured = {}
+
+    class DummyResponse:
+        headers = {"Content-Length": "1"}
+
+        def raise_for_status(self):
+            return None
+
+        def iter_content(self, chunk_size):
+            _ = chunk_size
+            yield b"x"
+
+    def fake_get(url, stream, headers, timeout):
+        captured["url"] = url
+        captured["stream"] = stream
+        captured["headers"] = headers
+        captured["timeout"] = timeout
+        return DummyResponse()
+
+    monkeypatch.setattr(cloudflare.requests, "get", fake_get)
+
+    task = {
+        "metadata": {"file": "timeout_test.zip", "path": "test"},
+        "folder": str(tmp_path),
+        "visible": True,
+        "size": 1,
+    }
+    cloudflare.worker(task_id=0, task=task, progress=None, decompress=False)
+
+    assert captured["url"] == "https://downloadnrao.org/test/timeout_test.zip"
+    assert captured["stream"] is True
+    assert captured["headers"] == {"user-agent": cloudflare.USER_AGENT}
+    assert captured["timeout"] == cloudflare.DOWNLOAD_READ_TIMEOUT
+    assert (tmp_path / "timeout_test.zip").exists()

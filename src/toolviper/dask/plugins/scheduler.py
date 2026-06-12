@@ -205,6 +205,110 @@ class Scheduler(SchedulerPlugin):
                         task.loose_restrictions = False
 
 
+class ViperGraphPlugin(SchedulerPlugin):
+    """Scheduler plugin that assigns task priorities for the viper
+    load → prepare → map → binary-tree-reduce graph pattern.
+
+    Priority scheme
+    ---------------
+    Dask's distributed scheduler processes tasks in ascending priority order
+    (min-heap: lower value = runs first).  This plugin prepends a
+    ``(load_group, pair_id)`` tuple to the existing priority of every
+    annotated task:
+
+    * **Load node for group** ``g``:  priority ``(g,)``
+
+      Load nodes run in group order.  Because ``(g,) < (g, pair_id)``
+      lexicographically, a load node is always more urgent than the map
+      tasks it feeds, ensuring it is dispatched first when workers are free.
+
+    * **Prepare / map tasks for group** ``g``, **reduction pair** ``p``:
+      priority ``(g, p)``
+
+      All tasks in group ``g`` are more urgent than any task in group
+      ``g+1``, so the disk chunk for group 0 is released from memory before
+      group 1's chunk is needed.  Within a group, pair 0 completes before
+      pair 1 starts, allowing the binary-tree reduction to proceed level by
+      level with minimal intermediate data resident in memory.
+
+    Annotation contract
+    -------------------
+    Tasks must carry the following annotations (added automatically by
+    :func:`graphviper.graph_tools.generate_dask_workflow.generate_dask_workflow`
+    when a load stage is present):
+
+    ``viper_load_group`` : int
+        Index of the disk-chunk group this task belongs to.
+        Present on load nodes, prepare nodes, and map nodes.
+
+    ``viper_map_pair`` : int
+        Reduction-pair index within the load group (0 = first pair of
+        adjacent map tasks to be combined, 1 = second pair, …).
+        Present on prepare and map nodes; absent on load nodes.
+
+    Parameters
+    ----------
+    None — the plugin is stateless; all information is read from task
+    annotations at graph-submission time.
+
+    Examples
+    --------
+    Register with a distributed client before submitting the graph::
+
+        from toolviper.dask.plugins.scheduler import ViperGraphPlugin
+        client.register_plugin(ViperGraphPlugin())
+    """
+
+    name = "viper-graph-plugin"
+
+    def update_graph(self, scheduler, dsk=None, keys=None, restrictions=None, **kw):
+        annotations = kw.get("annotations") or {}
+        if not annotations:
+            return
+
+        tasks = scheduler.tasks
+
+        # Collect the viper annotations keyed by task key.
+        load_group_by_key: dict = {}
+        map_pair_by_key: dict = {}
+
+        for task_key, annots in annotations.items():
+            if not isinstance(annots, dict):
+                continue
+            if "viper_load_group" in annots:
+                load_group_by_key[task_key] = int(annots["viper_load_group"])
+            if "viper_map_pair" in annots:
+                map_pair_by_key[task_key] = int(annots["viper_map_pair"])
+
+        if not load_group_by_key:
+            return  # No viper tasks in this graph submission.
+
+        n_groups = max(load_group_by_key.values()) + 1
+        n_annotated = len(load_group_by_key)
+        logger.debug(
+            f"ViperGraphPlugin: setting priorities for {n_annotated} tasks "
+            f"across {n_groups} load groups."
+        )
+
+        for task_key, load_group in load_group_by_key.items():
+            if task_key not in tasks:
+                continue
+            task = tasks[task_key]
+
+            pair_id = map_pair_by_key.get(task_key)
+            if pair_id is None:
+                # Load node: priority (g,).
+                # Shorter tuple sorts before (g, pair_id), so the load node
+                # is dispatched before any of its map tasks compete for a worker.
+                new_priority = (load_group,)
+            else:
+                # Prepare / map node: priority (g, pair_id).
+                new_priority = (load_group, pair_id)
+
+            existing = task.priority if task.priority is not None else ()
+            task.priority = new_priority + existing
+
+
 @click.command()
 @click.option("--autorestrictor", default=False)
 @click.option("--local_cache", default=False)
