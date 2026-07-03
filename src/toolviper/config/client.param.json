@@ -39,6 +39,10 @@
         "dashboard_address":{
             "type":["str"],
             "nullable": true
+        },
+        "asynchronous": {
+            "type": ["boolean"],
+            "nullable": true
         }
     }
 }
