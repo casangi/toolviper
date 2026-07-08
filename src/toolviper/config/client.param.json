@@ -9,7 +9,7 @@
             "nullable": true
         },
         "local_dir": {
-            "type": ["boolean"],
+            "type": ["str"],
             "nullable": true
         },
         "wait_for_workers": {
