@@ -36,6 +36,13 @@ def test_version(mock_metadata, monkeypatch, caplog):
         cloudflare, "__file__", str(mock_metadata.parent.parent / "cloudflare.py")
     )
 
+    # The toolviper logger doesn't propagate to the root logger (it has its
+    # own handler), but caplog captures via the root logger — re-enable
+    # propagation for the duration of the test.
+    import toolviper.utils.logger
+
+    monkeypatch.setattr(toolviper.utils.logger.get_logger(), "propagate", True)
+
     with caplog.at_level("INFO"):
         cloudflare.version()
     assert "1.0.0" in caplog.text
@@ -109,38 +116,150 @@ def test_list_files(mock_metadata, monkeypatch):
         assert "test_file.zip" in df["file"].values
 
 
-def test_worker_uses_configured_read_timeout(monkeypatch, tmp_path):
+def _make_task(tmp_path, filename, size=0):
+    return {
+        "metadata": {"file": filename, "path": "test"},
+        "folder": str(tmp_path),
+        "visible": True,
+        "size": size,
+    }
+
+
+class _FakeResponse:
+    def __init__(self, chunks, content_length=None):
+        self._chunks = chunks
+        self.headers = (
+            {"Content-Length": str(content_length)}
+            if content_length is not None
+            else {}
+        )
+
+    def raise_for_status(self):
+        return None
+
+    def iter_content(self, chunk_size):
+        _ = chunk_size
+        yield from self._chunks
+
+    def close(self):
+        return None
+
+
+def test_worker_uses_configured_timeouts(monkeypatch, tmp_path):
     captured = {}
-
-    class DummyResponse:
-        headers = {"Content-Length": "1"}
-
-        def raise_for_status(self):
-            return None
-
-        def iter_content(self, chunk_size):
-            _ = chunk_size
-            yield b"x"
 
     def fake_get(url, stream, headers, timeout):
         captured["url"] = url
         captured["stream"] = stream
         captured["headers"] = headers
         captured["timeout"] = timeout
-        return DummyResponse()
+        return _FakeResponse([b"x"], content_length=1)
 
     monkeypatch.setattr(cloudflare.requests, "get", fake_get)
 
-    task = {
-        "metadata": {"file": "timeout_test.zip", "path": "test"},
-        "folder": str(tmp_path),
-        "visible": True,
-        "size": 1,
-    }
+    task = _make_task(tmp_path, "timeout_test.zip", size=1)
     cloudflare.worker(task_id=0, task=task, progress=None, decompress=False)
 
     assert captured["url"] == "https://downloadnrao.org/test/timeout_test.zip"
     assert captured["stream"] is True
     assert captured["headers"] == {"user-agent": cloudflare.USER_AGENT}
-    assert captured["timeout"] == cloudflare.DOWNLOAD_READ_TIMEOUT
+    assert captured["timeout"] == (
+        cloudflare.DOWNLOAD_CONNECT_TIMEOUT,
+        cloudflare.DOWNLOAD_READ_TIMEOUT,
+    )
+    assert "error" not in task
     assert (tmp_path / "timeout_test.zip").exists()
+
+
+def test_worker_aborts_stalled_download(monkeypatch, tmp_path):
+    """A trickling connection (slow but never idle) must be detected and retried."""
+    clock = [0.0]
+    attempts = {"n": 0}
+
+    class TrickleResponse(_FakeResponse):
+        def iter_content(self, chunk_size):
+            # A few bytes arrive just past the grace period: far below the
+            # minimum average rate, but never idle long enough for the
+            # requests read timeout to fire.
+            clock[0] += cloudflare.DOWNLOAD_STALL_GRACE_PERIOD + 1
+            yield b"x" * 10
+            clock[0] += 1
+            yield b"x" * 10
+
+    def fake_get(url, stream, headers, timeout):
+        attempts["n"] += 1
+        return TrickleResponse([], content_length=10 * 1024 * 1024)
+
+    monkeypatch.setattr(cloudflare.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(cloudflare.time, "sleep", lambda _: None)
+    monkeypatch.setattr(cloudflare.requests, "get", fake_get)
+
+    task = _make_task(tmp_path, "stall_test.zip")
+    cloudflare.worker(task_id=0, task=task, progress=None, decompress=False)
+
+    assert attempts["n"] == cloudflare.DOWNLOAD_MAX_ATTEMPTS
+    assert "fell below" in task["error"]
+    assert not (tmp_path / "stall_test.zip").exists()
+
+
+def test_worker_detects_truncated_stream(monkeypatch, tmp_path):
+    attempts = {"n": 0}
+
+    def fake_get(url, stream, headers, timeout):
+        attempts["n"] += 1
+        return _FakeResponse([b"1234"], content_length=9)
+
+    monkeypatch.setattr(cloudflare.time, "sleep", lambda _: None)
+    monkeypatch.setattr(cloudflare.requests, "get", fake_get)
+
+    task = _make_task(tmp_path, "truncated_test.zip")
+    cloudflare.worker(task_id=0, task=task, progress=None, decompress=False)
+
+    assert attempts["n"] == cloudflare.DOWNLOAD_MAX_ATTEMPTS
+    assert "incomplete" in task["error"]
+    assert not (tmp_path / "truncated_test.zip").exists()
+
+
+def test_worker_retries_then_succeeds(monkeypatch, tmp_path):
+    attempts = {"n": 0}
+
+    def fake_get(url, stream, headers, timeout):
+        attempts["n"] += 1
+        if attempts["n"] == 1:
+            raise cloudflare.requests.ConnectionError("connection reset")
+        return _FakeResponse([b"test data"], content_length=9)
+
+    monkeypatch.setattr(cloudflare.time, "sleep", lambda _: None)
+    monkeypatch.setattr(cloudflare.requests, "get", fake_get)
+
+    task = _make_task(tmp_path, "retry_test.zip")
+    cloudflare.worker(task_id=0, task=task, progress=None, decompress=False)
+
+    assert attempts["n"] == 2
+    assert "error" not in task
+    assert (tmp_path / "retry_test.zip").read_bytes() == b"test data"
+
+
+@responses.activate
+def test_download_raises_on_failure(mock_metadata, monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        cloudflare, "__file__", str(mock_metadata.parent.parent / "cloudflare.py")
+    )
+    monkeypatch.setattr(cloudflare.time, "sleep", lambda _: None)
+
+    url = "https://downloadnrao.org/test/test_file.zip"
+    responses.add(responses.GET, url, status=500)
+
+    with pytest.raises(RuntimeError, match="Download failed"):
+        cloudflare.download(
+            "test_file.zip", folder=str(tmp_path / "dest"), decompress=False
+        )
+
+
+def test_download_raises_on_unknown_file(mock_metadata, monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        cloudflare, "__file__", str(mock_metadata.parent.parent / "cloudflare.py")
+    )
+
+    with pytest.raises(RuntimeError, match="manifest"):
+        cloudflare.download("no_such_file.zip", folder=str(tmp_path))

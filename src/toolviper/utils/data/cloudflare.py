@@ -2,6 +2,7 @@ import json
 import os
 import pathlib
 import shutil
+import time
 import zipfile
 from threading import Thread
 from typing import Any, Dict, List, Optional, Union
@@ -23,11 +24,26 @@ colorize = console.Colorize()
 
 # Constants
 PROGRESS_MAX_CHARACTERS = 28
-MINIMUM_CHUNK_SIZE = 1024
 BASE_URL = "https://downloadnrao.org"
 METADATA_REL_PATH = ".cloudflare/file.download.json"
 USER_AGENT = "Wget/1.16 (linux-gnu)"
-DOWNLOAD_READ_TIMEOUT = 120
+
+# Download robustness. The read timeout only fires when *no* bytes arrive for
+# that long; a connection that trickles a few bytes per second never trips it,
+# so a separate minimum-average-rate check catches stalled-but-alive transfers
+# (observed with the Cloudflare-fronted download server in CI). Stalled or
+# failed attempts are retried from a fresh connection.
+DOWNLOAD_CHUNK_SIZE = 64 * 1024  # bytes per iter_content chunk
+DOWNLOAD_CONNECT_TIMEOUT = 30  # seconds to establish the connection
+DOWNLOAD_READ_TIMEOUT = 120  # max seconds between bytes on the socket
+DOWNLOAD_MAX_ATTEMPTS = 3
+DOWNLOAD_RETRY_WAIT = 10  # seconds; scaled by the attempt number
+DOWNLOAD_STALL_GRACE_PERIOD = 60  # seconds before the rate check applies
+DOWNLOAD_STALL_MINIMUM_RATE = 64 * 1024  # bytes/s averaged over the attempt
+
+
+class DownloadStalledError(RuntimeError):
+    """A download attempt was aborted because it stalled or was truncated."""
 
 
 def _get_metadata_path() -> pathlib.Path:
@@ -149,6 +165,9 @@ def download(
     if not tasks:
         if missing_files:
             logger.error(f"Missing files: {missing_files}")
+            raise RuntimeError(
+                f"Files not found in the download manifest: {missing_files}"
+            )
 
         return
 
@@ -173,8 +192,82 @@ def download(
 
         progress.refresh()
 
+    failed = [task["error"] for task in tasks if task.get("error")]
+
     if missing_files:
         logger.error(f"Could not download: {missing_files}")
+
+    if failed or missing_files:
+        raise RuntimeError(
+            "Download failed: "
+            + "; ".join(
+                failed + [f"{f}: not in the download manifest" for f in missing_files]
+            )
+        )
+
+
+def _download_attempt(
+    task_id: TaskID, task: dict, url: str, fullname: pathlib.Path, progress: Progress
+) -> None:
+    """
+    Run a single download attempt, writing the file to ``fullname``.
+
+    Raises
+    ------
+    requests.RequestException
+        On connection errors, HTTP error statuses, or read timeouts.
+    DownloadStalledError
+        If the average transfer rate drops below
+        ``DOWNLOAD_STALL_MINIMUM_RATE`` after ``DOWNLOAD_STALL_GRACE_PERIOD``
+        seconds, or the stream ends short of the advertised Content-Length.
+    """
+    response = requests.get(
+        url,
+        stream=True,
+        headers={"user-agent": USER_AGENT},
+        timeout=(DOWNLOAD_CONNECT_TIMEOUT, DOWNLOAD_READ_TIMEOUT),
+    )
+    try:
+        response.raise_for_status()
+
+        # The manifest size is only a display hint (it may be stale);
+        # completeness is checked against the actual Content-Length header.
+        content_length = int(response.headers.get("Content-Length", 0))
+        total = content_length or task.get("size", 0)
+
+        size = 0
+        start = time.monotonic()
+        if progress is not None:
+            progress.update(task_id, completed=0, total=total, visible=task["visible"])
+
+        with open(fullname, "wb") as fd:
+            for chunk in response.iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE):
+                if not chunk:
+                    continue
+
+                size += fd.write(chunk)
+                if progress is not None:
+                    progress.update(
+                        task_id, completed=size, total=total, visible=task["visible"]
+                    )
+
+                elapsed = time.monotonic() - start
+                if (
+                    elapsed > DOWNLOAD_STALL_GRACE_PERIOD
+                    and size / elapsed < DOWNLOAD_STALL_MINIMUM_RATE
+                ):
+                    raise DownloadStalledError(
+                        f"average rate {size / elapsed:.0f} B/s fell below "
+                        f"{DOWNLOAD_STALL_MINIMUM_RATE} B/s after {elapsed:.0f} s "
+                        f"({size}/{total or 'unknown'} bytes)"
+                    )
+
+        if content_length and size < content_length:
+            raise DownloadStalledError(
+                f"incomplete download: received {size} of {content_length} bytes"
+            )
+    finally:
+        response.close()
 
 
 def worker(
@@ -182,6 +275,11 @@ def worker(
 ) -> None:
     """
     Worker function to download a file in a thread.
+
+    Retries stalled or failed attempts (up to ``DOWNLOAD_MAX_ATTEMPTS``) from a
+    fresh connection. On final failure the error is recorded in
+    ``task["error"]`` for the caller to report; nothing is raised because this
+    runs in a worker thread.
 
     Parameters
     ----------
@@ -199,42 +297,38 @@ def worker(
     path = metadata.get("path", "").strip("/")
     url = f"{BASE_URL}/{path}/{filename}" if path else f"{BASE_URL}/{filename}"
 
-    try:
-        response = requests.get(
-            url,
-            stream=True,
-            headers={"user-agent": USER_AGENT},
-            timeout=DOWNLOAD_READ_TIMEOUT,
-        )
-        response.raise_for_status()
-
-    except Exception as e:
-        logger.error(f"Failed to initiate download for {filename}: {e}")
-        return
-
-    total = int(response.headers.get("Content-Length", 0))
-    if total == 0:
-        total = task.get("size", 0)
-
     dest_folder = pathlib.Path(task["folder"])
     fullname = dest_folder.joinpath(filename)
 
-    try:
-        size = 0
-        with open(fullname, "wb") as fd:
-            for chunk in response.iter_content(chunk_size=MINIMUM_CHUNK_SIZE):
-                if chunk:
-                    size += fd.write(chunk)
-                    if progress is not None:
-                        progress.update(
-                            task_id,
-                            completed=size,
-                            total=total,
-                            visible=task["visible"],
-                        )
+    last_error = None
+    for attempt in range(1, DOWNLOAD_MAX_ATTEMPTS + 1):
+        try:
+            _download_attempt(task_id, task, url, fullname, progress)
+            break
 
-    except Exception as e:
-        logger.error(f"Error writing file {filename}: {e}")
+        except (requests.RequestException, DownloadStalledError) as e:
+            last_error = e
+            fullname.unlink(missing_ok=True)
+            if attempt < DOWNLOAD_MAX_ATTEMPTS:
+                wait = DOWNLOAD_RETRY_WAIT * attempt
+                logger.warning(
+                    f"Download attempt {attempt}/{DOWNLOAD_MAX_ATTEMPTS} failed "
+                    f"for {filename}: {e}. Retrying in {wait} s..."
+                )
+                time.sleep(wait)
+
+        except Exception as e:
+            # Non-retryable (e.g. disk errors while writing).
+            fullname.unlink(missing_ok=True)
+            task["error"] = f"{filename}: {e}"
+            logger.error(f"Error writing file {filename}: {e}")
+            return
+    else:
+        task["error"] = f"{filename}: {last_error}"
+        logger.error(
+            f"Failed to download {filename} after {DOWNLOAD_MAX_ATTEMPTS} "
+            f"attempts: {last_error}"
+        )
         return
 
     if decompress and zipfile.is_zipfile(fullname):
@@ -242,6 +336,7 @@ def worker(
             shutil.unpack_archive(filename=str(fullname), extract_dir=str(dest_folder))
             os.remove(fullname)
         except Exception as e:
+            task["error"] = f"{filename}: failed to decompress: {e}"
             logger.error(f"Failed to decompress {filename}: {e}")
 
 
@@ -449,20 +544,12 @@ def update(path: Optional[str] = None) -> None:
 
     logger.info("Updating file metadata information...")
 
-    task_id = 0
-    # with progress:
     _console = Console(force_jupyter=is_notebook())
-    tasks = [f"\nManifest update "]
 
-    with _console.status(
-        "[bold green]Working on download manifest update ..."
-    ) as status:
-        while tasks:
-            worker(task_id, task, progress=None, decompress=False)
+    with _console.status("[bold green]Working on download manifest update ..."):
+        worker(task_id=0, task=task, progress=None, decompress=False)
 
-            task = tasks.pop(0)
-
-    if not meta_data_path.exists():
+    if task.get("error") or not meta_data_path.exists():
         logger.error("Unable to retrieve download metadata.")
         raise FileNotFoundError(f"Download metadata file not found at {meta_data_path}")
 
