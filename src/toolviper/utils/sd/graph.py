@@ -84,6 +84,15 @@ class Graph:
                     )
                 )
 
+            elif coord == "polarization":
+                logger.info("Making polarization coordinate ...")
+                xds = self._dataset.xr_ps.get_combined_field_and_source_xds()
+                self._coordinates[coord] = (
+                    graph_tools.coordinate_utils.make_parallel_coord(
+                        coord=xds.polarization, n_chunks=xds.polarization.values.shape[0]
+                    )
+                )
+
             else:
                 logger.error(f"Coordinate {coord} not found in dataset.")
 
@@ -98,6 +107,9 @@ class Graph:
             input_params=parameters,
             previous=self._nodes[connect].result if connect is not None else None,
         )
+
+        if parameters is None:
+            parameters = {}
 
         if make_workflow:
             self._graph = generate_dask_workflow(self._graph)
@@ -131,7 +143,7 @@ class Graph:
     def reset(self):
         self._nodes = {}
         self._graph = None
-        self._dataset = None
+        #self._dataset = None
         self._coordinates = None
         self._node_mapping = None
 
