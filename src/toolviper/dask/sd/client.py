@@ -143,7 +143,7 @@ def distributed_client(
     name=None,
     shutdown_on_close=True,
     scheduler_sync_interval=1,
-    shutdown_scheduler=True
+    shutdown_scheduler=True,
 ) -> distributed.Client:
     """Setup dask cluster and logger.
 
@@ -175,7 +175,7 @@ def distributed_client(
         name=name,
         shutdown_on_close=True,
         scheduler_sync_interval=1,
-        shutdown_scheduler=True
+        shutdown_scheduler=True,
     )
 
     log_params = _get_log_params(log_params, DEFAULT_CLIENT_LOG_PARAMS)
@@ -208,6 +208,7 @@ def distributed_client(
     client.get_versions(check=True)
     logger.info("Created client " + str(client))
     return client
+
 
 def _set_up_dask(local_directory):
     if local_directory:
