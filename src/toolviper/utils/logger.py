@@ -294,6 +294,9 @@ def get_logger(logger_name: Optional[str] = None) -> logging.Logger:
         stream_handler.setFormatter(ColorLoggingFormatter())
         logger.addHandler(stream_handler)
         logger.setLevel(logging.INFO)
+        # This logger has its own handler; don't also bubble records up to the
+        # root logger (in Jupyter a root handler often exists, doubling output).
+        logger.propagate = False
 
     return logger
 
@@ -332,6 +335,9 @@ def setup_logger(
     logger = logging.getLogger(logger_name)
     logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
     logger.handlers.clear()
+    # This logger manages its own handlers; don't also bubble records up to the
+    # root logger (in Jupyter a root handler often exists, doubling output).
+    logger.propagate = False
 
     if log_to_term:
         stream_handler = logging.StreamHandler(sys.stdout)
@@ -409,6 +415,9 @@ def setup_worker_logger(
     logger = logging.getLogger(parallel_logger_name)
     logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
     logger.handlers.clear()
+    # This logger manages its own handlers; don't also bubble records up to the
+    # root logger (in Jupyter a root handler often exists, doubling output).
+    logger.propagate = False
 
     if log_to_term:
         stream_handler = logging.StreamHandler(sys.stdout)
