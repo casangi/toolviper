@@ -54,7 +54,7 @@ def _mallinfo_str() -> str:
                 f"heap_used={mi.uordblks / gb:.2f}GB "
                 f"heap_free={mi.fordblks / gb:.2f}GB "
                 f"mmap={mi.hblkhd / gb:.2f}GB")
-    except Exception:
+    except Exception:  # noqa: BLE001 -- best-effort diagnostics, never raise
         return ""
 
 
