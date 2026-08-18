@@ -1,6 +1,6 @@
 [project]
 name = "toolviper"
-version = "0.1.4"
+version = "0.1.5"
 description = ""
 authors = [
     {name = "Joshua Hoskins", email="jhoskins@nrao.edu"},
@@ -19,6 +19,7 @@ dependencies = [
     'psutil',
     'rich',
     'pandas',
+    'graphviper',
     'itables',
     'requests',
     'responses',
@@ -68,6 +69,7 @@ all = [
     'pytest-html',
     'matplotlib',
     'prettytable',
+    'graphviper',
     'jupyterlab',
     'ipykernel',
     'ipympl',
@@ -84,6 +86,7 @@ all = [
     'sphinx-autoapi',
     'sphinx-autosummary-accessors',
     'sphinx_rtd_theme',
+    'textual',
     'twine',
     'pandoc',
     'xarray'

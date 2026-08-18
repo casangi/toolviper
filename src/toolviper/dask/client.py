@@ -1,23 +1,21 @@
-import logging
+import functools
 import multiprocessing
 import os
 import pathlib
+
 import dask
 import dask_jobqueue
 import distributed
 import psutil
-import functools
+
+import toolviper.dask.menrva
+import toolviper.utils.console as console
+import toolviper.utils.logger as logger
+import toolviper.utils.parameter as parameter
 
 from importlib import import_module
 from importlib.util import find_spec
 from typing import Dict, Union, Any, Optional
-
-import toolviper.dask.menrva
-
-import toolviper.utils.console as console
-import toolviper.utils.logger as logger
-import toolviper.utils.parameter as parameter
-import toolviper.utils.display as display
 
 colorize = console.Colorize()
 
@@ -149,6 +147,7 @@ def local_client(
     worker_log_params: Optional[Dict[str, Any]] = None,
     dashboard_address: str = ":8787",
     serial_execution: bool = False,
+    asynchronous: bool = False,
 ) -> Optional[distributed.Client]:
     """Create a local client, scheduler and workers using Dask Distributed LocalCluster.
 
@@ -239,15 +238,6 @@ def local_client(
 
         return None
 
-    # This method of assigning a worker plugin does not seem to work when using dask_jobqueue. Consequently, using \
-    # client.register_plugin so that the method of assigning a worker plugin is the same for local_client\
-    # and slurm_cluster_client.
-    # if local_cache or worker_log_params:
-    #    dask.config.set({"distributed.worker.preload": os.path.join(path,'plugins/worker.py')})
-    #    dask.config.set({"distributed.worker.preload-argv": ["--local_cache",local_cache,"--log_to_term",\
-    #    worker_log_params['log_to_term'],"--log_to_file",worker_log_params['log_to_file'],"--log_file",\
-    #    worker_log_params['log_file'],"--log_level",worker_log_params['log_level']]})
-
     # setup dask.distributed based multiprocessing environment
     if cores is None:
         cores = multiprocessing.cpu_count()
@@ -267,7 +257,7 @@ def local_client(
             threads_per_worker=1,
             processes=True,
             memory_limit=memory_limit,
-            # silence_logs=logging.ERROR,  # , silence_logs=logging.ERROR #,resources={ 'GPU': 2}
+            asynchronous=asynchronous,
             dashboard_address=dashboard_address,
         )
 

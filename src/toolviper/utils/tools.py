@@ -2,9 +2,12 @@ import hashlib
 import inspect
 import json
 import pathlib
+import toolviper
+
 from typing import NoReturn, Union
 
 import toolviper.utils.logger as logger
+
 from toolviper.utils import parameter
 
 
@@ -104,7 +107,6 @@ def verify(filename: str, folder: str):
 def process_entry_(
     file: str, path: str, dtype: str, telescope: str, mode: str, json_file: dict
 ):
-    import toolviper
 
     filename = pathlib.Path(file)
     if filename.is_dir():
@@ -141,7 +143,7 @@ def add_entry(
     versioning: str = "patch",
 ) -> Union[dict, None]:
     """
-        Build new file.download.json with added metadata.
+        Build a new file.download.json with added metadata.
 
     Parameters
     ----------
@@ -159,12 +161,13 @@ def add_entry(
     -------
     dict, None
     """
-    import toolviper
 
     logger.get_logger("viperlog").setLevel("DEBUG")
+
     # Make sure entries is a list even if it's a single entry
     if isinstance(entries, dict):
         entries = [entries]
+
     json_file = None
     try:
         if manifest is None:
@@ -180,7 +183,6 @@ def add_entry(
             return None
 
         json_file = toolviper.utils.tools.open_json(str(manifest))
-
         json_file["version"] = update_version(versioning=versioning)
 
         for entry in entries:
@@ -190,24 +192,25 @@ def add_entry(
     #    logger.error(f"entry not found in metadata ... skipping: {key_error}")
     #    return None
 
-    except TypeError:
+    except TypeError as type_error:
         logger.error(
             "The file you are trying to add is likely the wrong type. Try zipping it."
         )
+        logger.error(str(type_error))
+        return None
 
     except OSError as os_error:
         logger.error("Error opening specified json manifest file.")
         logger.error(str(os_error))
         return None
 
-    with open("file.download.json", "w") as file_:
+    with open(manifest, "w") as file_:
         json.dump(json_file, file_)
 
     return json_file
 
 
 def update_version(versioning="patch"):
-    import toolviper
 
     manifest_path = pathlib.Path(toolviper.__path__[0]).joinpath(
         "utils/data/.cloudflare/file.download.json"
@@ -243,7 +246,6 @@ def update_version(versioning="patch"):
             return None
 
     version_number = f"v{major}.{minor}.{patch}"
-
     return version_number
 
 

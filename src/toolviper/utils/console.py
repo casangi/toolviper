@@ -224,6 +224,8 @@ class Colorize:
             if member[0] == color:
                 return re.split("[;m]", member[1])[-4:-1]
 
+        return None
+
 
 def add_verbose_info(message: str, color: str = "blue") -> str:
     function_name = inspect.stack()[PENULTIMATE_FUNCTION].function

@@ -190,8 +190,6 @@ def test_add_entry(tmp_path, monkeypatch):
 
     assert result["version"] == "v1.0.1"
     assert "new_file" in result["metadata"]
-    assert os.path.exists("file.download.json")
-    os.remove("file.download.json")
 
 
 def test_checksum_error_str():
