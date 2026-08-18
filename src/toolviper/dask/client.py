@@ -2,9 +2,6 @@ import functools
 import multiprocessing
 import os
 import pathlib
-from importlib import import_module
-from importlib.util import find_spec
-from typing import Dict, Union, Any, Optional
 
 import dask
 import dask_jobqueue
@@ -15,6 +12,10 @@ import toolviper.dask.menrva
 import toolviper.utils.console as console
 import toolviper.utils.logger as logger
 import toolviper.utils.parameter as parameter
+
+from importlib import import_module
+from importlib.util import find_spec
+from typing import Dict, Union, Any, Optional
 
 colorize = console.Colorize()
 

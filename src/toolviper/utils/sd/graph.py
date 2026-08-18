@@ -89,7 +89,8 @@ class Graph:
                 xds = self._dataset.xr_ps.get_combined_field_and_source_xds()
                 self._coordinates[coord] = (
                     graph_tools.coordinate_utils.make_parallel_coord(
-                        coord=xds.polarization, n_chunks=xds.polarization.values.shape[0]
+                        coord=xds.polarization,
+                        n_chunks=xds.polarization.values.shape[0],
                     )
                 )
 
@@ -143,7 +144,7 @@ class Graph:
     def reset(self):
         self._nodes = {}
         self._graph = None
-        #self._dataset = None
+        # self._dataset = None
         self._coordinates = None
         self._node_mapping = None
 
@@ -175,56 +176,3 @@ class GraphNode:
     function: callable
     result: dict | list | None
     previous: dict | list | None
-
-
-# class Graph:
-#     """A class representing a directed graph for dependency management."""
-#
-#     def __init__(self):
-#         self._graph = None
-#         self._results = collections.defaultdict(list)
-#
-#     def source(self, job, axes, connect=False, type="", node=None):
-#         function_name = job["function"].__name__
-#         previous = None
-#
-#         logger.info(f"Adding sink node for function: {function_name}")
-#         if connect:
-#             previous = self._graph
-#             logger.info(f"Connecting to previous node: {previous}")
-#
-#             if node is not None:
-#                 try:
-#                     logger.info(f"Connecting to user-supplied node: {node}")
-#                     previous = self._results[node]
-#
-#                 except KeyError:
-#                     logger.error(f"Node {node} not found in results.")
-#
-#         logger.info(f"Distributing function: {function_name} on axes: {axes}")
-#         if type == "tree":
-#             for _previous in previous:
-#                 self._graph = toolviper.utils.sd.distribute(
-#                     job=job, axes=axes, function=job["function"], previous=_previous
-#                 )
-#         else:
-#             self._graph = toolviper.utils.sd.distribute(
-#                 job=job, axes=axes, function=job["function"], previous=previous
-#             )
-#
-#         self._results[function_name].append(self._graph)
-#
-#     def sink(self, function, edges=None):
-#         logger.info(f"Adding sink node for function: {function.__name__}")
-#         self._results[function.__name__].append(self._graph)
-#         self._graph = dask.delayed(function)(self._graph)
-#
-#     def visualize(self):
-#         return dask.visualize(self._graph)
-#
-#     def compute(self):
-#         return dask.compute(self._graph)
-#
-#     @property
-#     def nodes(self):
-#         return list(self._results.keys())
