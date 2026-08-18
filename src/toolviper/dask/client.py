@@ -165,7 +165,11 @@ def local_client(
     dask_local_dir : str, optional
         Temporary files directory for Dask. Defaults to None.
     local_dir : str, optional
-        Client local directory. Defaults to None.
+        Node-local directory for the local-disk cache. When set, the
+        ``VIPER_LOCAL_DIR`` environment variable is exported and local caching
+        is enabled (graphviper's ``map`` then adds ``viper_local_dir``,
+        ``date_time`` and ``node_ip`` to each task's input parameters).
+        Defaults to None.
     wait_for_workers : bool, optional
         Whether to wait for workers to start. Defaults to True.
     log_params : dict, optional
@@ -191,7 +195,7 @@ def local_client(
     os.environ["VIPER_LOGGER_NAME"] = log_params["logger_name"]
 
     if local_dir:
-        os.environ["CLIENT_LOCAL_DIR"] = local_dir
+        os.environ["VIPER_LOCAL_DIR"] = local_dir
         local_cache = True
     else:
         local_cache = False
