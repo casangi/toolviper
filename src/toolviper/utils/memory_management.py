@@ -20,8 +20,18 @@ def _get_libc():
     return _libc
 
 
-_MALLINFO_FIELDS = ("arena", "ordblks", "smblks", "hblks", "hblkhd",
-                    "usmblks", "fsmblks", "uordblks", "fordblks", "keepcost")
+_MALLINFO_FIELDS = (
+    "arena",
+    "ordblks",
+    "smblks",
+    "hblks",
+    "hblkhd",
+    "usmblks",
+    "fsmblks",
+    "uordblks",
+    "fordblks",
+    "keepcost",
+)
 
 
 class _MallInfo2(ctypes.Structure):
@@ -50,10 +60,12 @@ def _mallinfo_str() -> str:
             fn.restype = _MallInfo
         mi = fn()
         gb = 1e9
-        return (f"heap_sbrk={mi.arena / gb:.2f}GB "
-                f"heap_used={mi.uordblks / gb:.2f}GB "
-                f"heap_free={mi.fordblks / gb:.2f}GB "
-                f"mmap={mi.hblkhd / gb:.2f}GB")
+        return (
+            f"heap_sbrk={mi.arena / gb:.2f}GB "
+            f"heap_used={mi.uordblks / gb:.2f}GB "
+            f"heap_free={mi.fordblks / gb:.2f}GB "
+            f"mmap={mi.hblkhd / gb:.2f}GB"
+        )
     except Exception:  # noqa: BLE001 -- best-effort diagnostics, never raise
         return ""
 
@@ -62,11 +74,16 @@ def memory_setup_summary() -> str:
     """One-line description of the allocator setup this process runs under:
     the malloc/graphviper environment knobs that are set, plus any mmap
     threshold pinned by memory_setup()."""
-    keys = ("MALLOC_TRIM_THRESHOLD_", "MALLOC_MMAP_THRESHOLD_",
-            "MALLOC_ARENA_MAX", "MALLOC_CONF",
-            "GRAPHVIPER_TASK_MEMORY_MANAGEMENT",
-            "GRAPHVIPER_PER_TASK_GC", "GRAPHVIPER_PER_TASK_TRIM",
-            "GRAPHVIPER_LOG_MEMORY_STATE")
+    keys = (
+        "MALLOC_TRIM_THRESHOLD_",
+        "MALLOC_MMAP_THRESHOLD_",
+        "MALLOC_ARENA_MAX",
+        "MALLOC_CONF",
+        "GRAPHVIPER_TASK_MEMORY_MANAGEMENT",
+        "GRAPHVIPER_PER_TASK_GC",
+        "GRAPHVIPER_PER_TASK_TRIM",
+        "GRAPHVIPER_LOG_MEMORY_STATE",
+    )
     env = {k: os.environ[k] for k in keys if k in os.environ}
     return f"env={env} mallopt_mmap_threshold={_mmap_threshold}"
 
