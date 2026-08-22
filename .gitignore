@@ -165,6 +165,5 @@ cython_debug/
 **/.dropbox
 /src/toolviper/utils/data/.cloudflare/file.download.json
 
-
 # Mac
 .DS_Store
