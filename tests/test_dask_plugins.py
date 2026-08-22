@@ -1,14 +1,14 @@
-import pytest
 from unittest.mock import MagicMock, patch
-from toolviper.dask.plugins.worker import DaskWorker
+
 from toolviper.dask.plugins.scheduler import (
     Scheduler,
     ViperGraphPlugin,
-    unravel_deps,
+    dask_setup,
     get_node_depths,
     graph_metrics,
-    dask_setup,
+    unravel_deps,
 )
+from toolviper.dask.plugins.worker import DaskWorker
 
 
 class FakeTask:
@@ -345,7 +345,9 @@ def test_graph_metrics_docstring_example():
     from dask.core import get_deps
     from dask.order import ndependencies
 
-    inc = lambda x: x + 1
+    def inc(x):
+        return x + 1
+
     dsk = {"a1": 1, "b1": (inc, "a1"), "b2": (inc, "a1"), "c1": (inc, "b1")}
     dependencies, dependents = get_deps(dsk)
     _, total_dependencies = ndependencies(dependencies, dependents)

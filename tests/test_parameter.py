@@ -1,12 +1,14 @@
-import pytest
-import os
 import json
-from unittest.mock import patch, MagicMock
+import os
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from toolviper.utils.parameter import (
-    validate,
     get_path,
-    set_config_directory,
     is_notebook,
+    set_config_directory,
+    validate,
     verify,
 )
 

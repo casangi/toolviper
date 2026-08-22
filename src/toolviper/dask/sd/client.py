@@ -1,8 +1,7 @@
-import functools
 import os
 from importlib import import_module
 from importlib.util import find_spec
-from typing import Dict, Union, Any, Optional
+from typing import Any
 
 import dask
 import distributed
@@ -31,14 +30,14 @@ DEFAULT_WORKER_LOG_PARAMS = {
 
 
 def _get_log_params(
-    log_params: Optional[Dict[str, Any]], defaults: Dict[str, Any]
-) -> Dict[str, Any]:
+    log_params: dict[str, Any] | None, defaults: dict[str, Any]
+) -> dict[str, Any]:
     if log_params is None:
         log_params = {}
     return {**defaults, **log_params}
 
 
-def load_libraries(name: str, libs: Union[str, list[str]]) -> dict[str, bool]:
+def load_libraries(name: str, libs: str | list[str]) -> dict[str, bool]:
     """Load libraries if they were installed and can be loaded.
 
     Parameters
@@ -87,12 +86,12 @@ def print_libraries_availability(spec: dict[str, bool]):
     )
 
 
-def get_thread_info() -> Dict[str, float]:
+def get_thread_info() -> dict[str, float]:
     # This just brings the built-in thread info function into the client module.
     return toolviper.dask.menrva.MenrvaClient.thread_info()
 
 
-def get_client() -> Union[None, distributed.Client]:
+def get_client() -> None | distributed.Client:
     """
     Get a toolviper client instance
     Returns: None or a toolviper client instance
@@ -111,7 +110,7 @@ def get_client() -> Union[None, distributed.Client]:
     return client
 
 
-def get_cluster() -> Union[None, distributed.LocalCluster]:
+def get_cluster() -> None | distributed.LocalCluster:
     """
     Get a toolviper cluster instance
     Returns: None or a toolviper cluster instance
@@ -131,9 +130,9 @@ def get_cluster() -> Union[None, distributed.LocalCluster]:
 
 def distributed_client(
     scheduler,
-    dask_local_dir: Optional[str] = None,
-    log_params: Optional[Dict[str, Any]] = None,
-    worker_log_params: Optional[Dict[str, Any]] = None,
+    dask_local_dir: str | None = None,
+    log_params: dict[str, Any] | None = None,
+    worker_log_params: dict[str, Any] | None = None,
     workers=None,
     worker=None,
     asynchronous=False,

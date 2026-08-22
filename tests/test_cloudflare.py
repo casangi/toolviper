@@ -1,10 +1,10 @@
-import os
-import pathlib
 import json
+
+import pandas as pd
 import pytest
 import responses
+
 from toolviper.utils.data import cloudflare
-import pandas as pd
 
 
 @pytest.fixture

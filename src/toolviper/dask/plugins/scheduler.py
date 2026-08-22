@@ -22,16 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import click
-import toolviper.utils.logger as logger
-
-from dask.core import reverse_dict
-from dask.base import tokenize
-from dask.order import ndependencies
-
 from collections import defaultdict
 
+import click
+from dask.base import tokenize
+from dask.core import reverse_dict
+from dask.order import ndependencies
 from distributed.diagnostics.plugin import SchedulerPlugin
+
+import toolviper.utils.logger as logger
 
 
 def unravel_deps(hlg_deps, name, unravelled_deps=None):
@@ -318,7 +317,7 @@ def dask_setup(scheduler, autorestrictor, local_cache):
 
 
 # Copied from Dask  v2023.12.0. Function depreciated.
-"""
+_DASK_LICENSE = """
 BSD 3-Clause License
 
 Copyright (c) 2014, Anaconda, Inc. and contributors
@@ -466,7 +465,7 @@ def graph_metrics(dependencies, dependents, total_dependencies):
                 max_dependencies,
                 min_heights,
                 max_heights,
-            ) = zip(*(result[parent] for parent in dependents[key]))
+            ) = zip(*(result[parent] for parent in dependents[key]), strict=False)
             result[key] = (
                 1 + sum(total_dependents),
                 min(min_dependencies),

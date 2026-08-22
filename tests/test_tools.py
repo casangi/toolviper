@@ -1,19 +1,19 @@
-import pytest
-import json
-import pathlib
 import hashlib
-import os
-from unittest.mock import MagicMock, patch
+import json
+from unittest.mock import patch
+
+import pytest
+
 from toolviper.utils.tools import (
-    open_json,
+    ChecksumError,
+    add_entry,
     calculate_checksum,
     iter_files_,
-    update_hash,
-    verify,
+    open_json,
     process_entry_,
-    add_entry,
+    update_hash,
     update_version,
-    ChecksumError,
+    verify,
 )
 
 
@@ -131,7 +131,6 @@ def test_update_version():
         patch("toolviper.utils.tools.open_json") as mock_open,
         patch("pathlib.Path.exists", return_value=True),
     ):
-
         mock_open.return_value = {"version": "v1.2.3"}
 
         # current implementation doesn't reset other parts

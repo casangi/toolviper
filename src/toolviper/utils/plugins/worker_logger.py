@@ -1,5 +1,4 @@
 import click
-
 from distributed.diagnostics.plugin import WorkerPlugin
 
 from toolviper.utils.logger import setup_worker_logger

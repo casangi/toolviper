@@ -2,6 +2,9 @@ import functools
 import multiprocessing
 import os
 import pathlib
+from importlib import import_module
+from importlib.util import find_spec
+from typing import Any
 
 import dask
 import dask_jobqueue
@@ -12,10 +15,6 @@ import toolviper.dask.menrva
 import toolviper.utils.console as console
 import toolviper.utils.logger as logger
 import toolviper.utils.parameter as parameter
-
-from importlib import import_module
-from importlib.util import find_spec
-from typing import Dict, Union, Any, Optional
 
 colorize = console.Colorize()
 
@@ -37,14 +36,14 @@ DEFAULT_WORKER_LOG_PARAMS = {
 
 
 def _get_log_params(
-    log_params: Optional[Dict[str, Any]], defaults: Dict[str, Any]
-) -> Dict[str, Any]:
+    log_params: dict[str, Any] | None, defaults: dict[str, Any]
+) -> dict[str, Any]:
     if log_params is None:
         log_params = {}
     return {**defaults, **log_params}
 
 
-def load_libraries(name: str, libs: Union[str, list[str]]) -> dict[str, bool]:
+def load_libraries(name: str, libs: str | list[str]) -> dict[str, bool]:
     """Load libraries if they were installed and can be loaded.
 
     Parameters
@@ -93,12 +92,12 @@ def print_libraries_availability(spec: dict[str, bool]):
     )
 
 
-def get_thread_info() -> Dict[str, float]:
+def get_thread_info() -> dict[str, float]:
     # This just brings the built-in thread info function into the client module.
     return toolviper.dask.menrva.MenrvaClient.thread_info()
 
 
-def get_client() -> Union[None, distributed.Client]:
+def get_client() -> None | distributed.Client:
     """
     Get a toolviper client instance
     Returns: None or a toolviper client instance
@@ -117,7 +116,7 @@ def get_client() -> Union[None, distributed.Client]:
     return client
 
 
-def get_cluster() -> Union[None, distributed.LocalCluster]:
+def get_cluster() -> None | distributed.LocalCluster:
     """
     Get a toolviper cluster instance
     Returns: None or a toolviper cluster instance
@@ -137,18 +136,18 @@ def get_cluster() -> Union[None, distributed.LocalCluster]:
 
 @parameter.validate()
 def local_client(
-    cores: Optional[int] = None,
-    memory_limit: Optional[str] = None,
+    cores: int | None = None,
+    memory_limit: str | None = None,
     autorestrictor: bool = False,
-    dask_local_dir: Optional[str] = None,
-    local_dir: Optional[str] = None,
+    dask_local_dir: str | None = None,
+    local_dir: str | None = None,
     wait_for_workers: bool = True,
-    log_params: Optional[Dict[str, Any]] = None,
-    worker_log_params: Optional[Dict[str, Any]] = None,
+    log_params: dict[str, Any] | None = None,
+    worker_log_params: dict[str, Any] | None = None,
     dashboard_address: str = ":8787",
     serial_execution: bool = False,
     asynchronous: bool = False,
-) -> Optional[distributed.Client]:
+) -> distributed.Client | None:
     """Create a local client, scheduler and workers using Dask Distributed LocalCluster.
 
     With Dask configuration tuned for VIPER and the option to use autorestrictor plugin and local cache.
@@ -251,7 +250,6 @@ def local_client(
         cluster = distributed.Client.current().cluster
 
     except ValueError:
-
         cluster = distributed.LocalCluster(
             n_workers=cores,
             threads_per_worker=1,
@@ -262,11 +260,9 @@ def local_client(
         )
 
     try:
-
         client = distributed.Client.current()
 
     except ValueError:
-
         client = toolviper.dask.menrva.MenrvaClient(cluster)
         client.get_versions(check=True)
 
@@ -299,9 +295,9 @@ def local_client(
 @parameter.validate()
 def distributed_client(
     cluster: Any,
-    dask_local_dir: Optional[str] = None,
-    log_params: Optional[Dict[str, Any]] = None,
-    worker_log_params: Optional[Dict[str, Any]] = None,
+    dask_local_dir: str | None = None,
+    log_params: dict[str, Any] | None = None,
+    worker_log_params: dict[str, Any] | None = None,
 ) -> distributed.Client:
     """Setup dask cluster and logger.
 
@@ -367,11 +363,11 @@ def slurm_cluster_client(
     dask_log_dir: str,
     exclude_nodes: str = "",
     dashboard_port: int = 8787,
-    local_dir: Optional[str] = None,
+    local_dir: str | None = None,
     autorestrictor: bool = False,
     wait_for_workers: bool = True,
-    log_params: Optional[Dict[str, Any]] = None,
-    worker_log_params: Optional[Dict[str, Any]] = None,
+    log_params: dict[str, Any] | None = None,
+    worker_log_params: dict[str, Any] | None = None,
 ) -> distributed.Client:
     """Create a SLURM cluster and return a client.
 
@@ -435,7 +431,7 @@ def slurm_cluster_client(
 
     """
     load libraries related functions of a distributed environment
-    'available_specs' contains the function name and a flag that the function was loaded successfully 
+    'available_specs' contains the function name and a flag that the function was loaded successfully
     """
 
     logger.debug(colorize.green("Checking functions availability:"))

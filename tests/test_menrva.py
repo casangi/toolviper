@@ -1,8 +1,4 @@
-import os
-import re
-import pathlib
-import distributed
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from toolviper.dask import menrva
 from toolviper.dask.client import local_client
@@ -62,7 +58,7 @@ class TestToolViperMenerva:
 
         worker_items = client.cluster.scheduler_info["workers"].items()
 
-        for worker_name, worker in worker_items:
+        for _worker_name, worker in worker_items:
             temp_memory_per_thread = (worker["memory_limit"] / worker["nthreads"]) / (
                 1024**3
             )
@@ -82,8 +78,9 @@ class TestToolViperMenerva:
 
 
 def test_port_is_free():
-    from toolviper.dask.menrva import port_is_free
     import socket
+
+    from toolviper.dask.menrva import port_is_free
 
     # Test with a definitely free port (hopefully)
     # We can use port 0 to let the OS pick a free port, but port_is_free binds it and closes it.
@@ -101,9 +98,9 @@ def test_port_is_free():
 
 
 def test_close_port():
-    from toolviper.dask.menrva import close_port, port_is_free
     import socket
-    import time
+
+    from toolviper.dask.menrva import close_port, port_is_free
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(("127.0.0.1", 0))

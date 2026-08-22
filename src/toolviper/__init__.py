@@ -1,6 +1,6 @@
 import os
-
 from importlib.metadata import version
+
 from toolviper.utils.logger import setup_logger
 
 __version__ = version("toolviper")

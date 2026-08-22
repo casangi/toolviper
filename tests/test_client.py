@@ -1,8 +1,9 @@
 import os
-import re
 import pathlib
+import re
+from unittest.mock import patch
+
 import distributed
-from unittest.mock import patch, MagicMock
 
 from toolviper.dask.client import local_client
 
@@ -55,7 +56,7 @@ class TestToolViperClient:
                 raise OSError
 
         except OSError:
-            assert False
+            raise AssertionError() from None
 
         client.shutdown()
 
@@ -107,7 +108,7 @@ class TestToolViperClient:
 
         worker_items = client.cluster.scheduler_info["workers"].items()
 
-        for worker_name, worker in worker_items:
+        for _worker_name, worker in worker_items:
             temp_memory_per_thread = (worker["memory_limit"] / worker["nthreads"]) / (
                 1024**3
             )
@@ -130,14 +131,13 @@ class TestToolViperClient:
         """
 
         try:
-
             path = pathlib.Path(".").cwd() / "dask_test_dir"
 
             if path.exists() is False:
                 raise FileNotFoundError
 
         except FileNotFoundError:
-            assert False
+            raise AssertionError() from None
 
     def test_client_logger(self):
         """
@@ -155,7 +155,7 @@ class TestToolViperClient:
             raise FileNotFoundError
 
         except FileNotFoundError:
-            assert False
+            raise AssertionError() from None
 
     def test_load_libraries(self):
         from toolviper.dask.client import load_libraries
@@ -163,7 +163,7 @@ class TestToolViperClient:
         libraries = load_libraries(name="CUDA", libs="dask_cuda")
 
         # Assuming github actions doesn't have CUDA installed
-        assert libraries.get("CUDA") == False
+        assert libraries.get("CUDA") is False
 
     def test__set_up_dask(self):
         import dask
@@ -176,8 +176,8 @@ class TestToolViperClient:
 
 
 def test_print_libraries_availability():
-    from toolviper.dask.client import print_libraries_availability
     import toolviper.utils.logger as logger
+    from toolviper.dask.client import print_libraries_availability
 
     with patch.object(logger, "debug") as mock_debug:
         print_libraries_availability({"CUDA": True, "MPI": False})

@@ -1,21 +1,19 @@
-import psutil
-import distributed
-import inspect
 import importlib
 import importlib.util
+import inspect
 import pathlib
-
-import toolviper.utils.logger as logger
-import toolviper.utils.console as console
-
+from collections.abc import Callable
 from importlib.metadata import PackageNotFoundError, version
+from typing import Any
 
-from packaging.version import parse as parse_version
-from distributed.diagnostics.plugin import WorkerPlugin
-
+import distributed
+import psutil
 from dask.widgets import get_template
+from distributed.diagnostics.plugin import WorkerPlugin
+from packaging.version import parse as parse_version
 
-from typing import Callable, Tuple, Dict, Any, Union
+import toolviper.utils.console as console
+import toolviper.utils.logger as logger
 
 colorize = console.Colorize()
 
@@ -59,8 +57,7 @@ class MenrvaClient(distributed.Client):
         )
 
     @staticmethod
-    def thread_info() -> Dict[str, Any]:
-
+    def thread_info() -> dict[str, Any]:
         try:
             client = distributed.Client.current()
 
@@ -89,7 +86,7 @@ class MenrvaClient(distributed.Client):
         else:
             worker_items = client.cluster.scheduler_info["workers"].items()
 
-        for worker_name, worker in worker_items:
+        for _worker_name, worker in worker_items:
             temp_memory_per_thread = (worker["memory_limit"] / worker["nthreads"]) / (
                 1024**3
             )
@@ -105,17 +102,17 @@ class MenrvaClient(distributed.Client):
         return thread_info
 
     @staticmethod
-    def call(func: Callable, *args: Tuple[Any], **kwargs: Dict[str, Any]):
+    def call(func: Callable, *args: tuple[Any], **kwargs: dict[str, Any]):
         try:
             params = inspect.signature(func).bind(*args, **kwargs)
             return func(*params.args, **params.kwargs)
 
         except TypeError as e:
-            logger.error("There was an error calling the function: {}".format(e))
+            logger.error(f"There was an error calling the function: {e}")
 
     @staticmethod
     def instantiate_module(
-        plugin: str, plugin_file: str, *args: Tuple[Any], **kwargs: Dict[str, Any]
+        plugin: str, plugin_file: str, *args: tuple[Any], **kwargs: dict[str, Any]
     ) -> WorkerPlugin | None:
         """
 
@@ -133,7 +130,7 @@ class MenrvaClient(distributed.Client):
         spec.loader.exec_module(module)
         for member in inspect.getmembers(module, predicate=inspect.isclass):
             plugin_instance = getattr(module, member[0])
-            logger.debug("Loading plugin module: {}".format(plugin_instance))
+            logger.debug(f"Loading plugin module: {plugin_instance}")
             return MenrvaClient.call(plugin_instance, *args, **kwargs)
 
         return None
@@ -143,8 +140,8 @@ class MenrvaClient(distributed.Client):
         directory: str,
         plugin: str,
         name: str,
-        *args: Union[Tuple[Any], Any],
-        **kwargs: Union[Dict[str, Any], Any],
+        *args: tuple[Any] | Any,
+        **kwargs: dict[str, Any] | Any,
     ):
         """Register a worker plugin from ``directory`` on this client.
 
@@ -159,8 +156,8 @@ def load_plugin(
     directory: str,
     plugin: str,
     name: str,
-    *args: Union[Tuple[Any], Any],
-    **kwargs: Union[Dict[str, Any], Any],
+    *args: tuple[Any] | Any,
+    **kwargs: dict[str, Any] | Any,
 ):
     """Instantiate a worker plugin module and register it on ``client``.
 
@@ -190,27 +187,25 @@ def load_plugin(
     plugin_file = ".".join((plugin, "py"))
     if pathlib.Path(directory).joinpath(plugin_file).exists():
         plugin_instance = MenrvaClient.instantiate_module(
-            plugin=plugin,
-            plugin_file="/".join((directory, plugin_file)),
+            plugin,
+            "/".join((directory, plugin_file)),
             *args,
             **kwargs,
         )
         client.register_plugin(plugin_instance, name=name)
     else:
-        logger.error(
-            "Cannot find plugins directory: {}".format(colorize.red(directory))
-        )
+        logger.error(f"Cannot find plugins directory: {colorize.red(directory)}")
 
 
 def port_is_free(port):
-    import socket
     import errno
+    import socket
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
         s.bind(("127.0.0.1", port))
-    except socket.error as e:
+    except OSError as e:
         if e.errno == errno.EADDRINUSE:
             logger.warning("Port is already in use.")
             return False
@@ -226,9 +221,10 @@ def port_is_free(port):
 
 
 def close_port(port):
+    from signal import SIGKILL
+
     import psutil
     from psutil import process_iter
-    from signal import SIGKILL
 
     for proc in process_iter():
         try:

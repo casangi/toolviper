@@ -1,6 +1,6 @@
 [project]
 name = "toolviper"
-version = "0.1.6"
+version = "0.1.7"
 description = ""
 authors = [
     {name = "Joshua Hoskins", email="jhoskins@nrao.edu"},
@@ -33,7 +33,7 @@ test = [
     'pytest',
     'pytest-cov',
     'pytest-html',
-    'black'
+    'pre-commit'
 ]
 
 interactive = [
@@ -63,7 +63,7 @@ docs = [
 ]
 
 all = [
-    'black',
+    'pre-commit',
     'pytest',
     'pytest-cov',
     'pytest-html',
@@ -91,3 +91,25 @@ all = [
     'pandoc',
     'xarray'
 ]
+
+[tool.ruff]
+target-version = "py311"
+# Unmaintained scratch notebooks -- not worth linting.
+extend-exclude = ["scratch"]
+
+[tool.ruff.lint]
+# Ruff replaces isort + black (layout via `ruff format`, import sorting via the
+# "I" rules) and also lints for real defects and best practices:
+#   E4/E7/E9 -- pycodestyle errors (import placement, statement syntax, runtime)
+#   F        -- pyflakes: undefined names, unused imports, unused variables
+#   B        -- flake8-bugbear: likely bugs (mutable defaults, loop captures, ...)
+#   UP       -- pyupgrade: outdated syntax/typing (mirrors the pyupgrade hook)
+select = ["E4", "E7", "E9", "F", "B", "UP", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tutorial notebooks introduce imports cell-by-cell as the narrative needs
+# them; that is deliberate style, not an error.
+"*.ipynb" = ["E402"]
+# Package __init__.py files re-export the public API; the "unused" imports
+# (and star imports) are the point.
+"__init__.py" = ["F401", "F403"]

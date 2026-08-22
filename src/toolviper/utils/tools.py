@@ -2,16 +2,14 @@ import hashlib
 import inspect
 import json
 import pathlib
+from typing import NoReturn
+
 import toolviper
-
-from typing import NoReturn, Union
-
 import toolviper.utils.logger as logger
-
 from toolviper.utils import parameter
 
 
-def open_json(file: str) -> Union[dict, NoReturn]:
+def open_json(file: str) -> dict | NoReturn:
     if not pathlib.Path(file).exists():
         logger.error(f"{file} doesn't exist ... exiting.")
         raise FileNotFoundError
@@ -107,7 +105,6 @@ def verify(filename: str, folder: str):
 def process_entry_(
     file: str, path: str, dtype: str, telescope: str, mode: str, json_file: dict
 ):
-
     filename = pathlib.Path(file)
     if filename.is_dir():
         logger.error(
@@ -138,10 +135,10 @@ def process_entry_(
 
 @parameter.validate()
 def add_entry(
-    entries: Union[list, dict],
-    manifest: Union[str, pathlib.Path, None] = None,
+    entries: list | dict,
+    manifest: str | pathlib.Path | None = None,
     versioning: str = "patch",
-) -> Union[dict, None]:
+) -> dict | None:
     """
         Build a new file.download.json with added metadata.
 
@@ -211,7 +208,6 @@ def add_entry(
 
 
 def update_version(versioning="patch"):
-
     manifest_path = pathlib.Path(toolviper.__path__[0]).joinpath(
         "utils/data/.cloudflare/file.download.json"
     )
