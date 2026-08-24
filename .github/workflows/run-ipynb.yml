@@ -11,6 +11,9 @@ on:
       - '**.md'
       - '**.rst'
 
+env:
+  ACTIONS_STEP_DEBUG: true
+
 jobs:
   call-testing-ipynb:
     uses: nrao/gh-actions-templates-public/.github/workflows/run-ipynb-template.yml@main
