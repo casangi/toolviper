@@ -1,5 +1,5 @@
-import numpy
 import cerberus
+import numpy
 
 
 class Protego(cerberus.Validator):
@@ -41,17 +41,13 @@ class Protego(cerberus.Validator):
                 if entry not in custom_constraint:
                     self._error(
                         field,
-                        "Allowed values not satisfied: {value} != {c}".format(
-                            value=value, c=custom_constraint
-                        ),
+                        f"Allowed values not satisfied: {value} != {custom_constraint}",
                     )
         else:
             if value not in custom_constraint:
                 self._error(
                     field,
-                    "Allowed values not satisfied: {value} != {c}".format(
-                        value=value, c=custom_constraint
-                    ),
+                    f"Allowed values not satisfied: {value} != {custom_constraint}",
                 )
 
     def _validate_sequence(self, constraint, field, value):
@@ -63,9 +59,7 @@ class Protego(cerberus.Validator):
         if not value == constraint:
             self._error(
                 field,
-                "Correct sequence not satisfied: {value}!={constraint}".format(
-                    value=value, constraint=constraint
-                ),
+                f"Correct sequence not satisfied: {value}!={constraint}",
             )
 
     def _validate_struct_type(self, constraint, field, value):
@@ -80,10 +74,10 @@ class Protego(cerberus.Validator):
         """
         if isinstance(value, list):
             for entry in value:
-                if not type(entry).__name__ in constraint:
+                if type(entry).__name__ not in constraint:
                     self._error(
                         field,
-                        "Must be of type:{constraint}".format(constraint=constraint),
+                        f"Must be of type:{constraint}",
                     )
 
     def register_data_type(self, data_type):

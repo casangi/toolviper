@@ -30,7 +30,6 @@ class TestToolViperDownload:
         shutil.rmtree(str(path), ignore_errors=True)
 
     def test_download_verification(self):
-
         path = pathlib.Path.cwd().joinpath("data")
         path.mkdir(parents=True, exist_ok=True)
 
@@ -47,23 +46,21 @@ class TestToolViperDownload:
             "utils/data/.cloudflare/file.download.json"
         )
 
-        metadata = toolviper.utils.tools.open_json(str(metadata_address))
+        toolviper.utils.tools.open_json(str(metadata_address))
 
         for file in files:
             toolviper.utils.tools.verify(filename=file, folder=path)
 
     def test_download_folder(self):
-
         path = pathlib.Path.cwd().joinpath("data")
         path.mkdir(parents=True, exist_ok=True)
 
         file = toolviper.utils.data.get_files()[0]
         toolviper.utils.data.download(file=file, folder=str(path))
 
-        assert path.joinpath(file).exists() == True
+        assert path.joinpath(file).exists()
 
     def test_download_overwrite(self):
-
         path = pathlib.Path.cwd().joinpath("data")
         path.mkdir(parents=True, exist_ok=True)
 
@@ -82,7 +79,6 @@ class TestToolViperDownload:
         assert original_file_timestamp != final_file_timestamp
 
     def test_download_decompress(self):
-
         path = pathlib.Path.cwd().joinpath("data")
         path.mkdir(parents=True, exist_ok=True)
 
@@ -93,16 +89,15 @@ class TestToolViperDownload:
         )
 
         # Check that the zip file exists
-        assert path.joinpath(f"{file}.zip").exists() == True
+        assert path.joinpath(f"{file}.zip").exists()
 
         # Check that folder does not exist
-        assert path.joinpath(file).exists() == False
+        assert not path.joinpath(file).exists()
 
         # Check that file isn't a folder
-        assert path.joinpath(file).is_dir() == False
+        assert not path.joinpath(file).is_dir()
 
     def test_update(self):
-
         meta_data_path = pathlib.Path(toolviper.__file__).parent.joinpath(
             "utils/data/.cloudflare/file.download.json"
         )
@@ -118,7 +113,6 @@ class TestToolViperDownload:
         assert original_file_timestamp != final_file_timestamp
 
     def test_get_file_size(self):
-
         path = pathlib.Path.cwd().joinpath("data")
         path.mkdir(parents=True, exist_ok=True)
 
@@ -144,7 +138,7 @@ class TestToolViperDownload:
         try:
             _print_file_queue(files="")
 
-        except AssertionError as e:
+        except AssertionError:
             logger.info("Failure test passed!")
             return None
 

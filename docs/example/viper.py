@@ -1,4 +1,4 @@
-from typing import List, NoReturn, Union
+from typing import NoReturn
 
 from rich.console import Console
 from rich.table import Table
@@ -8,7 +8,7 @@ import toolviper.utils.console
 import toolviper.utils.logger as logger
 
 
-def ascii_snake(color: Union[str, List, None] = None):
+def ascii_snake(color: str | list | None = None):
     if color:
         logger.info("Printing a cute snake in 24-bit color.")
         colorize = toolviper.utils.console.Colorize()
@@ -35,7 +35,7 @@ class SnakeObject:
             for name, value in kwargs.items():
                 setattr(cls, name, value)
 
-        return super(SnakeObject, cls).__new__(cls)
+        return super().__new__(cls)
 
     def __init__(self, object_name, **kwargs):
         self.object_name = object_name
@@ -60,7 +60,7 @@ class SnakeObject:
 )
 def snake_object_danger_checker(
     number: int, snake_info: SnakeObject
-) -> Union[float, NoReturn]:
+) -> float | NoReturn:
     species_score = {
         "viper": "Run",
         "cobra": "Run fast!",
@@ -91,9 +91,7 @@ def snake_object_danger_checker(
 
 
 @toolviper.utils.validate(logger=logger.get_logger(logger_name="viper-logger"))
-def snake_danger_checker(
-    number: int, poison: bool, species: str
-) -> Union[int, NoReturn]:
+def snake_danger_checker(number: int, poison: bool, species: str) -> int | NoReturn:
     species_score = {
         "viper": "Run",
         "cobra": "Run fast!",

@@ -1,18 +1,13 @@
 import dataclasses
+import operator
 
 import dask
-import operator
-import collections
-
-from rich.jupyter import display
+import graphviper.graph_tools as graph_tools
+import xarray as xr
+from graphviper.graph_tools.generate_dask_workflow import generate_dask_workflow
 
 import toolviper
-
-import xarray as xr
-import graphviper.graph_tools as graph_tools
 import toolviper.utils.logger as logger
-
-from graphviper.graph_tools.generate_dask_workflow import generate_dask_workflow
 
 
 class Graph:
@@ -25,12 +20,13 @@ class Graph:
         self._dataset = None
 
     def __getitem__(self, item):
-
         # convert to a list so we can parse the input
         item = list(item)
         trees = {
             key: value
-            for key, value in zip(item, list(operator.itemgetter(*item)(self._dataset)))
+            for key, value in zip(
+                item, list(operator.itemgetter(*item)(self._dataset)), strict=False
+            )
         }
 
         return xr.DataTree.from_dict(data=trees)
@@ -98,7 +94,6 @@ class Graph:
                 logger.error(f"Coordinate {coord} not found in dataset.")
 
     def map(self, function, parameters=None, connect=None, make_workflow=False):
-
         name = function.__name__
 
         self._graph = graph_tools.map(

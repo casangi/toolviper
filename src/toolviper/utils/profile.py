@@ -1,9 +1,10 @@
-import tracemalloc
-import uuid
 import csv
 import functools
 import multiprocessing
 import time
+import tracemalloc
+import uuid
+
 import psutil
 
 import toolviper.utils.logger as logger

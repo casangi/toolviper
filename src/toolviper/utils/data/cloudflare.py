@@ -4,21 +4,18 @@ import pathlib
 import shutil
 import time
 import zipfile
+from collections import defaultdict
 from threading import Thread
-from typing import Any, Dict, List, Optional, Union
 
-import requests
 import pandas as pd
-
+import requests
 from rich.console import Console
 from rich.progress import Progress, TaskID
 
 import toolviper.utils.console as console
 import toolviper.utils.logger as logger
-
 from toolviper.utils import parameter
 from toolviper.utils.parameter import is_notebook
-from collections import defaultdict
 
 colorize = console.Colorize()
 
@@ -64,7 +61,7 @@ def version() -> None:
     _verify_metadata_file()
 
     try:
-        with open(meta_data_path, "r") as json_file:
+        with open(meta_data_path) as json_file:
             file_meta_data = json.load(json_file)
             logger.info(f"Manifest version: {file_meta_data.get('version', 'unknown')}")
 
@@ -74,7 +71,7 @@ def version() -> None:
 
 @parameter.validate()
 def download(
-    file: Union[str, List[str]],
+    file: str | list[str],
     folder: str = ".",
     overwrite: bool = False,
     decompress: bool = True,
@@ -116,7 +113,7 @@ def download(
         update()
 
     try:
-        with open(meta_data_path, "r") as json_file:
+        with open(meta_data_path) as json_file:
             file_meta_data = json.load(json_file)
     except (FileNotFoundError, json.JSONDecodeError) as e:
         logger.error(f"Failed to load metadata: {e}")
@@ -345,7 +342,7 @@ class ToolviperFiles:
     Helper class for managing and displaying toolviper data manifests.
     """
 
-    def __init__(self, manifest: str, dataframe: Optional[pd.DataFrame] = None) -> None:
+    def __init__(self, manifest: str, dataframe: pd.DataFrame | None = None) -> None:
         self.manifest = manifest
         self.dataframe = dataframe
         self.notebook_mode = is_notebook()
@@ -359,14 +356,14 @@ class ToolviperFiles:
             except ImportError:
                 logger.debug("itables not found, falling back to standard display.")
 
-    def __call__(self) -> Optional[pd.DataFrame]:
+    def __call__(self) -> pd.DataFrame | None:
         if not self.notebook_mode:
             print(self.dataframe)
             return None
 
         return self.dataframe
 
-    def print(self) -> Optional[pd.DataFrame]:
+    def print(self) -> pd.DataFrame | None:
         """
         Display the dataframe using appropriate formatting.
         """
@@ -396,7 +393,7 @@ class ToolviperFiles:
         meta_data_path = pathlib.Path(manifest)
 
         try:
-            with open(meta_data_path, "r") as json_file:
+            with open(meta_data_path) as json_file:
                 file_meta_data = json.load(json_file)
 
         except (FileNotFoundError, json.JSONDecodeError) as e:
@@ -426,7 +423,7 @@ class ToolviperFiles:
         return cls(manifest=manifest, dataframe=pd.DataFrame(data))
 
 
-def list_files(truncate: Optional[int] = None) -> Optional[pd.DataFrame]:
+def list_files(truncate: int | None = None) -> pd.DataFrame | None:
     """
     List all files available in the cloudflare manifest.
 
@@ -487,7 +484,7 @@ def list_files_() -> None:
     console.print(table)
 
 
-def get_files() -> List[str]:
+def get_files() -> list[str]:
     """
     Get a list of all file names available in the cloudflare manifest.
     """
@@ -495,7 +492,7 @@ def get_files() -> List[str]:
     _verify_metadata_file()
 
     try:
-        with open(meta_data_path, "r") as json_file:
+        with open(meta_data_path) as json_file:
             file_meta_data = json.load(json_file)
             return list(file_meta_data.get("metadata", {}).keys())
 
@@ -504,7 +501,7 @@ def get_files() -> List[str]:
 
 
 @parameter.validate()
-def update(path: Optional[str] = None) -> None:
+def update(path: str | None = None) -> None:
     """
     Update the local cloudflare manifest by downloading the latest version.
 
@@ -555,7 +552,7 @@ def update(path: Optional[str] = None) -> None:
 
 
 @parameter.validate()
-def get_file_size(path: str) -> Dict[str, int]:
+def get_file_size(path: str) -> dict[str, int]:
     """
     Get file sizes in bytes for all files in a given path.
 
@@ -585,7 +582,7 @@ def get_file_size(path: str) -> Dict[str, int]:
     return file_size_dict
 
 
-def _print_file_queue(files: List[str]) -> None:
+def _print_file_queue(files: list[str]) -> None:
     """
     Print a formatted list of files to be downloaded.
     """

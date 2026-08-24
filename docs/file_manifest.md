@@ -31,5 +31,5 @@ def add_entry(
     dict, None
     """
   ```
-  
+
  The new file will be saved in the local directory and can then be uploaded to cloudflare in the base directory of the public-data bucket. See the example notebook (file-manifest-update.ipynb) for usage with example files.

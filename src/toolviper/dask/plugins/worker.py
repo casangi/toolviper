@@ -1,10 +1,8 @@
-import sys
 import click
+import distributed
+from distributed.diagnostics.plugin import WorkerPlugin
 
 import toolviper.utils.logger as logger
-import distributed
-
-from distributed.diagnostics.plugin import WorkerPlugin
 
 
 class DaskWorker(WorkerPlugin):
@@ -94,12 +92,4 @@ async def dask_setup(
 
     plugin = DaskWorker(local_cache, log_params)
 
-    if sys.version_info.major == 3:
-        if sys.version_info.minor > 8:
-            await worker.client.register_plugin(plugin, name="worker_logger")
-
-        else:
-            await worker.client.register_plugin(plugin, name="worker_logger")
-
-    else:
-        logger.warning("Python version may not be supported.")
+    await worker.client.register_plugin(plugin, name="worker_logger")

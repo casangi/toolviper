@@ -1,22 +1,24 @@
-import pytest
 import logging
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from toolviper.utils.logger import (
-    set_verbosity,
-    verbosity,
-    info,
-    debug,
-    warning,
-    error,
-    critical,
-    exception,
-    log,
-    get_logger,
-    setup_logger,
     ColorLoggingFormatter,
     LoggingFormatter,
+    critical,
+    debug,
+    error,
+    exception,
+    get_logger,
     get_worker_logger_name,
+    info,
+    log,
+    set_verbosity,
+    setup_logger,
     setup_worker_logger,
+    verbosity,
+    warning,
 )
 
 

@@ -1,7 +1,6 @@
 import inspect
-
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import List, Union, Callable
 
 PREVIOUS_FUNCTION = 1
 PENULTIMATE_FUNCTION = 2
@@ -40,88 +39,56 @@ class Colorize:
         self.levels = {"info": self.blue}
 
     def bold(self, text: str) -> str:
-        return "{format}{text}{reset}".format(
-            format=self.codes.bold, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.bold}{text}{self.codes.reset}"
 
     def faint(self, text: str) -> str:
-        return "{format}{text}{reset}".format(
-            format=self.codes.faint, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.faint}{text}{self.codes.reset}"
 
     def italics(self, text: str) -> str:
-        return "{format}{text}{reset}".format(
-            format=self.codes.italics, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.italics}{text}{self.codes.reset}"
 
     def underline(self, text: str) -> str:
-        return "{format}{text}{reset}".format(
-            format=self.codes.underline, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.underline}{text}{self.codes.reset}"
 
     def blink(self, text: str) -> str:
-        return "{format}{text}{reset}".format(
-            format=self.codes.blink, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.blink}{text}{self.codes.reset}"
 
     def highlight(self, text: str) -> str:
-        return "{format}{text}{reset}".format(
-            format=self.codes.highlight, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.highlight}{text}{self.codes.reset}"
 
     def white(self, text: str) -> str:
-        return "{color}{text}{reset}".format(
-            color=self.codes.white, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.white}{text}{self.codes.reset}"
 
     def black(self, text: str) -> str:
-        return "{color}{text}{reset}".format(
-            color=self.codes.black, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.black}{text}{self.codes.reset}"
 
     def grey(self, text: str) -> str:
-        return "{color}{text}{reset}".format(
-            color=self.codes.grey, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.grey}{text}{self.codes.reset}"
 
     def red(self, text: str) -> str:
-        return "{color}{text}{reset}".format(
-            color=self.codes.red, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.red}{text}{self.codes.reset}"
 
     def green(self, text: str) -> str:
-        return "{color}{text}{reset}".format(
-            color=self.codes.green, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.green}{text}{self.codes.reset}"
 
     def yellow(self, text: str) -> str:
-        return "{color}{text}{reset}".format(
-            color=self.codes.yellow, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.yellow}{text}{self.codes.reset}"
 
     def orange(self, text: str) -> str:
-        return "{color}{text}{reset}".format(
-            color=self.codes.orange, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.orange}{text}{self.codes.reset}"
 
     def blue(self, text: str) -> str:
-        return "{color}{text}{reset}".format(
-            color=self.codes.blue, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.blue}{text}{self.codes.reset}"
 
     def purple(self, text: str) -> str:
-        return "{color}{text}{reset}".format(
-            color=self.codes.purple, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.purple}{text}{self.codes.reset}"
 
     def alert(self, text: str) -> str:
-        return "{color}{text}{reset}".format(
-            color=self.codes.alert, text=text, reset=self.codes.reset
-        )
+        return f"{self.codes.alert}{text}{self.codes.reset}"
 
     @staticmethod
     def from_ansi(
-        color: Union[str, List],
+        color: str | list,
         bold: bool = False,
         italics: bool = False,
         faint: bool = False,
@@ -169,7 +136,7 @@ class Colorize:
     def format(
         self,
         text: str,
-        color: Union[List, str],
+        color: list | str,
         bold: bool = False,
         italics: bool = False,
         faint: bool = False,
@@ -217,8 +184,8 @@ class Colorize:
         return self.black
 
     def get_color_ascii_list(self, color: str):
-        import re
         import inspect
+        import re
 
         for member in inspect.getmembers(self.codes):
             if member[0] == color:
@@ -232,6 +199,4 @@ def add_verbose_info(message: str, color: str = "blue") -> str:
     colorize = Colorize()
     color_function = colorize.get_color_function(color=color)
 
-    return "[{function_name}]: {message}".format(
-        function_name=color_function(function_name), message=message
-    )
+    return f"[{color_function(function_name)}]: {message}"

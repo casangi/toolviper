@@ -5,8 +5,9 @@ import json
 import os
 import pathlib
 import pkgutil
+from collections.abc import Callable
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
 
 import toolviper.utils.console as console
 import toolviper.utils.logger
@@ -105,19 +106,17 @@ def get_path(function: Callable) -> tuple[str, str]:
         return str(base_module_path), module_path
 
 
-def config_search(root: str = "/", module_name=None) -> Union[None, str]:
+def config_search(root: str = "/", module_name=None) -> None | str:
     colorize = console.Colorize()
 
     if root == "/":
         toolviper.utils.logger.warning("File search from root could take some time ...")
 
     toolviper.utils.logger.debug(
-        "Searching {} for configuration file, please wait ...".format(
-            colorize.blue(root)
-        )
+        f"Searching {colorize.blue(root)} for configuration file, please wait ..."
     )
 
-    for file in glob.glob("{root}/**".format(root=root), recursive=True):
+    for file in glob.glob(f"{root}/**", recursive=True):
         if module_name + ".param.json" in file:
             basename = os.path.dirname(file)
             return basename
@@ -129,22 +128,16 @@ def set_config_directory(path: str, create: bool = False) -> None:
     colorize = console.Colorize()
     if pathlib.Path(path).exists():
         toolviper.utils.logger.info(
-            "Setting configuration directory to [{path}]".format(
-                path=colorize.blue(path)
-            )
+            f"Setting configuration directory to [{colorize.blue(path)}]"
         )
         os.environ["PARAMETER_CONFIG_PATH"] = path
     else:
         toolviper.utils.logger.info(
-            "The configuration directory [{path}] does not currently exist.".format(
-                path=colorize.blue(path)
-            )
+            f"The configuration directory [{colorize.blue(path)}] does not currently exist."
         )
         if create:
             toolviper.utils.logger.info(
-                "Creating empty configuration directory: {path}".format(
-                    path=colorize.blue(path)
-                )
+                f"Creating empty configuration directory: {colorize.blue(path)}"
             )
             pathlib.Path(path).mkdir()
             if not pathlib.Path(path).exists():
@@ -153,11 +146,11 @@ def set_config_directory(path: str, create: bool = False) -> None:
                 )
 
 
-def verify_configuration(path: str, module: ModuleType) -> List[str]:
+def verify_configuration(path: str, module: ModuleType) -> list[str]:
     modules = []
-    for file in glob.glob("{path}/*.param.json".format(path=path), recursive=True):
+    for file in glob.glob(f"{path}/*.param.json", recursive=True):
         if file.endswith(".param.json"):
-            modules.append(os.path.basename(file).strip(".param.json"))
+            modules.append(os.path.basename(file).removesuffix(".param.json"))
 
     package_path = os.path.dirname(module.__file__)
     package_modules = [name for _, name, _ in pkgutil.iter_modules([package_path])]
@@ -174,8 +167,8 @@ def verify_configuration(path: str, module: ModuleType) -> List[str]:
 
 def verify(
     function: Callable,
-    args: Dict,
-    meta_data: Dict[str, Union[Optional[str], Any]],
+    args: dict,
+    meta_data: dict[str, str | None | Any],
     config_dir: str = None,
     add_data_type: Any = None,
     custom_checker: Callable = None,
@@ -197,9 +190,7 @@ def verify(
         logger = external_logger
 
     toolviper.utils.logger.debug(
-        "Checking parameter values for {module}.{function}".format(
-            function=colorize.blue(function_name), module=colorize.blue(module_name)
-        )
+        f"Checking parameter values for {colorize.blue(module_name)}.{colorize.blue(function_name)}"
     )
 
     path = None

@@ -1,6 +1,5 @@
-import re
 import operator
-from typing import Dict
+import re
 
 from IPython.core.display import HTML
 
@@ -30,7 +29,9 @@ class DataDict(dict):
         if in_place:
             self._dict = _result
 
-        return DataDict.from_dict({key: value for key, value in zip(keys, _result)})
+        return DataDict.from_dict(
+            {key: value for key, value in zip(keys, _result, strict=False)}
+        )
 
     def get_entries_(self, keys):
         return {key: value for key, value in self._dict.items() if key in keys}
@@ -54,6 +55,7 @@ class DataDict(dict):
 
     def display(self, interactive=True):
         import rich
+
         from toolviper.utils.parameter import is_notebook
 
         if is_notebook() and interactive:
@@ -64,7 +66,7 @@ class DataDict(dict):
         return rich.print_json(data=self._dict)
 
     @staticmethod
-    def html(dictionary: Dict, indent: int = 0):
+    def html(dictionary: dict, indent: int = 0):
         _html = _write_html(dictionary, indent)
 
         return HTML(_html)
@@ -84,7 +86,6 @@ def _write_html(d, indent=0):
 
 
 def dict_to_html(d, indent=0):
-
     html = ""
     for key, value in d.items():
         if isinstance(value, dict):
@@ -94,7 +95,7 @@ def dict_to_html(d, indent=0):
 
     if indent == 0:
         print(
-            f"THIS FUNCTION WILL BE DEPRECATED SOON,  switch to: toolviper.utils.display.DataDict.html(d)"
+            "THIS FUNCTION WILL BE DEPRECATED SOON,  switch to: toolviper.utils.display.DataDict.html(d)"
         )
 
     return html

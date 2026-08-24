@@ -1,6 +1,0 @@
-# This workflow runs black on the codebase to check for formatting issues.
-on: [push, pull_request]
-
-jobs:
-    call-testing-linux:
-      uses: nrao/gh-actions-templates-public/.github/workflows/black-template.yml@main

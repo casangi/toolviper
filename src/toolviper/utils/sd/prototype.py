@@ -1,7 +1,7 @@
-import dask
-import typing
 import itertools
+import typing
 
+import dask
 import numpy as np
 import xarray as xr
 
@@ -30,8 +30,8 @@ def simulate(field, spw, polarization, antenna, row):
 
 
 def distribute(
-    job: typing.Dict, axes: typing.List[str], function: typing.Callable, previous=None
-) -> typing.List[dask.delayed]:
+    job: dict, axes: list[str], function: typing.Callable, previous=None
+) -> list[dask.delayed]:
     """
     Distribute a function across a dataset along specified axes.
 

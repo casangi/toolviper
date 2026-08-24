@@ -31,7 +31,7 @@ pip install toolviper
 
 ### With Optional Dependencies
 ToolVIPER offers several optional dependency sets:
-- `test`: For running tests (`pytest`, `black`, etc.)
+- `test`: For running tests and linting (`pytest`, `pre-commit`, etc.)
 - `interactive`: For Jupyter/IPython support (`jupyterlab`, `matplotlib`, `ipympl`, etc.)
 - `docs`: For building documentation (`sphinx`, `nbsphinx`, etc.)
 - `all`: Installs all optional dependencies.
@@ -43,9 +43,9 @@ pip install "toolviper[interactive]"
 
 ## Quick Start
 
-### 1. Dask Client Management 
+### 1. Dask Client Management
 #### [Example Notebook](docs/client_tutorial.ipynb)
-ToolVIPER simplifies setting up a Dask environment. 
+ToolVIPER simplifies setting up a Dask environment.
 
 ```python
 from toolviper.dask.client import local_client
@@ -133,7 +133,7 @@ from toolviper.utils.parameter import validate
 
 @validate()
 def my_function(param1: int, param2: str):
-    # This function will automatically validate arguments 
+    # This function will automatically validate arguments
     # against a corresponding .param.json schema.
     pass
 ```
@@ -153,7 +153,12 @@ To contribute or run tests locally:
    pip install -e ".[test]"
    ```
 
-3. Run tests:
+3. Install the pre-commit git hooks (ruff linting/formatting, nbstripout, repo hygiene checks — also enforced by CI):
+   ```bash
+   pre-commit install
+   ```
+
+4. Run tests:
    ```bash
    pytest tests
    ```

@@ -15,18 +15,17 @@
 import logging
 import os
 import sys
+from contextvars import ContextVar
 from datetime import datetime
-from typing import Any, Dict, Optional, Union
 
 import dask
 import dask.distributed
-from contextvars import ContextVar
 from dask.distributed import get_worker
 
 from toolviper.utils.console import Colorize, add_verbose_info
 
 # Global verbosity flag
-verbosity: ContextVar[Optional[bool]] = ContextVar("message_verbosity", default=None)
+verbosity: ContextVar[bool | None] = ContextVar("message_verbosity", default=None)
 
 # Constants for default values
 DEFAULT_LOGGER_NAME = "viperlog"
@@ -36,7 +35,7 @@ VERBOSE = True
 DEFAULT = False
 
 
-def set_verbosity(state: Optional[bool] = None) -> None:
+def set_verbosity(state: bool | None = None) -> None:
     """
     Set the global verbosity state.
 
@@ -49,7 +48,7 @@ def set_verbosity(state: Optional[bool] = None) -> None:
 
 
 def _log_message(
-    level: str, message: str, verbose: bool = False, color: Optional[str] = None
+    level: str, message: str, verbose: bool = False, color: str | None = None
 ) -> None:
     """
     Helper function to process and log a message.
@@ -193,7 +192,7 @@ class ColorLoggingFormatter(logging.Formatter):
 
     colorize = Colorize()
 
-    def __init__(self, fmt: Optional[str] = None, datefmt: Optional[str] = None):
+    def __init__(self, fmt: str | None = None, datefmt: str | None = None):
         super().__init__(fmt, datefmt)
         self.start_msg = f"[{self.colorize.purple('%(asctime)s')}] "
 
@@ -234,7 +233,7 @@ class LoggingFormatter(logging.Formatter):
     A standard logging formatter for file output.
     """
 
-    def __init__(self, fmt: Optional[str] = None, datefmt: Optional[str] = None):
+    def __init__(self, fmt: str | None = None, datefmt: str | None = None):
         super().__init__(fmt, datefmt)
         self.start_msg = "[%(asctime)s] "
         self.middle_msg = "%(levelname)8s"
@@ -257,7 +256,7 @@ class LoggingFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-def get_logger(logger_name: Optional[str] = None) -> logging.Logger:
+def get_logger(logger_name: str | None = None) -> logging.Logger:
     """
     Get a logger instance by name, with fallback to environment or defaults.
 
@@ -302,7 +301,7 @@ def get_logger(logger_name: Optional[str] = None) -> logging.Logger:
 
 
 def setup_logger(
-    logger_name: Optional[str] = None,
+    logger_name: str | None = None,
     log_to_term: bool = False,
     log_to_file: bool = True,
     log_file: str = "logger",
@@ -354,7 +353,7 @@ def setup_logger(
     return logger
 
 
-def get_worker_logger_name(logger_name: Optional[str] = None) -> str:
+def get_worker_logger_name(logger_name: str | None = None) -> str:
     """
     Generate a unique logger name for a Dask worker.
 
