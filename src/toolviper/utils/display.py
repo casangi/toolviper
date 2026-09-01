@@ -1,8 +1,6 @@
 import operator
 import re
 
-from IPython.core.display import HTML
-
 
 class DataDict(dict):
     def __init__(self, dictionary):
@@ -67,6 +65,8 @@ class DataDict(dict):
 
     @staticmethod
     def html(dictionary: dict, indent: int = 0):
+        from IPython.core.display import HTML
+
         _html = _write_html(dictionary, indent)
 
         return HTML(_html)
