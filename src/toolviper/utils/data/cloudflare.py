@@ -39,8 +39,58 @@ DOWNLOAD_STALL_GRACE_PERIOD = 60  # seconds before the rate check applies
 DOWNLOAD_STALL_MINIMUM_RATE = 64 * 1024  # bytes/s averaged over the attempt
 
 
+# Set to "1" to force the plain (non-widget) progress display in a notebook,
+# or to "0" to force the live ipywidgets display. Unset = auto-detect.
+PLAIN_PROGRESS_ENV = "TOOLVIPER_PLAIN_PROGRESS"
+
+
 class DownloadStalledError(RuntimeError):
     """A download attempt was aborted because it stalled or was truncated."""
+
+
+def _use_widget_progress() -> bool:
+    """
+    Whether rich may render its live display through an ipywidgets Output widget.
+
+    The widget is only wanted in an interactive notebook. When a notebook is
+    executed headlessly (nbconvert, nbsphinx, papermill: anything built on
+    nbclient) every progress refresh makes nbclient echo a ``comm_msg`` back on
+    the shell channel. That traffic triggers ZeroMQ lost-wakeup races in
+    ipykernel 7.x (ipython/ipykernel#1554) and jupyter_client, which leave the
+    next cell waiting until the cell timeout (toolviper issue #52).
+    """
+    if not is_notebook():
+        return False
+
+    override = os.environ.get(PLAIN_PROGRESS_ENV, "").strip().lower()
+    if override in ("1", "true", "yes", "on"):
+        return False
+    if override in ("0", "false", "no", "off"):
+        return True
+
+    if os.environ.get("CI", "").strip().lower() not in ("", "0", "false"):
+        return False
+
+    # nbclient starts its kernels with an in-memory IPython history; an
+    # interactive front end (JupyterLab, VS Code) uses the history file.
+    try:
+        from IPython import get_ipython
+
+        return get_ipython().history_manager.hist_file != ":memory:"
+
+    except Exception:
+        return True
+
+
+def _progress_console() -> Console:
+    """Console for progress/status displays; plain stdout in a headless notebook."""
+    if _use_widget_progress():
+        return Console(force_jupyter=True)
+
+    if is_notebook():
+        return Console(force_jupyter=False, force_terminal=False)
+
+    return Console(force_jupyter=False)
 
 
 def _get_metadata_path() -> pathlib.Path:
@@ -171,7 +221,7 @@ def download(
     progress = Progress()
     if is_notebook():
         _ = Console(force_terminal=True, force_jupyter=False)
-        _console = Console(force_jupyter=is_notebook())
+        _console = _progress_console()
 
         progress = Progress(console=_console)
 
@@ -541,7 +591,7 @@ def update(path: str | None = None) -> None:
 
     logger.info("Updating file metadata information...")
 
-    _console = Console(force_jupyter=is_notebook())
+    _console = _progress_console()
 
     with _console.status("[bold green]Working on download manifest update ..."):
         worker(task_id=0, task=task, progress=None, decompress=False)

@@ -263,3 +263,57 @@ def test_download_raises_on_unknown_file(mock_metadata, monkeypatch, tmp_path):
 
     with pytest.raises(RuntimeError, match="manifest"):
         cloudflare.download("no_such_file.zip", folder=str(tmp_path))
+
+
+class _FakeShell:
+    def __init__(self, hist_file):
+        self.history_manager = type("HM", (), {"hist_file": hist_file})()
+
+
+def _in_kernel(monkeypatch, hist_file):
+    """Pretend to run inside a Jupyter kernel with the given history file."""
+    import IPython
+
+    monkeypatch.setattr(cloudflare, "is_notebook", lambda: True)
+    monkeypatch.setattr(IPython, "get_ipython", lambda: _FakeShell(hist_file))
+    monkeypatch.delenv("CI", raising=False)
+    monkeypatch.delenv(cloudflare.PLAIN_PROGRESS_ENV, raising=False)
+
+
+def test_widget_progress_not_in_notebook(monkeypatch):
+    monkeypatch.setattr(cloudflare, "is_notebook", lambda: False)
+    assert cloudflare._use_widget_progress() is False
+    assert cloudflare._progress_console().is_jupyter is False
+
+
+def test_widget_progress_interactive_notebook(monkeypatch):
+    _in_kernel(monkeypatch, "/home/user/.ipython/profile_default/history.sqlite")
+    assert cloudflare._use_widget_progress() is True
+    assert cloudflare._progress_console().is_jupyter is True
+
+
+def test_widget_progress_disabled_under_nbclient(monkeypatch):
+    # nbclient/nbconvert start kernels with an in-memory history (issue #52).
+    _in_kernel(monkeypatch, ":memory:")
+    assert cloudflare._use_widget_progress() is False
+
+    console_ = cloudflare._progress_console()
+    assert console_.is_jupyter is False
+    assert console_.is_terminal is False
+
+
+def test_widget_progress_disabled_in_ci(monkeypatch):
+    _in_kernel(monkeypatch, "history.sqlite")
+    monkeypatch.setenv("CI", "true")
+    assert cloudflare._use_widget_progress() is False
+
+
+@pytest.mark.parametrize(
+    "value, hist_file, expected",
+    [("1", "history.sqlite", False), ("0", ":memory:", True)],
+)
+def test_widget_progress_env_override(monkeypatch, value, hist_file, expected):
+    _in_kernel(monkeypatch, hist_file)
+    monkeypatch.setenv("CI", "true")
+    monkeypatch.setenv(cloudflare.PLAIN_PROGRESS_ENV, value)
+    assert cloudflare._use_widget_progress() is expected
