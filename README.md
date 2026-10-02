@@ -2,7 +2,7 @@
 
 Tools and utilities for optimized radio astronomy processing using the VIPER framework.
 
-[![Python 3.11 3.12 3.13](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/downloads/release/python-3130/)
+[![Python 3.12 3.13 3.14](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue)](https://www.python.org/downloads/release/python-3140/)
 [![Linux Tests](https://github.com/casangi/toolviper/actions/workflows/python-testing-linux.yml/badge.svg?branch=main)](https://github.com/casangi/toolviper/actions/workflows/python-testing-linux.yml?query=branch%3Amain)
 [![macOS Tests](https://github.com/casangi/toolviper/actions/workflows/python-testing-macos.yml/badge.svg?branch=main)](https://github.com/casangi/toolviper/actions/workflows/python-testing-macos.yml?query=branch%3Amain)
 [![ipynb Tests](https://github.com/casangi/toolviper/actions/workflows/run-ipynb.yml/badge.svg?branch=main)](https://github.com/casangi/toolviper/actions/workflows/run-ipynb.yml?query=branch%3Amain)
@@ -22,7 +22,7 @@ ToolVIPER provides a suite of high-level tools designed to simplify Dask cluster
 
 ## Installation
 
-ToolVIPER requires Python 3.11, 3.12, or 3.13.
+ToolVIPER is tested on Python 3.12, 3.13 and 3.14 (3.11 is still allowed but no longer tested).
 
 ### Basic Installation
 ```bash
