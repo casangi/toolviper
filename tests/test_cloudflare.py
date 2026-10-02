@@ -202,6 +202,44 @@ def test_worker_aborts_stalled_download(monkeypatch, tmp_path):
     assert not (tmp_path / "stall_test.zip").exists()
 
 
+def test_worker_aborts_download_that_stalls_late(monkeypatch, tmp_path):
+    """A transfer that stalls after most of the file arrived quickly keeps a
+    high average rate for a long time; the rate over the last window must
+    catch it."""
+    clock = [0.0]
+    attempts = {"n": 0}
+    total = 50 * 1024 * 1024
+
+    class LateStallResponse(_FakeResponse):
+        def iter_content(self, chunk_size):
+            # 88 percent arrives in a second, then a trickle: the average over
+            # the attempt stays far above the minimum for about ten minutes.
+            clock[0] += 1
+            yield b"x" * (total * 88 // 100)
+            while True:
+                clock[0] += cloudflare.DOWNLOAD_STALL_WINDOW + 1
+                yield b"x" * 10
+
+    def fake_get(url, stream, headers, timeout):
+        attempts["n"] += 1
+        return LateStallResponse([], content_length=total)
+
+    monkeypatch.setattr(cloudflare.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(cloudflare.time, "sleep", lambda _: None)
+    monkeypatch.setattr(cloudflare.requests, "get", fake_get)
+
+    task = _make_task(tmp_path, "late_stall_test.zip")
+    cloudflare.worker(task_id=0, task=task, progress=None, decompress=False)
+
+    assert attempts["n"] == cloudflare.DOWNLOAD_MAX_ATTEMPTS
+    assert "over the last" in task["error"]
+    # caught within two windows of the stall, not after the average collapsed
+    assert clock[0] < cloudflare.DOWNLOAD_MAX_ATTEMPTS * (
+        3 * cloudflare.DOWNLOAD_STALL_WINDOW
+    )
+    assert not (tmp_path / "late_stall_test.zip").exists()
+
+
 def test_worker_detects_truncated_stream(monkeypatch, tmp_path):
     attempts = {"n": 0}
 
