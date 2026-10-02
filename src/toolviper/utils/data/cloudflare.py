@@ -27,16 +27,22 @@ USER_AGENT = "Wget/1.16 (linux-gnu)"
 
 # Download robustness. The read timeout only fires when *no* bytes arrive for
 # that long; a connection that trickles a few bytes per second never trips it,
-# so a separate minimum-average-rate check catches stalled-but-alive transfers
-# (observed with the Cloudflare-fronted download server in CI). Stalled or
-# failed attempts are retried from a fresh connection.
+# so a separate minimum-rate check catches stalled-but-alive transfers
+# (observed with the Cloudflare-fronted download server in CI). The rate is
+# checked over the whole attempt and over every window of
+# DOWNLOAD_STALL_WINDOW seconds: a transfer that stalls late, after most of
+# the file arrived quickly, keeps a high average for many minutes (sd.zarr
+# stalled at 88 percent for the whole 600 s cell timeout of an astroviper
+# notebook run, 2026-09-30) but fails the window check after one window.
+# Stalled or failed attempts are retried from a fresh connection.
 DOWNLOAD_CHUNK_SIZE = 64 * 1024  # bytes per iter_content chunk
 DOWNLOAD_CONNECT_TIMEOUT = 30  # seconds to establish the connection
 DOWNLOAD_READ_TIMEOUT = 120  # max seconds between bytes on the socket
 DOWNLOAD_MAX_ATTEMPTS = 3
 DOWNLOAD_RETRY_WAIT = 10  # seconds; scaled by the attempt number
 DOWNLOAD_STALL_GRACE_PERIOD = 60  # seconds before the rate check applies
-DOWNLOAD_STALL_MINIMUM_RATE = 64 * 1024  # bytes/s averaged over the attempt
+DOWNLOAD_STALL_MINIMUM_RATE = 64 * 1024  # bytes/s, averaged over the attempt
+DOWNLOAD_STALL_WINDOW = 60  # seconds; the rate is also checked over each window
 
 
 # Set to "1" to force the plain (non-widget) progress display in a notebook,
@@ -264,9 +270,10 @@ def _download_attempt(
     requests.RequestException
         On connection errors, HTTP error statuses, or read timeouts.
     DownloadStalledError
-        If the average transfer rate drops below
-        ``DOWNLOAD_STALL_MINIMUM_RATE`` after ``DOWNLOAD_STALL_GRACE_PERIOD``
-        seconds, or the stream ends short of the advertised Content-Length.
+        If the transfer rate drops below ``DOWNLOAD_STALL_MINIMUM_RATE``,
+        averaged over the attempt after ``DOWNLOAD_STALL_GRACE_PERIOD``
+        seconds or over any window of ``DOWNLOAD_STALL_WINDOW`` seconds, or
+        the stream ends short of the advertised Content-Length.
     """
     response = requests.get(
         url,
@@ -284,6 +291,7 @@ def _download_attempt(
 
         size = 0
         start = time.monotonic()
+        window_start, window_size = start, 0
         if progress is not None:
             progress.update(task_id, completed=0, total=total, visible=task["visible"])
 
@@ -298,7 +306,8 @@ def _download_attempt(
                         task_id, completed=size, total=total, visible=task["visible"]
                     )
 
-                elapsed = time.monotonic() - start
+                now = time.monotonic()
+                elapsed = now - start
                 if (
                     elapsed > DOWNLOAD_STALL_GRACE_PERIOD
                     and size / elapsed < DOWNLOAD_STALL_MINIMUM_RATE
@@ -308,6 +317,16 @@ def _download_attempt(
                         f"{DOWNLOAD_STALL_MINIMUM_RATE} B/s after {elapsed:.0f} s "
                         f"({size}/{total or 'unknown'} bytes)"
                     )
+                window = now - window_start
+                if window >= DOWNLOAD_STALL_WINDOW:
+                    rate = (size - window_size) / window
+                    if rate < DOWNLOAD_STALL_MINIMUM_RATE:
+                        raise DownloadStalledError(
+                            f"rate {rate:.0f} B/s over the last {window:.0f} s fell "
+                            f"below {DOWNLOAD_STALL_MINIMUM_RATE} B/s after "
+                            f"{elapsed:.0f} s ({size}/{total or 'unknown'} bytes)"
+                        )
+                    window_start, window_size = now, size
 
         if content_length and size < content_length:
             raise DownloadStalledError(
