@@ -43,6 +43,53 @@ def _get_log_params(
     return {**defaults, **log_params}
 
 
+# Dask's Nanny sets every key of distributed.nanny.pre-spawn-environ in the
+# environment of each worker process it spawns, and Dask ships
+# MALLOC_TRIM_THRESHOLD_=65536 there. Setting any MALLOC_* tunable through the
+# environment turns off glibc's dynamic mmap threshold for the life of the
+# worker. Every buffer above 128 KiB is then mmapped, unmapped when freed and
+# faulted in again by the next task.
+# https://github.com/dask/distributed/issues/9345
+_MALLOC_TRIM_THRESHOLD_KEY = (
+    "distributed.nanny.pre-spawn-environ.MALLOC_TRIM_THRESHOLD_"
+)
+_DASK_DEFAULT_MALLOC_TRIM_THRESHOLD = 65536
+
+# Nannies on other hosts (SLURM jobs) read their own Dask config, so the job
+# script sets it through the environment. The value is a dict because Dask
+# lowercases nested keys taken from DASK_* variable names, and a lowercase key
+# does not match MALLOC_TRIM_THRESHOLD_.
+_NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE = (
+    "export DASK_DISTRIBUTED__NANNY__PRE_SPAWN_ENVIRON="
+    "\"{'MALLOC_TRIM_THRESHOLD_': None}\""
+)
+
+
+def _keep_glibc_dynamic_mmap_threshold() -> bool:
+    """Stop the Dask Nanny from setting MALLOC_TRIM_THRESHOLD_ in its workers.
+
+    Replaces Dask's built-in default (65536) with None in the Dask config. The
+    Nanny then leaves the variable unset, and glibc keeps adapting its mmap
+    threshold in the workers. A value the user chose is kept: a
+    MALLOC_TRIM_THRESHOLD_ already in the environment, or another value in
+    the Dask config.
+
+    Returns
+    -------
+    bool
+        True if Nannies started from now on leave the variable unset.
+    """
+    if "MALLOC_TRIM_THRESHOLD_" in os.environ:
+        return False
+
+    value = dask.config.get(_MALLOC_TRIM_THRESHOLD_KEY, default=None)
+    if value is not None and str(value) != str(_DASK_DEFAULT_MALLOC_TRIM_THRESHOLD):
+        return False
+
+    dask.config.set({_MALLOC_TRIM_THRESHOLD_KEY: None})
+    return True
+
+
 def load_libraries(name: str, libs: str | list[str]) -> dict[str, bool]:
     """Load libraries if they were installed and can be loaded.
 
@@ -184,6 +231,15 @@ def local_client(
     -------
     distributed.Client or None
         Dask Distributed Client, or None if serial_execution is True.
+
+    Notes
+    -----
+    Dask's Nanny would set MALLOC_TRIM_THRESHOLD_=65536 in every worker, which
+    turns off glibc's dynamic mmap threshold. toolviper leaves it unset. To
+    keep Dask's behaviour, set MALLOC_TRIM_THRESHOLD_ in the environment before
+    calling local_client, or set
+    distributed.nanny.pre-spawn-environ.MALLOC_TRIM_THRESHOLD_ to another value
+    in your Dask config.
     """
 
     log_params = _get_log_params(log_params, DEFAULT_CLIENT_LOG_PARAMS)
@@ -245,6 +301,8 @@ def local_client(
         memory_limit = "".join(
             (str(round((psutil.virtual_memory().available / (1024**2)) / cores)), "MB")
         )
+
+    _keep_glibc_dynamic_mmap_threshold()
 
     try:
         cluster = distributed.Client.current().cluster
@@ -334,6 +392,9 @@ def distributed_client(
         )
 
     _set_up_dask(dask_local_dir)
+    # The cluster already exists, so this reaches only workers that Nannies in
+    # this process spawn later, for example when a LocalCluster scales up.
+    _keep_glibc_dynamic_mmap_threshold()
 
     logger.debug(colorize.green("Checking functions availability:"))
     available_specs = {
@@ -410,6 +471,13 @@ def slurm_cluster_client(
     -------
     distributed.Client
         The dask client connected to the SLURM cluster.
+
+    Notes
+    -----
+    The job script makes the worker Nannies leave MALLOC_TRIM_THRESHOLD_ unset,
+    as local_client does, by exporting DASK_DISTRIBUTED__NANNY__PRE_SPAWN_ENVIRON.
+    The export is left out when MALLOC_TRIM_THRESHOLD_ is set in the environment
+    of the calling process, or set to another value in its Dask config.
     """
 
     # https://github.com/dask/dask/issues/5577
@@ -460,6 +528,15 @@ def slurm_cluster_client(
             }
         )
 
+    job_script_prologue = None
+    if _keep_glibc_dynamic_mmap_threshold():
+        # Passing job_script_prologue replaces the configured one, so keep it.
+        job_script_prologue = list(
+            dask.config.get("jobqueue.slurm.job-script-prologue", default=None)
+            or dask.config.get("jobqueue.slurm.env-extra", default=None)
+            or []
+        ) + [_NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE]
+
     cluster = dask_jobqueue.SLURMCluster(
         processes=workers_per_node,
         cores=cores_per_node,
@@ -472,6 +549,7 @@ def slurm_cluster_client(
         local_directory=dask_local_dir,
         log_directory=dask_log_dir,
         job_extra_directives=["--exclude=" + exclude_nodes],
+        job_script_prologue=job_script_prologue,
         scheduler_options={"dashboard_address": ":" + str(dashboard_port)},
     )
 

@@ -9,6 +9,7 @@ import distributed
 import toolviper.dask.menrva
 import toolviper.utils.console as console
 import toolviper.utils.logger as logger
+from toolviper.dask.client import _keep_glibc_dynamic_mmap_threshold
 
 colorize = console.Colorize()
 
@@ -162,6 +163,9 @@ def distributed_client(
     distributed.Client
         Dask Distributed Client
     """
+
+    # Before the SpecCluster starts its workers; _set_up_dask below runs later.
+    _keep_glibc_dynamic_mmap_threshold()
 
     cluster = distributed.SpecCluster(
         workers=workers,

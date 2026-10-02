@@ -1,11 +1,22 @@
+import ast
 import os
 import pathlib
 import re
+import subprocess
+import sys
 from unittest.mock import patch
 
+import dask
 import distributed
+import pytest
 
-from toolviper.dask.client import local_client
+from toolviper.dask.client import (
+    _DASK_DEFAULT_MALLOC_TRIM_THRESHOLD,
+    _MALLOC_TRIM_THRESHOLD_KEY,
+    _NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE,
+    _keep_glibc_dynamic_mmap_threshold,
+    local_client,
+)
 
 
 class TestToolViperClient:
@@ -199,3 +210,137 @@ def test_get_cluster_none():
 
     with patch("toolviper.dask.client.get_client", return_value=None):
         assert get_cluster() is None
+
+
+def test_keep_glibc_dynamic_mmap_threshold_replaces_dask_default(monkeypatch):
+    monkeypatch.delenv("MALLOC_TRIM_THRESHOLD_", raising=False)
+
+    with dask.config.set(
+        {_MALLOC_TRIM_THRESHOLD_KEY: _DASK_DEFAULT_MALLOC_TRIM_THRESHOLD}
+    ):
+        assert _keep_glibc_dynamic_mmap_threshold() is True
+        assert dask.config.get(_MALLOC_TRIM_THRESHOLD_KEY) is None
+
+
+@pytest.mark.parametrize("user_value", [0, "131072"])
+def test_keep_glibc_dynamic_mmap_threshold_respects_user_config(
+    monkeypatch, user_value
+):
+    monkeypatch.delenv("MALLOC_TRIM_THRESHOLD_", raising=False)
+
+    with dask.config.set({_MALLOC_TRIM_THRESHOLD_KEY: user_value}):
+        assert _keep_glibc_dynamic_mmap_threshold() is False
+        assert dask.config.get(_MALLOC_TRIM_THRESHOLD_KEY) == user_value
+
+
+def test_keep_glibc_dynamic_mmap_threshold_respects_user_environment(monkeypatch):
+    monkeypatch.setenv("MALLOC_TRIM_THRESHOLD_", "65536")
+
+    with dask.config.set(
+        {_MALLOC_TRIM_THRESHOLD_KEY: _DASK_DEFAULT_MALLOC_TRIM_THRESHOLD}
+    ):
+        assert _keep_glibc_dynamic_mmap_threshold() is False
+        assert (
+            dask.config.get(_MALLOC_TRIM_THRESHOLD_KEY)
+            == _DASK_DEFAULT_MALLOC_TRIM_THRESHOLD
+        )
+
+
+def test_local_client_workers_without_malloc_trim_threshold(monkeypatch):
+    monkeypatch.delenv("MALLOC_TRIM_THRESHOLD_", raising=False)
+
+    # Start from Dask's default, whatever earlier tests left in the config.
+    with dask.config.set(
+        {_MALLOC_TRIM_THRESHOLD_KEY: _DASK_DEFAULT_MALLOC_TRIM_THRESHOLD}
+    ):
+        client = local_client(cores=2, memory_limit="1GB")
+
+        try:
+            worker_env = client.run(
+                lambda: {
+                    key: os.environ.get(key)
+                    for key in ("MALLOC_TRIM_THRESHOLD_", "OMP_NUM_THREADS")
+                }
+            )
+        finally:
+            client.shutdown()
+
+    assert len(worker_env) == 2
+    for env in worker_env.values():
+        assert env["MALLOC_TRIM_THRESHOLD_"] is None
+        assert env["OMP_NUM_THREADS"] == "1"
+
+    # The Nanny copies its pre-spawn environment into this process too.
+    assert "MALLOC_TRIM_THRESHOLD_" not in os.environ
+
+
+def test_slurm_job_script_prologue_unsets_malloc_trim_threshold(monkeypatch, tmp_path):
+    import toolviper.dask.client as client_module
+
+    monkeypatch.delenv("MALLOC_TRIM_THRESHOLD_", raising=False)
+    captured = {}
+
+    class Submitted(Exception):
+        pass
+
+    def fake_slurm_cluster(**kwargs):
+        captured.update(kwargs)
+        raise Submitted
+
+    monkeypatch.setattr(client_module.dask_jobqueue, "SLURMCluster", fake_slurm_cluster)
+    # Keep _set_up_dask from pointing the global temporary_directory at tmp_path.
+    monkeypatch.setattr(client_module, "_set_up_dask", lambda local_directory: None)
+
+    with dask.config.set(
+        {
+            _MALLOC_TRIM_THRESHOLD_KEY: _DASK_DEFAULT_MALLOC_TRIM_THRESHOLD,
+            "jobqueue.slurm.job-script-prologue": ["module load python"],
+        }
+    ):
+        # client.param.json has no schema for slurm_cluster_client, so call it
+        # past the parameter.validate decorator.
+        with pytest.raises(Submitted):
+            client_module.slurm_cluster_client.__wrapped__(
+                workers_per_node=1,
+                cores_per_node=1,
+                memory_per_node="1GB",
+                number_of_nodes=1,
+                queue="debug",
+                interface="lo",
+                python_env_dir=sys.executable,
+                dask_local_dir=str(tmp_path),
+                dask_log_dir=str(tmp_path),
+            )
+
+    assert captured["job_script_prologue"] == [
+        "module load python",
+        _NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE,
+    ]
+
+
+def test_slurm_job_script_prologue_reaches_nanny_config():
+    # Run the job script line in a shell, as the SLURM job does, and read the
+    # Dask config that a Nanny started after it would see.
+    env = {k: v for k, v in os.environ.items() if not k.startswith("DASK_")}
+    env.pop("MALLOC_TRIM_THRESHOLD_", None)
+    code = (
+        "import dask, distributed; "
+        "print(dask.config.get('distributed.nanny.pre-spawn-environ'))"
+    )
+    result = subprocess.run(
+        [
+            "bash",
+            "-c",
+            f'{_NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE}\n"$0" -c "$1"',
+            sys.executable,
+            code,
+        ],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    pre_spawn_environ = ast.literal_eval(result.stdout)
+
+    assert pre_spawn_environ["MALLOC_TRIM_THRESHOLD_"] is None
+    assert str(pre_spawn_environ["OMP_NUM_THREADS"]) == "1"
