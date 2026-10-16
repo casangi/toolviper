@@ -32,8 +32,8 @@ USER_AGENT = "Wget/1.16 (linux-gnu)"
 # checked over the whole attempt and over every window of
 # DOWNLOAD_STALL_WINDOW seconds: a transfer that stalls late, after most of
 # the file arrived quickly, keeps a high average for many minutes (sd.zarr
-# stalled at 88 percent for the whole 600 s cell timeout of a notebook run
-# in CI, 2026-09-30) but fails the window check after one window.
+# stalled at 88 percent for the whole 600 s cell timeout of an astroviper
+# notebook run, 2026-09-30) but fails the window check after one window.
 # Stalled or failed attempts are retried from a fresh connection.
 DOWNLOAD_CHUNK_SIZE = 64 * 1024  # bytes per iter_content chunk
 DOWNLOAD_CONNECT_TIMEOUT = 30  # seconds to establish the connection
