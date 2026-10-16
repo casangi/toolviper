@@ -232,9 +232,8 @@ class ViperGraphPlugin(SchedulerPlugin):
 
     Annotation contract
     -------------------
-    Tasks must carry the following annotations (added automatically by
-    :func:`graphviper.graph_tools.generate_dask_workflow.generate_dask_workflow`
-    when a load stage is present):
+    Tasks must carry the following annotations (set by the code that builds
+    the task graph, when the graph has a load stage):
 
     ``viper_load_group`` : int
         Index of the disk-chunk group this task belongs to.
