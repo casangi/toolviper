@@ -1,4 +1,3 @@
-from toolviper.utils.sd.graph import *
 from toolviper.utils.sd.prototype import *
 
 __submodules__ = ["prototype"]
