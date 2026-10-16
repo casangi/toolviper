@@ -92,8 +92,6 @@ all = [
 
 [tool.ruff]
 target-version = "py311"
-# Unmaintained scratch notebooks -- not worth linting.
-extend-exclude = ["scratch"]
 
 [tool.ruff.lint]
 # Ruff replaces isort + black (layout via `ruff format`, import sorting via the
