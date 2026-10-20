@@ -68,7 +68,7 @@ client = slurm_cluster_client(
     interface="ib0",
     python_env_dir="/path/to/env",
     dask_local_dir="/tmp/dask",
-    dask_log_dir="dask_logs"
+    dask_log_dir="dask_logs",
 )
 ```
 
@@ -89,10 +89,12 @@ Monitor your functions' resource consumption using decorators.
 ```python
 from toolviper.utils.profile import cpu_usage
 
+
 @cpu_usage(filename="my_profile.csv")
 def heavy_computation():
     # Your code here
     pass
+
 
 heavy_computation()
 ```
@@ -130,6 +132,7 @@ A detailed write-up can be found here: [Parameter Validation](docs/parameter.md)
 
 ```python
 from toolviper.utils.parameter import validate
+
 
 @validate()
 def my_function(param1: int, param2: str):
