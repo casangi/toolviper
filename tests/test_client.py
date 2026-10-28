@@ -274,6 +274,43 @@ def test_local_client_workers_without_malloc_trim_threshold(monkeypatch):
     assert "MALLOC_TRIM_THRESHOLD_" not in os.environ
 
 
+def test_set_up_dask_worker_numeric_threads(monkeypatch):
+    import copy
+
+    from toolviper.dask.client import _set_up_dask
+
+    monkeypatch.setattr(dask.config, "config", copy.deepcopy(dask.config.config))
+    _set_up_dask(None, worker_numeric_threads=4)
+
+    for environ in ("pre-spawn-environ", "environ"):
+        for variable in ("OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+            assert dask.config.get(f"distributed.nanny.{environ}.{variable}") == 4
+
+
+def test_local_client_worker_numeric_threads(monkeypatch):
+    import copy
+
+    monkeypatch.setattr(dask.config, "config", copy.deepcopy(dask.config.config))
+    # The Nanny copies its pre-spawn environment into this process, and the
+    # environment of this process takes precedence over the Dask config.
+    for variable in ("OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+        monkeypatch.delenv(variable, raising=False)
+
+    client = local_client(cores=1, memory_limit="1GB", worker_numeric_threads=3)
+    try:
+        worker_env = client.run(
+            lambda: {
+                key: os.environ.get(key)
+                for key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS")
+            }
+        )
+    finally:
+        client.shutdown()
+
+    for env in worker_env.values():
+        assert env == {"OMP_NUM_THREADS": "3", "MKL_NUM_THREADS": "3"}
+
+
 def test_slurm_job_script_prologue_unsets_malloc_trim_threshold(monkeypatch, tmp_path):
     import toolviper.dask.client as client_module
 

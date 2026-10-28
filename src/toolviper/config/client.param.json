@@ -43,6 +43,10 @@
         "asynchronous": {
             "type": ["boolean"],
             "nullable": true
+        },
+        "worker_numeric_threads": {
+            "type": ["int"],
+            "min": 1
         }
     }
 }

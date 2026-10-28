@@ -194,6 +194,7 @@ def local_client(
     dashboard_address: str = ":8787",
     serial_execution: bool = False,
     asynchronous: bool = False,
+    worker_numeric_threads: int = 1,
 ) -> distributed.Client | None:
     """Create a local client, scheduler and workers using Dask Distributed LocalCluster.
 
@@ -224,6 +225,11 @@ def local_client(
         Address for the Bokeh diagnostics server (e.g., 'localhost:8787'). Defaults to ':8787'.
     serial_execution : bool, optional
         If True, runs Dask in serial mode (synchronous) for debugging. Defaults to False.
+    worker_numeric_threads : int, optional
+        ``OMP_NUM_THREADS`` and ``MKL_NUM_THREADS`` of every worker, which size the
+        thread pools of the numerical libraries (scipy.fft, pyfftw, BLAS). Set
+        before the worker process starts (``distributed.nanny.pre-spawn-environ``)
+        and in it (``distributed.nanny.environ``). Defaults to 1.
 
     Returns
     -------
@@ -261,7 +267,7 @@ def local_client(
             f"the {colorize.blue('dask_local_dir')} parameter."
         )
 
-    _set_up_dask(dask_local_dir)
+    _set_up_dask(dask_local_dir, worker_numeric_threads)
 
     # This will work as long as the scheduler path isn't in some outside directory. Being that it is a plugin specific
     # to this module, I think keeping it static in the module directory it good.
@@ -614,7 +620,7 @@ def auto_client():
     return function_wrapper
 
 
-def _set_up_dask(local_directory):
+def _set_up_dask(local_directory, worker_numeric_threads=1):
     if local_directory:
         dask.config.set({"temporary_directory": local_directory})
 
@@ -626,6 +632,9 @@ def _set_up_dask(local_directory):
     # dask.config.set({"distributed.worker.memory.recent-to-old-time": "999s"})
     dask.config.set({"distributed.comm.timeouts.connect": "3600s"})
     dask.config.set({"distributed.comm.timeouts.tcp": "3600s"})
-    dask.config.set({"distributed.nanny.environ.OMP_NUM_THREADS": 1})
-    dask.config.set({"distributed.nanny.environ.MKL_NUM_THREADS": 1})
+    for variable in ("OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+        for environ in ("pre-spawn-environ", "environ"):
+            dask.config.set(
+                {f"distributed.nanny.{environ}.{variable}": worker_numeric_threads}
+            )
     # https://docs.dask.org/en/stable/how-to/customize-initialization.html
