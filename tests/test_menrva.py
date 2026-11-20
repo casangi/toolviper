@@ -77,6 +77,25 @@ class TestToolViperMenerva:
         client.shutdown()
 
 
+def test_thread_info_asks_for_every_worker():
+    """A client made from a scheduler address has no cluster object, so the
+    workers come from scheduler_info(), which must not be capped."""
+    client = MagicMock()
+    client.cluster = None
+    client.scheduler_info.return_value = {
+        "workers": {
+            f"tcp://127.0.0.1:{port}": {"memory_limit": 2 * 1024**3, "nthreads": 2}
+            for port in range(7)
+        }
+    }
+
+    with patch("distributed.Client.current", return_value=client):
+        thread_info = menrva.MenrvaClient.thread_info()
+
+    client.scheduler_info.assert_called_once_with(n_workers=-1)
+    assert thread_info == {"n_threads": 14, "memory_per_thread": 1.0}
+
+
 def test_port_is_free():
     import socket
 
