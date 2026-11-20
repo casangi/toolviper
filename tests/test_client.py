@@ -16,7 +16,7 @@ from toolviper.dask.client import (
     _MALLOC_TRIM_THRESHOLD_KEY,
     _NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE,
     _keep_glibc_dynamic_mmap_threshold,
-    _worker_memory_settings_prologue,
+    _worker_settings_prologue,
     local_client,
 )
 
@@ -386,6 +386,8 @@ def test_slurm_job_script_prologue_unsets_malloc_trim_threshold(monkeypatch, tmp
             "distributed.worker.memory.spill": 0.7,
             "distributed.worker.memory.pause": False,
             "distributed.worker.memory.terminate": False,
+            "distributed.comm.timeouts.connect": "3600s",
+            "distributed.comm.timeouts.tcp": "3600s",
         }
     ):
         # client.param.json has no schema for slurm_cluster_client, so call it
@@ -409,6 +411,8 @@ def test_slurm_job_script_prologue_unsets_malloc_trim_threshold(monkeypatch, tmp
         "export DASK_DISTRIBUTED__WORKER__MEMORY__SPILL=0.7",
         "export DASK_DISTRIBUTED__WORKER__MEMORY__PAUSE=False",
         "export DASK_DISTRIBUTED__WORKER__MEMORY__TERMINATE=False",
+        "export DASK_DISTRIBUTED__COMM__TIMEOUTS__CONNECT=3600s",
+        "export DASK_DISTRIBUTED__COMM__TIMEOUTS__TCP=3600s",
         _NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE,
     ]
 
@@ -441,7 +445,7 @@ def test_slurm_job_script_prologue_reaches_nanny_config():
     assert str(pre_spawn_environ["OMP_NUM_THREADS"]) == "1"
 
 
-def test_slurm_job_script_prologue_reaches_worker_memory_config():
+def test_slurm_job_script_prologue_reaches_worker_config():
     # Run the job script lines in a shell, as the SLURM job does, and read the
     # Dask config that a worker started after them would see.
     settings = {
@@ -449,9 +453,11 @@ def test_slurm_job_script_prologue_reaches_worker_memory_config():
         "distributed.worker.memory.spill": 0.75,
         "distributed.worker.memory.pause": False,
         "distributed.worker.memory.terminate": 0.9,
+        "distributed.comm.timeouts.connect": "90 s",
+        "distributed.comm.timeouts.tcp": "120s",
     }
     with dask.config.set(settings):
-        prologue = "\n".join(_worker_memory_settings_prologue())
+        prologue = "\n".join(_worker_settings_prologue())
 
     env = {k: v for k, v in os.environ.items() if not k.startswith("DASK_")}
     code = (
