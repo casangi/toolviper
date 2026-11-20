@@ -626,6 +626,10 @@ def _set_up_dask(local_directory, worker_numeric_threads=1):
 
     dask.config.set({"distributed.scheduler.allowed-failures": 10})
     dask.config.set({"distributed.scheduler.work-stealing": True})
+    # One root task per worker thread. Dask's default of 1.1 parks a second task
+    # on every worker, where it waits behind the running one while other
+    # workers are idle.
+    dask.config.set({"distributed.scheduler.worker-saturation": 1.0})
     dask.config.set({"distributed.scheduler.unknown-task-duration": "99m"})
     dask.config.set({"distributed.worker.memory.pause": False})
     dask.config.set({"distributed.worker.memory.terminate": False})
