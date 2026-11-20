@@ -311,6 +311,26 @@ def test_local_client_worker_numeric_threads(monkeypatch):
         assert env == {"OMP_NUM_THREADS": "3", "MKL_NUM_THREADS": "3"}
 
 
+def test_local_client_workers_do_not_spill(monkeypatch):
+    import copy
+
+    monkeypatch.setattr(dask.config, "config", copy.deepcopy(dask.config.config))
+
+    client = local_client(cores=1, memory_limit="1GB")
+    try:
+        fractions = client.run(
+            lambda dask_worker: (
+                dask_worker.memory_manager.memory_target_fraction,
+                dask_worker.memory_manager.memory_spill_fraction,
+                type(dask_worker.data),
+            )
+        )
+    finally:
+        client.shutdown()
+
+    assert list(fractions.values()) == [(False, False, dict)]
+
+
 def test_slurm_job_script_prologue_unsets_malloc_trim_threshold(monkeypatch, tmp_path):
     import toolviper.dask.client as client_module
 
