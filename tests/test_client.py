@@ -287,11 +287,7 @@ def test_set_up_dask_worker_numeric_threads(monkeypatch):
             assert dask.config.get(f"distributed.nanny.{environ}.{variable}") == 4
 
 
-def test_local_client_scheduler_worker_ttl_matches_comm_timeouts(monkeypatch):
-    import copy
-
-    monkeypatch.setattr(dask.config, "config", copy.deepcopy(dask.config.config))
-
+def test_local_client_scheduler_worker_ttl_matches_comm_timeouts():
     client = local_client(cores=1, memory_limit="1GB")
     try:
         worker_ttl = client.run_on_scheduler(
