@@ -311,11 +311,7 @@ def test_local_client_worker_numeric_threads(monkeypatch):
         assert env == {"OMP_NUM_THREADS": "3", "MKL_NUM_THREADS": "3"}
 
 
-def test_local_client_workers_do_not_spill(monkeypatch):
-    import copy
-
-    monkeypatch.setattr(dask.config, "config", copy.deepcopy(dask.config.config))
-
+def test_local_client_workers_do_not_spill():
     client = local_client(cores=1, memory_limit="1GB")
     try:
         fractions = client.run(
