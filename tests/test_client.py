@@ -15,6 +15,7 @@ from toolviper.dask.client import (
     _MALLOC_TRIM_THRESHOLD_KEY,
     _NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE,
     _keep_glibc_dynamic_mmap_threshold,
+    _worker_memory_settings_prologue,
     local_client,
 )
 
@@ -332,6 +333,10 @@ def test_slurm_job_script_prologue_unsets_malloc_trim_threshold(monkeypatch, tmp
         {
             _MALLOC_TRIM_THRESHOLD_KEY: _DASK_DEFAULT_MALLOC_TRIM_THRESHOLD,
             "jobqueue.slurm.job-script-prologue": ["module load python"],
+            "distributed.worker.memory.target": 0.6,
+            "distributed.worker.memory.spill": 0.7,
+            "distributed.worker.memory.pause": False,
+            "distributed.worker.memory.terminate": False,
         }
     ):
         # client.param.json has no schema for slurm_cluster_client, so call it
@@ -351,6 +356,10 @@ def test_slurm_job_script_prologue_unsets_malloc_trim_threshold(monkeypatch, tmp
 
     assert captured["job_script_prologue"] == [
         "module load python",
+        "export DASK_DISTRIBUTED__WORKER__MEMORY__TARGET=0.6",
+        "export DASK_DISTRIBUTED__WORKER__MEMORY__SPILL=0.7",
+        "export DASK_DISTRIBUTED__WORKER__MEMORY__PAUSE=False",
+        "export DASK_DISTRIBUTED__WORKER__MEMORY__TERMINATE=False",
         _NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE,
     ]
 
@@ -381,3 +390,31 @@ def test_slurm_job_script_prologue_reaches_nanny_config():
 
     assert pre_spawn_environ["MALLOC_TRIM_THRESHOLD_"] is None
     assert str(pre_spawn_environ["OMP_NUM_THREADS"]) == "1"
+
+
+def test_slurm_job_script_prologue_reaches_worker_memory_config():
+    # Run the job script lines in a shell, as the SLURM job does, and read the
+    # Dask config that a worker started after them would see.
+    settings = {
+        "distributed.worker.memory.target": False,
+        "distributed.worker.memory.spill": 0.75,
+        "distributed.worker.memory.pause": False,
+        "distributed.worker.memory.terminate": 0.9,
+    }
+    with dask.config.set(settings):
+        prologue = "\n".join(_worker_memory_settings_prologue())
+
+    env = {k: v for k, v in os.environ.items() if not k.startswith("DASK_")}
+    code = (
+        "import dask, distributed; "
+        f"print({{key: dask.config.get(key) for key in {list(settings)}}})"
+    )
+    result = subprocess.run(
+        ["bash", "-c", f'{prologue}\n"$0" -c "$1"', sys.executable, code],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert ast.literal_eval(result.stdout) == settings
