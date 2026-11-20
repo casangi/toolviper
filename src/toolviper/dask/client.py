@@ -629,6 +629,9 @@ def _set_up_dask(local_directory, worker_numeric_threads=1):
     dask.config.set({"distributed.scheduler.unknown-task-duration": "99m"})
     dask.config.set({"distributed.worker.memory.pause": False})
     dask.config.set({"distributed.worker.memory.terminate": False})
+    # Task results stay in memory: a worker spills nothing to disk.
+    dask.config.set({"distributed.worker.memory.target": False})
+    dask.config.set({"distributed.worker.memory.spill": False})
     # dask.config.set({"distributed.worker.memory.recent-to-old-time": "999s"})
     dask.config.set({"distributed.comm.timeouts.connect": "3600s"})
     dask.config.set({"distributed.comm.timeouts.tcp": "3600s"})
