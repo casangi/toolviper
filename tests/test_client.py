@@ -274,11 +274,7 @@ def test_local_client_workers_without_malloc_trim_threshold(monkeypatch):
     assert "MALLOC_TRIM_THRESHOLD_" not in os.environ
 
 
-def test_local_client_scheduler_hands_out_one_task_per_thread(monkeypatch):
-    import copy
-
-    monkeypatch.setattr(dask.config, "config", copy.deepcopy(dask.config.config))
-
+def test_local_client_scheduler_hands_out_one_task_per_thread():
     client = local_client(cores=1, memory_limit="1GB")
     try:
         saturation = client.run_on_scheduler(
