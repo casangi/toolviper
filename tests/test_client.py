@@ -299,8 +299,11 @@ def test_local_client_worker_numeric_threads(monkeypatch):
     _isolate_dask_config(monkeypatch)
     # The Nanny copies its pre-spawn environment into this process, and the
     # environment of this process takes precedence over the Dask config.
+    # monkeypatch restores only what it has recorded, and delenv records
+    # nothing for a variable that is not set, hence the setenv.
     for variable in ("OMP_NUM_THREADS", "MKL_NUM_THREADS"):
-        monkeypatch.delenv(variable, raising=False)
+        monkeypatch.setenv(variable, "")
+        monkeypatch.delenv(variable)
 
     client = local_client(cores=1, memory_limit="1GB", worker_numeric_threads=3)
     try:
