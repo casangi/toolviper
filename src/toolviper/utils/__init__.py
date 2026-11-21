@@ -10,7 +10,7 @@ from toolviper.utils.logger import (
     setup_logger,
     warning,
 )
-from toolviper.utils.parameter import set_config_directory, validate
+from toolviper.utils.parameter import ParameterError, set_config_directory, validate
 from toolviper.utils.profile import cpu_usage, memory_usage
 from toolviper.utils.protego import Protego
 from toolviper.utils.sd import prototype
