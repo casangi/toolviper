@@ -81,7 +81,8 @@ class MenrvaClient(distributed.Client):
 
         # client.cluster only exists for LocalCluster
         if client.cluster is None:
-            worker_items = client.scheduler_info()["workers"].items()
+            # distributed 2026.3 to 2026.6 report five workers unless asked for all
+            worker_items = client.scheduler_info(n_workers=-1)["workers"].items()
 
         else:
             worker_items = client.cluster.scheduler_info["workers"].items()
