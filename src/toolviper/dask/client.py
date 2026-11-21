@@ -64,6 +64,13 @@ _NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE = (
     "\"{'MALLOC_TRIM_THRESHOLD_': None}\""
 )
 
+# Workers on other hosts read their own Dask config as well, so the job script
+# hands them these settings of the calling process.
+_WORKER_MEMORY_SETTINGS = tuple(
+    f"distributed.worker.memory.{name}"
+    for name in ("target", "spill", "pause", "terminate")
+)
+
 
 def _keep_glibc_dynamic_mmap_threshold() -> bool:
     """Stop the Dask Nanny from setting MALLOC_TRIM_THRESHOLD_ in its workers.
@@ -88,6 +95,14 @@ def _keep_glibc_dynamic_mmap_threshold() -> bool:
 
     dask.config.set({_MALLOC_TRIM_THRESHOLD_KEY: None})
     return True
+
+
+def _worker_memory_settings_prologue() -> list[str]:
+    """Job script lines that export the worker memory settings of this process."""
+    return [
+        f"export DASK_{key.upper().replace('.', '__')}={dask.config.get(key)}"
+        for key in _WORKER_MEMORY_SETTINGS
+    ]
 
 
 def load_libraries(name: str, libs: str | list[str]) -> dict[str, bool]:
@@ -482,6 +497,10 @@ def slurm_cluster_client(
     as local_client does, by exporting DASK_DISTRIBUTED__NANNY__PRE_SPAWN_ENVIRON.
     The export is left out when MALLOC_TRIM_THRESHOLD_ is set in the environment
     of the calling process, or set to another value in its Dask config.
+
+    The job script also exports the worker memory settings of the calling process
+    (distributed.worker.memory.target, spill, pause and terminate). A worker on
+    another host reads its own Dask config and would run with Dask's defaults.
     """
 
     # https://github.com/dask/dask/issues/5577
@@ -532,14 +551,15 @@ def slurm_cluster_client(
             }
         )
 
-    job_script_prologue = None
+    # Passing job_script_prologue replaces the configured one, so keep it.
+    job_script_prologue = list(
+        dask.config.get("jobqueue.slurm.job-script-prologue", default=None)
+        or dask.config.get("jobqueue.slurm.env-extra", default=None)
+        or []
+    )
+    job_script_prologue += _worker_memory_settings_prologue()
     if _keep_glibc_dynamic_mmap_threshold():
-        # Passing job_script_prologue replaces the configured one, so keep it.
-        job_script_prologue = list(
-            dask.config.get("jobqueue.slurm.job-script-prologue", default=None)
-            or dask.config.get("jobqueue.slurm.env-extra", default=None)
-            or []
-        ) + [_NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE]
+        job_script_prologue.append(_NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE)
 
     cluster = dask_jobqueue.SLURMCluster(
         processes=workers_per_node,
