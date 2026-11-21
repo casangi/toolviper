@@ -12,9 +12,9 @@ requires-python = ">= 3.11, < 3.15"
 
 dependencies = [
     'cerberus',
-    'dask>=2026.3.0',
+    'dask>=2026.8.0',
     'dask_jobqueue',
-    'distributed>=2026.3.0',
+    'distributed>=2026.8.0',
     'numpy',
     'psutil',
     'rich',
