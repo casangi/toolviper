@@ -1,4 +1,5 @@
 import ast
+import copy
 import os
 import pathlib
 import re
@@ -18,6 +19,15 @@ from toolviper.dask.client import (
     _worker_memory_settings_prologue,
     local_client,
 )
+
+
+def _isolate_dask_config(monkeypatch):
+    """Let a test change the Dask config; monkeypatch puts it back afterwards."""
+    # dask.config.get and set work on this dict whatever dask.config.config is
+    # bound to, and a Nanny reads dask.config.config. So the sections of the
+    # dict are replaced with copies, not the dict.
+    for section, values in list(dask.config.config.items()):
+        monkeypatch.setitem(dask.config.config, section, copy.deepcopy(values))
 
 
 class TestToolViperClient:
@@ -288,11 +298,9 @@ def test_local_client_scheduler_hands_out_one_task_per_thread():
 
 
 def test_set_up_dask_worker_numeric_threads(monkeypatch):
-    import copy
-
     from toolviper.dask.client import _set_up_dask
 
-    monkeypatch.setattr(dask.config, "config", copy.deepcopy(dask.config.config))
+    _isolate_dask_config(monkeypatch)
     _set_up_dask(None, worker_numeric_threads=4)
 
     for environ in ("pre-spawn-environ", "environ"):
@@ -313,13 +321,14 @@ def test_local_client_scheduler_worker_ttl_matches_comm_timeouts():
 
 
 def test_local_client_worker_numeric_threads(monkeypatch):
-    import copy
-
-    monkeypatch.setattr(dask.config, "config", copy.deepcopy(dask.config.config))
+    _isolate_dask_config(monkeypatch)
     # The Nanny copies its pre-spawn environment into this process, and the
     # environment of this process takes precedence over the Dask config.
+    # monkeypatch restores only what it has recorded, and delenv records
+    # nothing for a variable that is not set, hence the setenv.
     for variable in ("OMP_NUM_THREADS", "MKL_NUM_THREADS"):
-        monkeypatch.delenv(variable, raising=False)
+        monkeypatch.setenv(variable, "")
+        monkeypatch.delenv(variable)
 
     client = local_client(cores=1, memory_limit="1GB", worker_numeric_threads=3)
     try:
