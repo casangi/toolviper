@@ -656,6 +656,9 @@ def _set_up_dask(local_directory, worker_numeric_threads=1):
     # dask.config.set({"distributed.worker.memory.recent-to-old-time": "999s"})
     dask.config.set({"distributed.comm.timeouts.connect": "3600s"})
     dask.config.set({"distributed.comm.timeouts.tcp": "3600s"})
+    # The scheduler restarts a worker that sends no heartbeat for this long. A
+    # task that keeps the GIL or whose module is slow to import stops them.
+    dask.config.set({"distributed.scheduler.worker-ttl": "3600s"})
     for variable in ("OMP_NUM_THREADS", "MKL_NUM_THREADS"):
         for environ in ("pre-spawn-environ", "environ"):
             dask.config.set(
