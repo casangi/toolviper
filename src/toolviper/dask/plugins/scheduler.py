@@ -260,27 +260,21 @@ class ViperGraphPlugin(SchedulerPlugin):
     name = "viper-graph-plugin"
 
     def update_graph(self, scheduler, dsk=None, keys=None, restrictions=None, **kw):
+        # The scheduler passes {annotation name: {task key: value}}.
         annotations = kw.get("annotations") or {}
-        if not annotations:
-            return
-
-        tasks = scheduler.tasks
-
-        # Collect the viper annotations keyed by task key.
-        load_group_by_key: dict = {}
-        map_pair_by_key: dict = {}
-
-        for task_key, annots in annotations.items():
-            if not isinstance(annots, dict):
-                continue
-            if "viper_load_group" in annots:
-                load_group_by_key[task_key] = int(annots["viper_load_group"])
-            if "viper_map_pair" in annots:
-                map_pair_by_key[task_key] = int(annots["viper_map_pair"])
+        load_group_by_key = {
+            key: int(group)
+            for key, group in (annotations.get("viper_load_group") or {}).items()
+        }
+        map_pair_by_key = {
+            key: int(pair)
+            for key, pair in (annotations.get("viper_map_pair") or {}).items()
+        }
 
         if not load_group_by_key:
             return  # No viper tasks in this graph submission.
 
+        tasks = scheduler.tasks
         n_groups = max(load_group_by_key.values()) + 1
         n_annotated = len(load_group_by_key)
         logger.debug(

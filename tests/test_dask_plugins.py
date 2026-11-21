@@ -1,5 +1,8 @@
 from unittest.mock import MagicMock, patch
 
+import dask
+import distributed
+
 from toolviper.dask.plugins.scheduler import (
     Scheduler,
     ViperGraphPlugin,
@@ -283,9 +286,8 @@ def test_viper_graph_plugin_no_annotations_is_noop():
 
 def test_viper_graph_plugin_no_viper_annotations_is_noop():
     scheduler = FakeScheduler(["w0"], {"t": FakeTask(priority=(3,))})
-    # Annotations exist but none carry viper keys; a non-dict annotation is also
-    # tolerated (skipped). load_group_by_key stays empty -> early return.
-    annotations = {"t": {"resources": {"GPU": 1}}, "bad": "not-a-dict"}
+    # Annotations exist but none are viper keys -> early return.
+    annotations = {"resources": {"t": {"GPU": 1}}}
     ViperGraphPlugin().update_graph(scheduler, annotations=annotations)
     assert scheduler.tasks["t"].priority == (3,)
 
@@ -297,17 +299,19 @@ def test_viper_graph_plugin_sets_priorities():
         "map-1-2": FakeTask(priority=None),
     }
     scheduler = FakeScheduler(["w0"], tasks)
+    # The layout a scheduler passes: {annotation name: {task key: value}}.
     annotations = {
-        # Load node: only viper_load_group -> priority (g,) prepended.
-        "load-0": {"viper_load_group": 0},
-        # Map node: (g, pair) prepended, existing priority preserved.
-        "map-0-0": {"viper_load_group": 0, "viper_map_pair": 0},
-        # Map node with no existing priority -> existing treated as ().
-        "map-1-2": {"viper_load_group": 1, "viper_map_pair": 2},
-        # Annotated key absent from scheduler.tasks -> skipped, no error.
-        "absent": {"viper_load_group": 9},
-        # Non-dict annotation -> skipped.
-        "bad": "ignore-me",
+        "viper_load_group": {
+            # Load node: only viper_load_group -> priority (g,) prepended.
+            "load-0": 0,
+            # Map node: (g, pair) prepended, existing priority preserved.
+            "map-0-0": 0,
+            # Map node with no existing priority -> existing treated as ().
+            "map-1-2": 1,
+            # Annotated key absent from scheduler.tasks -> skipped, no error.
+            "absent": 9,
+        },
+        "viper_map_pair": {"map-0-0": 0, "map-1-2": 2},
     }
     ViperGraphPlugin().update_graph(scheduler, annotations=annotations)
     assert tasks["load-0"].priority == (0, 5)
@@ -319,9 +323,37 @@ def test_viper_graph_plugin_coerces_annotation_values_to_int():
     """String annotation values are coerced via ``int(...)``."""
     tasks = {"map-0-0": FakeTask(priority=None)}
     scheduler = FakeScheduler(["w0"], tasks)
-    annotations = {"map-0-0": {"viper_load_group": "2", "viper_map_pair": "3"}}
+    annotations = {
+        "viper_load_group": {"map-0-0": "2"},
+        "viper_map_pair": {"map-0-0": "3"},
+    }
     ViperGraphPlugin().update_graph(scheduler, annotations=annotations)
     assert tasks["map-0-0"].priority == (2, 3)
+
+
+def test_viper_graph_plugin_on_a_scheduler():
+    """A scheduler hands the plugin annotations it reads: every annotated task
+    gets its load group, and its pair, in front of the priority Dask gave it."""
+    with (
+        distributed.LocalCluster(
+            n_workers=1, threads_per_worker=1, processes=False, dashboard_address=None
+        ) as cluster,
+        distributed.Client(cluster) as client,
+    ):
+        client.register_plugin(ViperGraphPlugin())
+        nodes = {}
+        for group in range(2):
+            with dask.annotate(viper_load_group=group):
+                load = dask.delayed(int)(group)
+            nodes[(group,)] = load
+            for pair in range(2):
+                with dask.annotate(viper_load_group=group, viper_map_pair=pair):
+                    nodes[(group, pair)] = dask.delayed(pow)(load, pair)
+        futures = client.compute(list(nodes.values()))
+        distributed.wait(futures)
+        for prefix, future in zip(nodes, futures, strict=True):
+            priority = cluster.scheduler.tasks[future.key].priority
+            assert priority[: len(prefix)] == prefix
 
 
 # ---------------------------------------------------------------------------
