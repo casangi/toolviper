@@ -14,6 +14,15 @@ import toolviper.utils.logger
 from toolviper.utils.protego import Protego
 
 
+class ParameterError(ValueError, AssertionError):
+    """Raised when the arguments of a validated function break its parameter rules.
+
+    It is a ``ValueError``. It also derives from ``AssertionError``, which
+    validation failures used to raise, so existing ``except AssertionError``
+    handlers keep working.
+    """
+
+
 def is_notebook() -> bool:
     try:
         from IPython import get_ipython
@@ -272,4 +281,9 @@ def verify(
     if custom_checker is not None:
         validator.custom_allowed_function = custom_checker
 
-    assert validator.validate(args), logger.error(validator.errors)
+    # Raise explicitly rather than with assert, which `python -O` removes.
+    if not validator.validate(args):
+        logger.error(validator.errors)
+        raise ParameterError(
+            f"Invalid parameters for {module_name}.{function_name}: {validator.errors}"
+        )

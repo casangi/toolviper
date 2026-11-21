@@ -176,8 +176,34 @@ In addition, `toolviper` also supports:
 - Custom checking function
 - Sequence validation
 - Structure data type
+- Finite numbers (the `finite` rule, see below)
 
 The framework is fully extensible so additional checks can be added without too much work.
+
+### Numbers, booleans and NumPy values
+
+The numeric types `int`, `integer`, `float` and `number` accept NumPy scalars as well as Python numbers: `numpy.int64(3)`
+is an `int`, and `numpy.float32(0.5)` is a `float`. They reject booleans: Python's `True` and `False` are integers, but
+passing one where a number is expected is almost always a mistake. As in `cerberus`, `float` also accepts integers. The
+`boolean` type accepts `numpy.bool_` as well as `bool`.
+
+`min` and `max` cannot reject NaN, because every comparison with NaN is false. Add the `finite` rule to reject NaN and
+infinity in a number, in each number of a list or tuple, or anywhere in a floating-point or complex NumPy array:
+
+```json
+"primary_beam_limit": {
+    "type": "float",
+    "min": 0.0,
+    "max": 1.0,
+    "finite": true
+}
+```
+
+### Validation Errors
+
+A function called with invalid parameters logs the errors and raises `toolviper.utils.ParameterError`. It is a
+`ValueError`, and it also derives from `AssertionError`, which validation failures used to raise, so existing handlers
+keep working. Validation does not rely on `assert`, so it also runs under `python -O`.
 
 ### Function with Custom Data Implementation:
 
