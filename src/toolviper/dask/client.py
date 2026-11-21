@@ -2,6 +2,7 @@ import functools
 import multiprocessing
 import os
 import pathlib
+import shlex
 from importlib import import_module
 from importlib.util import find_spec
 from typing import Any
@@ -66,9 +67,13 @@ _NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE = (
 
 # Workers on other hosts read their own Dask config as well, so the job script
 # hands them these settings of the calling process.
-_WORKER_MEMORY_SETTINGS = tuple(
-    f"distributed.worker.memory.{name}"
-    for name in ("target", "spill", "pause", "terminate")
+_WORKER_SETTINGS = (
+    "distributed.worker.memory.target",
+    "distributed.worker.memory.spill",
+    "distributed.worker.memory.pause",
+    "distributed.worker.memory.terminate",
+    "distributed.comm.timeouts.connect",
+    "distributed.comm.timeouts.tcp",
 )
 
 
@@ -97,11 +102,12 @@ def _keep_glibc_dynamic_mmap_threshold() -> bool:
     return True
 
 
-def _worker_memory_settings_prologue() -> list[str]:
-    """Job script lines that export the worker memory settings of this process."""
+def _worker_settings_prologue() -> list[str]:
+    """Job script lines that export the settings of this process for the workers."""
     return [
-        f"export DASK_{key.upper().replace('.', '__')}={dask.config.get(key)}"
-        for key in _WORKER_MEMORY_SETTINGS
+        f"export DASK_{key.upper().replace('.', '__')}="
+        + shlex.quote(str(dask.config.get(key)))
+        for key in _WORKER_SETTINGS
     ]
 
 
@@ -498,9 +504,11 @@ def slurm_cluster_client(
     The export is left out when MALLOC_TRIM_THRESHOLD_ is set in the environment
     of the calling process, or set to another value in its Dask config.
 
-    The job script also exports the worker memory settings of the calling process
-    (distributed.worker.memory.target, spill, pause and terminate). A worker on
-    another host reads its own Dask config and would run with Dask's defaults.
+    The job script also exports the worker memory settings
+    (distributed.worker.memory.target, spill, pause and terminate) and the comm
+    timeouts (distributed.comm.timeouts.connect and tcp) of the calling process.
+    A worker on another host reads its own Dask config and would run with Dask's
+    defaults.
     """
 
     # https://github.com/dask/dask/issues/5577
@@ -557,7 +565,7 @@ def slurm_cluster_client(
         or dask.config.get("jobqueue.slurm.env-extra", default=None)
         or []
     )
-    job_script_prologue += _worker_memory_settings_prologue()
+    job_script_prologue += _worker_settings_prologue()
     if _keep_glibc_dynamic_mmap_threshold():
         job_script_prologue.append(_NANNY_UNSETS_MALLOC_TRIM_THRESHOLD_PROLOGUE)
 
